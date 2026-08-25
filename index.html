@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Arhiva</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='14' fill='%230d0e10'/%3E%3Cpath d='M50 22 L74 50 L50 78 L26 50 Z' fill='none' stroke='%23c9a355' stroke-width='5'/%3E%3C/svg%3E">
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="manifest.json" id="manifestLink">
 <meta name="theme-color" content="#0d0e10">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -415,7 +415,7 @@
     <div class="sheet-head"><button class="back-btn" id="shortcutBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h3>Prečica spremna</h3></div>
     <p style="font-size:13.5px;color:var(--ink-dim);line-height:1.6;margin:0 0 16px;">
       Ova stranica sad vodi direktno do slike <b id="shortcutName" style="color:var(--ink);font-style:italic;"></b>.
-      Da je zakačiš na početni ekran: dodirni meni (tri tačke) u Chrome traci, pa <b style="color:var(--brass);">"Instaliraj i kreiraj prečicu"</b> — u ponuđenom izboru odaberi <b style="color:var(--ink);">prečicu</b> (ne "Instaliraj").
+      Da je zakačiš na početni ekran: dodirni meni (tri tačke) u Chrome traci, pa <b style="color:var(--brass);">"Dodaj na početni ekran"</b>.
     </p>
     <button id="shortcutOk" class="sheet-cta">Razumem</button>
   </div>
@@ -1090,6 +1090,8 @@ document.getElementById('btnShortcut').onclick = ()=>{
   const url = location.origin + location.pathname + '?p=' + encodeURIComponent(item.id);
   history.replaceState(null, '', url);
   document.title = item.name;
+  const mLink = document.getElementById('manifestLink');
+  if(mLink) mLink.remove();
   exitSelection();
   openModal(item);
   shortcutName.textContent = item.name;
@@ -1105,6 +1107,13 @@ function clearDeepLink(){
   if(location.hash || location.search){
     history.replaceState(null, '', location.pathname);
     document.title = 'Arhiva';
+  }
+  if(!document.getElementById('manifestLink')){
+    const link = document.createElement('link');
+    link.rel = 'manifest';
+    link.href = 'manifest.json';
+    link.id = 'manifestLink';
+    document.head.appendChild(link);
   }
 }
 sheetBg.onclick = (e)=>{ if(e.target === sheetBg) requestClose(); };
