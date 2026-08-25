@@ -519,18 +519,81 @@ function normalizeSr(s){
 
 const LS_PREFIX = 'galerija:';
 
-function loadAll(){
+/* ---------- IndexedDB sloj za stavke (slike/dokumenti) ---------- */
+const IDB_NAME = 'galerijaDB';
+const IDB_STORE = 'items';
+let _idbPromise = null;
+function idbOpen(){
+  if(_idbPromise) return _idbPromise;
+  _idbPromise = new Promise((resolve, reject)=>{
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = ()=>{
+      const db = req.result;
+      if(!db.objectStoreNames.contains(IDB_STORE)){
+        db.createObjectStore(IDB_STORE, {keyPath:'id'});
+      }
+    };
+    req.onsuccess = ()=>resolve(req.result);
+    req.onerror = ()=>reject(req.error);
+  });
+  return _idbPromise;
+}
+async function idbPut(item){
+  const db = await idbOpen();
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    tx.objectStore(IDB_STORE).put(item);
+    tx.oncomplete = ()=>resolve();
+    tx.onerror = ()=>reject(tx.error);
+  });
+}
+async function idbDelete(id){
+  const db = await idbOpen();
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    tx.objectStore(IDB_STORE).delete(id);
+    tx.oncomplete = ()=>resolve();
+    tx.onerror = ()=>reject(tx.error);
+  });
+}
+async function idbGetAll(){
+  const db = await idbOpen();
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction(IDB_STORE, 'readonly');
+    const req = tx.objectStore(IDB_STORE).getAll();
+    req.onsuccess = ()=>resolve(req.result || []);
+    req.onerror = ()=>reject(req.error);
+  });
+}
+async function migrateLegacyLocalStorageItems(){
+  try{
+    const raw = localStorage.getItem(LS_PREFIX+'item-ids');
+    if(!raw) return;
+    const ids = JSON.parse(raw);
+    if(!Array.isArray(ids) || ids.length === 0){
+      localStorage.removeItem(LS_PREFIX+'item-ids');
+      return;
+    }
+    for(const id of ids){
+      const raw2 = localStorage.getItem(LS_PREFIX+'item:'+id);
+      if(raw2){
+        try{ await idbPut(JSON.parse(raw2)); }catch(e){ console.error(e); }
+        localStorage.removeItem(LS_PREFIX+'item:'+id);
+      }
+    }
+    localStorage.removeItem(LS_PREFIX+'item-ids');
+  }catch(e){
+    console.error(e);
+  }
+}
+
+async function loadAll(){
   try{
     const rawCats = localStorage.getItem(LS_PREFIX+'categories');
     let parsed = rawCats ? JSON.parse(rawCats) : [];
     categories = parsed.map(c => typeof c === 'string' ? {name:c, pinned:false, cover:null} : c);
-    const raw = localStorage.getItem(LS_PREFIX+'item-ids');
-    const ids = raw ? JSON.parse(raw) : [];
-    const loaded = [];
-    for(const id of ids){
-      const raw2 = localStorage.getItem(LS_PREFIX+'item:'+id);
-      if(raw2) loaded.push(JSON.parse(raw2));
-    }
+    await migrateLegacyLocalStorageItems();
+    const loaded = await idbGetAll();
     loaded.sort((a,b)=>a.ts-b.ts);
     items = loaded;
   }catch(e){
@@ -546,7 +609,7 @@ function maybeAutoCover(folderName, item){
   const cat = categories.find(c=>c.name===folderName);
   if(cat && !cat.cover){ cat.cover = item.id; saveCategories(); }
 }
-function saveIndex(){ localStorage.setItem(LS_PREFIX+'item-ids', JSON.stringify(items.map(i=>i.id))); }
+function saveIndex(){ /* IndexedDB čuva svaku stavku pojedinačno preko idbPut; ova funkcija više nije potrebna, ostavljena zbog kompatibilnosti poziva. */ }
 
 function folderIconSvg(){
   return '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 012-2h4l2 2.5h8a2 2 0 012 2V17a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>';
@@ -763,7 +826,7 @@ document.getElementById('acDelete').onclick = ()=>{
   items.forEach(it=>{
     if(it.category === name){
       it.category = null;
-      try{ localStorage.setItem(LS_PREFIX+'item:'+it.id, JSON.stringify(it)); }catch(e){}
+      idbPut(it).catch(e=>console.error(e));
     }
   });
   categories = categories.filter(c=>c.name!==name);
@@ -950,8 +1013,7 @@ function startRename(item, nameSpan, meta, idx){
   const commit = ()=>{
     const newName = input.value.trim() || item.name;
     item.name = newName;
-    try{ localStorage.setItem(LS_PREFIX+'item:'+item.id, JSON.stringify(item)); }
-    catch(e){ toast('Greška pri čuvanju naziva.'); }
+    idbPut(item).catch(e=>{ console.error(e); toast('Greška pri čuvanju naziva.'); });
     render();
   };
   input.addEventListener('blur', commit);
@@ -1014,7 +1076,7 @@ function moveSelectedToFolder(folderName){
     const item = items.find(i=>i.id===id);
     if(item){
       item.category = folderName || null;
-      try{ localStorage.setItem(LS_PREFIX+'item:'+item.id, JSON.stringify(item)); }catch(e){}
+      idbPut(item).catch(e=>console.error(e));
       maybeAutoCover(folderName, item);
     }
   });
@@ -1029,11 +1091,10 @@ function copySelectedToFolder(folderName){
       const newId = 'i' + Date.now() + Math.random().toString(36).slice(2,8);
       const clone = { id:newId, name:orig.name, dataUrl:orig.dataUrl, ts:Date.now(), category:folderName || null, type: orig.type, ext: orig.ext };
       items.push(clone);
-      try{ localStorage.setItem(LS_PREFIX+'item:'+newId, JSON.stringify(clone)); }catch(e){}
+      idbPut(clone).catch(e=>console.error(e));
       maybeAutoCover(folderName, clone);
     }
   });
-  saveIndex();
   exitSelection();
   toast('Kopirano u "'+folderName+'".');
 }
@@ -1043,8 +1104,7 @@ function deleteSelected(){
   if(!confirm(selectedIds.size===1 ? 'Obrisati ovu stavku?' : 'Obrisati '+selectedIds.size+' stavki?')) return;
   const ids = Array.from(selectedIds);
   items = items.filter(i=>!selectedIds.has(i.id));
-  ids.forEach(id=>{ try{ localStorage.removeItem(LS_PREFIX+'item:'+id); }catch(e){} });
-  saveIndex();
+  ids.forEach(id=>{ idbDelete(id).catch(e=>console.error(e)); });
   exitSelection();
   toast('Obrisano.');
 }
@@ -1127,7 +1187,7 @@ function createFolder(){
       items.forEach(it=>{
         if(it.category === oldName){
           it.category = name;
-          try{ localStorage.setItem(LS_PREFIX+'item:'+it.id, JSON.stringify(it)); }catch(e){}
+          idbPut(it).catch(e=>console.error(e));
         }
       });
       if(currentFolder === oldName) currentFolder = name;
@@ -1241,21 +1301,20 @@ async function addFile(file, category){
       type: isPdf ? 'pdf' : (isDoc ? 'doc' : 'image'),
       ext: isDoc ? ext : undefined
     };
-    localStorage.setItem(LS_PREFIX+'item:'+id, JSON.stringify(item));
+    await idbPut(item);
     items.push(item);
-    saveIndex();
     maybeAutoCover(category, item);
     render();
   }catch(e){
     console.error(e);
-    if(e && e.name === 'QuotaExceededError'){ toast('Nema više prostora za nove stavke u browseru.'); }
+    if(e && (e.name === 'QuotaExceededError' || (e.target && e.target.error && e.target.error.name === 'QuotaExceededError'))){ toast('Nema više prostora za nove stavke u browseru.'); }
     else{ toast('Greška pri dodavanju.'); }
   }
 }
 
 searchEl.addEventListener('input', render);
 
-loadAll();
+loadAll().then(checkDeepLink);
 
 /* ---------- Podešavanja: rezervna kopija ---------- */
 const settingsSheet = document.getElementById('settingsSheet');
@@ -1303,7 +1362,7 @@ importInput.addEventListener('change', (e)=>{
   importInput.value = '';
   if(!file) return;
   const reader = new FileReader();
-  reader.onload = (ev)=>{
+  reader.onload = async (ev)=>{
     try{
       const data = JSON.parse(ev.target.result);
       if(!data || !Array.isArray(data.items)) throw new Error('bad format');
@@ -1315,8 +1374,8 @@ importInput.addEventListener('change', (e)=>{
       });
       saveCategories();
       let added = 0;
-      data.items.forEach(it=>{
-        if(!it || !it.dataUrl) return;
+      for(const it of data.items){
+        if(!it || !it.dataUrl) continue;
         const newId = 'i' + Date.now() + Math.random().toString(36).slice(2,8);
         const clone = {
           id: newId,
@@ -1328,10 +1387,9 @@ importInput.addEventListener('change', (e)=>{
           ext: it.ext
         };
         items.push(clone);
-        try{ localStorage.setItem(LS_PREFIX+'item:'+newId, JSON.stringify(clone)); }catch(err){}
+        try{ await idbPut(clone); }catch(err){ console.error(err); }
         added++;
-      });
-      saveIndex();
+      }
       updateStorageInfo();
       render();
       toast('Uvezeno ' + added + ' stavki.');
@@ -1357,7 +1415,6 @@ function checkDeepLink(){
     }
   }
 }
-checkDeepLink();
 </script>
 </body>
 </html>
