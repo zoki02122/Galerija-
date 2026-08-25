@@ -40,26 +40,44 @@
 <div id="content"><p class="missing">Učitavanje...</p></div>
 
 <script>
-const LS_PREFIX = 'galerija:';
-function getItem(id){
-  try{
-    const raw = localStorage.getItem(LS_PREFIX + 'item:' + id);
-    return raw ? JSON.parse(raw) : null;
-  }catch(e){ return null; }
+const IDB_NAME = 'galerijaDB';
+const IDB_STORE = 'items';
+function idbGetItem(id){
+  return new Promise((resolve)=>{
+    try{
+      const req = indexedDB.open(IDB_NAME, 1);
+      req.onupgradeneeded = ()=>{
+        const db = req.result;
+        if(!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE, {keyPath:'id'});
+      };
+      req.onsuccess = ()=>{
+        const db = req.result;
+        if(!db.objectStoreNames.contains(IDB_STORE)){ resolve(null); return; }
+        const tx = db.transaction(IDB_STORE, 'readonly');
+        const getReq = tx.objectStore(IDB_STORE).get(id);
+        getReq.onsuccess = ()=>resolve(getReq.result || null);
+        getReq.onerror = ()=>resolve(null);
+      };
+      req.onerror = ()=>resolve(null);
+    }catch(e){ resolve(null); }
+  });
 }
 function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 const params = new URLSearchParams(location.search);
 const id = params.get('p');
-const item = id ? getItem(id) : null;
 const content = document.getElementById('content');
 
-if(!item){
-  content.innerHTML =
-    '<p class="missing">Stavka nije pronađena u ovom browseru.</p>' +
-    '<a class="back" href="index.html">\u2190 Nazad u Arhivu</a>';
-}else{
+(async ()=>{
+  const item = id ? await idbGetItem(id) : null;
+
+  if(!item){
+    content.innerHTML =
+      '<p class="missing">Stavka nije pronađena u ovom browseru.</p>' +
+      '<a class="back" href="index.html">\u2190 Nazad u Arhivu</a>';
+    return;
+  }
   document.title = item.name;
   const mimeMatch = /^data:([^;]+);/.exec(item.dataUrl || '');
   const mime = mimeMatch ? mimeMatch[1] : '';
@@ -87,7 +105,7 @@ if(!item){
       }catch(e){}
     };
   }
-}
+})();
 </script>
 </body>
 </html>
