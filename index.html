@@ -410,17 +410,6 @@
   </div>
 </div>
 
-<div class="sheet-bg" id="shortcutSheet">
-  <div class="sheet">
-    <div class="sheet-head"><button class="back-btn" id="shortcutBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h3>Prečica spremna</h3></div>
-    <p style="font-size:13.5px;color:var(--ink-dim);line-height:1.6;margin:0 0 16px;">
-      Ova stranica sad vodi direktno do slike <b id="shortcutName" style="color:var(--ink);font-style:italic;"></b>.
-      Da je zakačiš na početni ekran: dodirni meni (tri tačke) u Chrome traci, pa <b style="color:var(--brass);">"Dodaj na početni ekran"</b>.
-    </p>
-    <button id="shortcutOk" class="sheet-cta">Razumem</button>
-  </div>
-</div>
-
 <div class="sheet-bg" id="newFolderSheet">
   <div class="sheet">
     <div class="sheet-head"><button class="back-btn" id="newFolderBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h3 id="newFolderTitle">Novi album</h3></div>
@@ -1081,39 +1070,17 @@ async function shareSelected(){
 }
 document.getElementById('btnShare').onclick = shareSelected;
 
-const shortcutSheet = document.getElementById('shortcutSheet');
-const shortcutName = document.getElementById('shortcutName');
 document.getElementById('btnShortcut').onclick = ()=>{
   const id = Array.from(selectedIds)[0];
   const item = items.find(i=>i.id===id);
   if(!item) return;
-  const url = location.origin + location.pathname + '?p=' + encodeURIComponent(item.id);
-  history.replaceState(null, '', url);
-  document.title = item.name;
-  const mLink = document.getElementById('manifestLink');
-  if(mLink) mLink.remove();
-  exitSelection();
-  openModal(item);
-  shortcutName.textContent = item.name;
-  shortcutSheet.classList.add('open');
-  pushBack(closeShortcutSheet);
+  location.href = 'photo.html?p=' + encodeURIComponent(item.id);
 };
-const closeShortcutSheet = ()=>shortcutSheet.classList.remove('open');
-document.getElementById('shortcutOk').onclick = ()=>requestClose();
-document.getElementById('shortcutBack').onclick = ()=>requestClose();
-shortcutSheet.onclick = (e)=>{ if(e.target===shortcutSheet) requestClose(); };
 
 function clearDeepLink(){
   if(location.hash || location.search){
     history.replaceState(null, '', location.pathname);
     document.title = 'Arhiva';
-  }
-  if(!document.getElementById('manifestLink')){
-    const link = document.createElement('link');
-    link.rel = 'manifest';
-    link.href = 'manifest.json';
-    link.id = 'manifestLink';
-    document.head.appendChild(link);
   }
 }
 sheetBg.onclick = (e)=>{ if(e.target === sheetBg) requestClose(); };
