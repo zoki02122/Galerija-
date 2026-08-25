@@ -1137,13 +1137,7 @@ document.getElementById('btnShortcut').onclick = ()=>{
   const id = Array.from(selectedIds)[0];
   const item = items.find(i=>i.id===id);
   if(!item) return;
-  const a = document.createElement('a');
-  a.href = 'photo.html?p=' + encodeURIComponent(item.id);
-  a.target = '_blank';
-  a.rel = 'noopener';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  location.href = 'photo.html?p=' + encodeURIComponent(item.id);
 };
 
 function clearDeepLink(){
