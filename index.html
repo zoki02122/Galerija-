@@ -54,7 +54,7 @@
 
   .crumb{display:none;align-items:center;gap:10px;margin-top:18px;}
   .crumb.show{display:flex;}
-  .crumb .here{font-family:'Fraunces',serif;font-style:italic;color:var(--ink);font-size:15px;}
+  .crumb .here{font-family:'Fraunces',serif;font-style:italic;color:var(--ink);font-size:21px;}
 
   .back-btn{
     width:42px;height:42px;border-radius:50%;flex:none;
@@ -132,7 +132,7 @@
   }
   .count{font-family:'IBM Plex Mono',monospace;font-size:15px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink-dim);}
   .count b{color:var(--ink);font-weight:600;font-size:17px;}
-  .add-btn{display:flex;align-items:center;gap:9px;background:none;border:none;cursor:pointer;padding:2px;}
+  .add-btn{display:flex;align-items:center;gap:9px;background:none;border:none;cursor:pointer;padding:2px;font-family:inherit;}
   .add-btn .seal{
     width:34px;height:34px;border-radius:50%;border:1.5px solid var(--brass);
     display:flex;align-items:center;justify-content:center;color:var(--brass);
@@ -343,18 +343,12 @@
   <div class="toolbar" id="toolbarWrap">
     <span class="count" id="count">0 stavki</span>
     <div class="toolbar-actions">
-      <label class="icon-btn" for="cameraInput" title="Slikaj">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-      </label>
-      <label class="icon-btn" for="docInput" title="Dodaj dokument">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-      </label>
-      <label class="add-btn" for="fileInput">
+      <button class="add-btn" id="addBtn" type="button">
         <span class="seal">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
         </span>
         <span class="label">Dodaj</span>
-      </label>
+      </button>
     </div>
     <input id="fileInput" type="file" accept="image/*" multiple>
     <input id="docInput" type="file" accept="*/*" multiple>
@@ -407,6 +401,15 @@
     <div class="sheet-head"><button class="back-btn" id="moveCopyBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h3 id="moveCopyTitle">Album</h3></div>
     <button id="btnMove" class="sheet-cta">Premesti</button>
     <button id="btnCopy" class="sheet-cta secondary">Kopiraj</button>
+  </div>
+</div>
+
+<div class="sheet-bg" id="addSheet">
+  <div class="sheet">
+    <div class="sheet-head"><button class="back-btn" id="addSheetBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h3>Dodaj</h3></div>
+    <div class="sheet-row" id="addFromGallery"><span>Iz galerije</span></div>
+    <div class="sheet-row" id="addFromCamera"><span>Slikaj</span></div>
+    <div class="sheet-row" id="addFromDocs"><span>Dokument</span></div>
   </div>
 </div>
 
@@ -1174,6 +1177,18 @@ docInput.addEventListener('change', async (e)=>{
   docInput.value = '';
   for(const file of files){ await addFile(file, currentFolder && currentFolder !== INBOX ? currentFolder : null); }
 });
+
+const addSheet = document.getElementById('addSheet');
+const closeAddSheet = ()=>addSheet.classList.remove('open');
+document.getElementById('addBtn').onclick = ()=>{
+  addSheet.classList.add('open');
+  pushBack(closeAddSheet);
+};
+document.getElementById('addSheetBack').onclick = ()=>requestClose();
+addSheet.onclick = (e)=>{ if(e.target === addSheet) requestClose(); };
+document.getElementById('addFromGallery').onclick = ()=>{ requestClose(); fileInput.click(); };
+document.getElementById('addFromCamera').onclick = ()=>{ requestClose(); cameraInput.click(); };
+document.getElementById('addFromDocs').onclick = ()=>{ requestClose(); docInput.click(); };
 function readFileAsDataUrl(file){
   return new Promise((resolve, reject)=>{
     const r = new FileReader();
