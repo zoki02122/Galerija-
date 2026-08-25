@@ -3,223 +3,305 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Galerija</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%2314151a'/%3E%3Ccircle cx='40' cy='40' r='18' fill='none' stroke='%23e8a33d' stroke-width='8'/%3E%3Cline x1='53' y1='53' x2='75' y2='75' stroke='%23e8a33d' stroke-width='8' stroke-linecap='round'/%3E%3C/svg%3E">
+<title>Arhiva</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='14' fill='%230d0e10'/%3E%3Cpath d='M50 22 L74 50 L50 78 L26 50 Z' fill='none' stroke='%23c9a355' stroke-width='5'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#14151a;
-    --panel:#1c1e24;
-    --panel-2:#23262d;
-    --text:#edede7;
-    --text-dim:#9296a0;
-    --accent:#e8a33d;
-    --border:#2e313a;
-    --danger:#c9584f;
+    --bg:#0d0e10;
+    --surface:#17181b;
+    --surface-2:#1f2124;
+    --line:#2a2c30;
+    --line-soft:#232529;
+    --ink:#ede9e1;
+    --ink-dim:#8b8d92;
+    --ink-faint:#5c5e63;
+    --brass:#c9a355;
+    --brass-soft:#8a7240;
+    --brass-glow:rgba(201,163,85,0.22);
+    --danger:#b5544a;
   }
   *{box-sizing:border-box;}
+  html{-webkit-tap-highlight-color:transparent;}
   body{
     margin:0;
-    background:var(--bg);
-    color:var(--text);
+    background:
+      radial-gradient(ellipse 900px 500px at 50% -10%, rgba(201,163,85,0.06), transparent 60%),
+      radial-gradient(ellipse 800px 600px at 100% 100%, rgba(255,255,255,0.02), transparent 60%),
+      var(--bg);
+    color:var(--ink);
     font-family:'Inter',sans-serif;
     min-height:100vh;
-    padding:20px 16px 60px;
+    padding:28px 18px 70px;
+    -webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:920px;margin:0 auto;}
-  header{margin-bottom:22px;}
+  .wrap{max-width:900px;margin:0 auto;}
+
+  header{margin-bottom:26px;}
+  .mark-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+  .mark-title{display:flex;align-items:center;gap:10px;}
+  .mark{width:15px;height:15px;border:2px solid var(--brass);transform:rotate(45deg);flex:none;}
   h1{
-    font-family:'Space Grotesk',sans-serif;
-    font-weight:700;
-    font-size:26px;
-    letter-spacing:0.5px;
-    text-transform:uppercase;
-    margin:0 0 4px;
+    font-family:'Fraunces',serif;font-weight:600;font-size:24px;
+    letter-spacing:2px;text-transform:uppercase;margin:0;color:var(--ink);
   }
-  .sub{color:var(--text-dim);font-size:13px;margin:0;}
+  .sub{color:var(--ink-dim);font-size:13.5px;margin:2px 0 0 25px;font-style:italic;font-family:'Fraunces',serif;}
+
+  .crumb{display:none;align-items:center;gap:10px;margin-top:18px;}
+  .crumb.show{display:flex;}
+  .crumb .here{font-family:'Fraunces',serif;font-style:italic;color:var(--ink);font-size:15px;}
+
+  .back-btn{
+    width:42px;height:42px;border-radius:50%;flex:none;
+    border:1px solid var(--line);background:var(--surface);color:var(--ink);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    transition:border-color .2s, color .2s;
+  }
+  .back-btn:hover, .back-btn:active{border-color:var(--brass-soft);color:var(--brass);}
+  .sheet-head{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+  .sheet-head h3{margin:0;}
+
+  /* ---------- Selection header ---------- */
+  .sel-header{
+    display:none;
+    align-items:center;
+    justify-content:space-between;
+    margin-top:18px;
+  }
+  .sel-header.show{display:flex;}
+  .sel-header button{
+    background:none;border:none;cursor:pointer;
+    font-family:'Inter',sans-serif;
+  }
+  .sel-header .cancel{
+    color:var(--ink);font-size:19px;line-height:1;
+    width:30px;height:30px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    border:1px solid var(--line);
+  }
+  .sel-header .count{
+    font-family:'Fraunces',serif;font-style:italic;font-size:15px;color:var(--ink);
+  }
+  .sel-header .all{color:var(--brass);font-size:13px;letter-spacing:0.3px;}
+
+  /* ---------- Bottom action bar ---------- */
+  .sel-bar{
+    display:none;
+    position:fixed;bottom:0;left:0;right:0;
+    background:var(--surface);
+    border-top:1px solid var(--brass-soft);
+    padding:12px 10px calc(12px + env(safe-area-inset-bottom));
+    justify-content:space-around;
+    z-index:40;
+  }
+  .sel-bar.show{display:flex;}
+  .sel-bar button{
+    background:none;border:none;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:5px;
+    color:var(--ink-dim);
+    font-family:'Inter',sans-serif;font-size:11px;
+    padding:4px 10px;
+  }
+  .sel-bar button svg{stroke:var(--ink-dim);}
+  .sel-bar button.danger{color:var(--danger);}
+  .sel-bar button.danger svg{stroke:var(--danger);}
+  .sel-bar button:active{opacity:0.6;}
+  .sel-bar button[hidden]{display:none;}
+
 
   .searchbar{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    background:var(--panel);
-    border:1px solid var(--border);
-    border-radius:10px;
-    padding:10px 14px;
-    margin-top:18px;
-    transition:border-color .15s;
+    display:flex;align-items:center;gap:10px;
+    background:var(--surface);border:1px solid var(--line);border-radius:4px;
+    padding:12px 14px;margin-top:16px;
+    transition:border-color .2s, box-shadow .2s;
   }
-  .searchbar:focus-within{border-color:var(--accent);}
-  .searchbar svg{flex:none;stroke:var(--text-dim);transition:stroke .15s;}
-  .searchbar:focus-within svg{stroke:var(--accent);}
-  .searchbar input{
-    flex:1;
-    background:none;
-    border:none;
-    outline:none;
-    color:var(--text);
-    font-family:'Inter',sans-serif;
-    font-size:15px;
-  }
-  .searchbar input::placeholder{color:var(--text-dim);}
+  .searchbar:focus-within{border-color:var(--brass-soft);box-shadow:0 0 0 3px var(--brass-glow);}
+  .searchbar svg{flex:none;stroke:var(--ink-faint);transition:stroke .2s;}
+  .searchbar:focus-within svg{stroke:var(--brass);}
+  .searchbar input{flex:1;background:none;border:none;outline:none;color:var(--ink);font-family:'Inter',sans-serif;font-size:15px;}
+  .searchbar input::placeholder{color:var(--ink-faint);}
 
   .toolbar{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin:18px 0 16px;
+    display:flex;justify-content:space-between;align-items:center;
+    margin:22px 0 20px;padding-bottom:14px;border-bottom:1px solid var(--line-soft);
   }
-  .count{font-size:12px;color:var(--text-dim);font-family:'Space Grotesk',sans-serif;letter-spacing:0.5px;}
-  .add-btn{
-    background:var(--accent);
-    color:#1a1400;
-    border:none;
-    border-radius:8px;
-    padding:9px 16px;
-    font-family:'Space Grotesk',sans-serif;
-    font-weight:700;
-    font-size:13px;
-    letter-spacing:0.3px;
-    text-transform:uppercase;
-    cursor:pointer;
+  .count{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink-dim);}
+  .count b{color:var(--ink);font-weight:500;}
+  .add-btn{display:flex;align-items:center;gap:9px;background:none;border:none;cursor:pointer;padding:2px;}
+  .add-btn .seal{
+    width:34px;height:34px;border-radius:50%;border:1.5px solid var(--brass);
+    display:flex;align-items:center;justify-content:center;color:var(--brass);
+    transition:background .2s, box-shadow .2s, transform .15s;flex:none;
   }
-  .add-btn:active{transform:translateY(1px);}
+  .add-btn:active .seal{transform:scale(0.93);}
+  .add-btn .seal:hover, .add-btn:focus-visible .seal{background:var(--brass-glow);box-shadow:0 0 0 4px var(--brass-glow);}
+  .add-btn .label{font-family:'Fraunces',serif;font-style:italic;font-size:14.5px;color:var(--ink-dim);}
   input[type=file]{display:none;}
 
-  .grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
-    gap:14px;
+  .toolbar-actions{display:flex;align-items:center;gap:14px;}
+  .icon-btn{
+    width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line);
+    display:flex;align-items:center;justify-content:center;color:var(--ink-dim);
+    cursor:pointer;background:none;flex:none;
+    transition:border-color .2s, color .2s;
   }
-  .card{
-    background:var(--panel);
-    border:1px solid var(--border);
-    border-radius:10px;
-    overflow:hidden;
-    position:relative;
-    cursor:pointer;
+  .icon-btn:active{transform:scale(0.93);}
+  .icon-btn:hover, .icon-btn:focus-visible{border-color:var(--brass-soft);color:var(--brass);}
+
+  .section-label{
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;
+    color:var(--ink-faint);margin:0 0 12px;
   }
+  .date-label{
+    font-family:'Fraunces',serif;font-style:italic;font-size:14px;color:var(--ink-dim);
+    margin:26px 0 12px;
+  }
+  .date-label:first-child{margin-top:0;}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:18px 14px;}
+  .grid + .section-label{margin-top:30px;}
+
+  .folder-tile{
+    aspect-ratio:1/1;background:var(--surface);border:1px solid var(--line);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+    cursor:pointer;position:relative;transition:border-color .2s;
+  }
+  .folder-tile:active{border-color:var(--brass-soft);}
+  .folder-tile svg{stroke:var(--brass);}
+  .folder-tile .fname{
+    font-family:'Fraunces',serif;font-style:italic;font-size:13.5px;color:var(--ink);
+    text-align:center;padding:0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
+  }
+  .folder-tile .fcount{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-faint);}
+  .folder-tile.has-cover{padding:0;overflow:hidden;justify-content:flex-end;}
+  .folder-tile.has-cover .cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .folder-tile.has-cover .cover-shade{position:absolute;inset:0;background:linear-gradient(to top, rgba(6,6,7,0.88), rgba(6,6,7,0.1) 55%);}
+  .folder-tile.has-cover .fname, .folder-tile.has-cover .fcount{position:relative;z-index:1;padding:0 10px;}
+  .folder-tile.has-cover .fname{color:var(--ink);}
+  .folder-tile.has-cover .fcount{color:rgba(237,233,225,0.75);margin-bottom:8px;}
+  .pin-mark{
+    position:absolute;top:6px;right:6px;width:18px;height:18px;border-radius:50%;
+    background:var(--brass);display:flex;align-items:center;justify-content:center;z-index:2;
+  }
+  .pin-mark svg{stroke:#1a1400;}
+
+  .card{position:relative;cursor:pointer;}
   .thumb-box{
-    aspect-ratio:1/1;
-    background:var(--panel-2);
-    overflow:hidden;
+    position:relative;aspect-ratio:1/1;background:var(--surface-2);
+    border:1px solid var(--line);overflow:hidden;transition:border-color .2s;
   }
+  .card:active .thumb-box{border-color:var(--brass-soft);}
   .thumb-box img{width:100%;height:100%;object-fit:cover;display:block;}
-  .tag{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:6px;
-    padding:8px 10px;
-    border-top:1px dashed var(--border);
-  }
-  .tag .num{
-    font-family:'Space Grotesk',sans-serif;
-    font-size:10px;
-    color:var(--accent);
-    flex:none;
-  }
-  .tag .name{
-    font-size:12.5px;
-    color:var(--text);
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    flex:1;
-  }
-  .tag input{
-    background:none;
-    border:none;
-    border-bottom:1px solid var(--accent);
-    outline:none;
-    color:var(--text);
-    font-size:12.5px;
-    font-family:'Inter',sans-serif;
-    width:100%;
-  }
-  .del-btn{
-    position:absolute;
-    top:6px;
-    right:6px;
-    width:22px;
-    height:22px;
-    border-radius:50%;
-    background:rgba(20,21,26,0.75);
-    border:1px solid var(--border);
-    color:var(--text-dim);
-    font-size:13px;
-    line-height:1;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-  }
-  .del-btn:hover{color:var(--danger);border-color:var(--danger);}
+  .thumb-box.pdf-thumb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--brass);}
+  .thumb-box.pdf-thumb .pdf-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1.5px;}
 
-  .empty{
-    text-align:center;
-    padding:60px 20px;
-    color:var(--text-dim);
-    border:1px dashed var(--border);
-    border-radius:10px;
-    font-size:14px;
+  .corner{
+    position:absolute;top:0;left:0;width:0;height:0;
+    border-style:solid;border-width:16px 16px 0 0;
+    border-color:var(--brass) transparent transparent transparent;
+    opacity:0.88;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4));
   }
-  .empty b{color:var(--text);}
 
-  .modal-bg{
-    display:none;
-    position:fixed;inset:0;
-    background:rgba(10,10,12,0.88);
-    z-index:50;
-    align-items:center;
-    justify-content:center;
-    padding:20px;
+  .select-mark{
+    position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;
+    background:rgba(13,14,16,0.82);border:1.5px solid var(--brass-soft);
+    display:none;align-items:center;justify-content:center;
+    transition:background .15s, border-color .15s;
   }
+  .card.selectable .select-mark{display:flex;}
+  .card.selected .select-mark{background:var(--brass);border-color:var(--brass);}
+  .select-mark svg{opacity:0;stroke:#1a1400;stroke-width:3;}
+  .card.selected .select-mark svg{opacity:1;}
+  .card.selected .thumb-box{border-color:var(--brass);}
+
+  .meta{padding:8px 1px 0;}
+  .meta .index{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--brass-soft);margin-bottom:2px;}
+  .meta .name{display:block;font-family:'Fraunces',serif;font-style:italic;font-size:16.5px;color:var(--ink);white-space:normal;overflow-wrap:break-word;line-height:1.3;}
+  .meta input{background:none;border:none;border-bottom:1px solid var(--brass);outline:none;color:var(--ink);font-size:16.5px;font-family:'Fraunces',serif;font-style:italic;width:100%;padding:0;}
+
+  .empty{text-align:center;padding:56px 20px;color:var(--ink-dim);border:1px solid var(--line-soft);position:relative;}
+  .empty::before{content:'';position:absolute;inset:8px;border:1px dashed var(--line);pointer-events:none;}
+  .empty .mark{margin:0 auto 14px;}
+  .empty b{display:block;color:var(--ink);font-family:'Fraunces',serif;font-style:italic;font-size:16px;font-weight:500;margin-bottom:6px;}
+  .empty span{font-size:13px;}
+
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(6,6,7,0.92);z-index:50;align-items:center;justify-content:center;padding:24px;}
   .modal-bg.open{display:flex;}
-  .modal-bg img{max-width:100%;max-height:78vh;border-radius:8px;display:block;margin:0 auto;}
-  .modal-caption{
-    text-align:center;
-    color:var(--text-dim);
-    font-size:13px;
-    margin-top:12px;
-  }
-  .modal-close{
-    position:absolute;
-    top:18px;right:18px;
-    background:var(--panel);
-    border:1px solid var(--border);
-    color:var(--text);
-    width:34px;height:34px;
-    border-radius:50%;
-    cursor:pointer;
-    font-size:16px;
-  }
+  .modal-frame{border:1px solid var(--brass-soft);padding:6px;background:var(--surface);max-width:100%;}
+  .modal-frame img{max-width:100%;max-height:66vh;display:block;}
+  .modal-caption{text-align:center;color:var(--ink-dim);font-family:'Fraunces',serif;font-style:italic;font-size:14px;margin-top:14px;}
+  .modal-close{position:absolute;top:20px;left:20px;}
+
   .toast{
-    position:fixed;
-    bottom:18px;left:50%;
-    transform:translateX(-50%);
-    background:var(--panel-2);
-    border:1px solid var(--border);
-    color:var(--text);
-    padding:10px 16px;
-    border-radius:8px;
-    font-size:13px;
-    opacity:0;
-    pointer-events:none;
-    transition:opacity .2s;
-    z-index:60;
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(8px);
+    background:var(--surface);border:1px solid var(--brass-soft);color:var(--ink);
+    padding:11px 18px;font-size:13px;font-family:'Inter',sans-serif;
+    opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;z-index:60;
   }
-  .toast.show{opacity:1;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .sheet-bg{display:none;position:fixed;inset:0;background:rgba(6,6,7,0.85);z-index:55;align-items:flex-end;justify-content:center;}
+  .sheet-bg.open{display:flex;}
+  .sheet{background:var(--surface);border-top:1px solid var(--brass-soft);width:100%;max-width:500px;padding:18px 16px 26px;}
+  .sheet h3{font-family:'Fraunces',serif;font-style:italic;font-weight:500;font-size:15px;color:var(--ink-dim);margin:0 0 12px;}
+  .sheet-row{
+    display:flex;align-items:center;justify-content:space-between;padding:13px 4px;
+    border-bottom:1px solid var(--line-soft);cursor:pointer;color:var(--ink);font-size:14.5px;
+  }
+  .sheet-row:last-child{border-bottom:none;}
+  .sheet-row .dot{width:7px;height:7px;border-radius:50%;background:var(--brass);opacity:0;}
+  .sheet-row.selected .dot{opacity:1;}
+  .sheet-row.new{color:var(--brass);font-style:italic;font-family:'Fraunces',serif;}
+
+  .sheet-input{
+    width:100%;background:var(--surface-2);border:1px solid var(--line);
+    color:var(--ink);font-family:'Inter',sans-serif;font-size:15px;
+    padding:12px 14px;outline:none;margin-bottom:12px;
+  }
+  .sheet-input:focus{border-color:var(--brass-soft);box-shadow:0 0 0 3px var(--brass-glow);}
+  .sheet-cta{
+    width:100%;background:var(--brass);color:#1a1400;border:none;
+    font-family:'Fraunces',serif;font-weight:600;font-size:14.5px;
+    padding:13px;cursor:pointer;
+  }
+  .sheet-cta:active{opacity:0.85;}
+  .sheet-cta.secondary{
+    background:var(--surface-2);color:var(--ink);border:1px solid var(--line);
+    margin-top:8px;
+  }
+
+  @media (prefers-reduced-motion: reduce){*{transition:none !important;}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>Galerija</h1>
-    <p class="sub">Sačuvaj slike, dodeli im naziv, pronađi ih pretragom.</p>
-    <div class="searchbar">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
+    <div class="mark-row">
+      <div class="mark-title">
+        <div class="mark"></div>
+        <h1>Arhiva</h1>
+      </div>
+      <button class="icon-btn" id="settingsBtn" title="Podešavanja">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"></path></svg>
+      </button>
+    </div>
+    <p class="sub">Privatna arhiva dokumenata i slika</p>
+
+    <div class="crumb" id="crumb">
+      <button class="back-btn" id="crumbBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+      <span class="here" id="crumbName"></span>
+    </div>
+
+    <div class="sel-header" id="selHeader">
+      <button class="cancel" id="selCancel">✕</button>
+      <span class="count" id="selCount">1 odabrano</span>
+      <button class="all" id="selAll">Izaberi sve</button>
+    </div>
+
+    <div class="searchbar" id="searchbarWrap">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
         <circle cx="11" cy="11" r="7"></circle>
         <line x1="21" y1="21" x2="16.2" y2="16.2"></line>
       </svg>
@@ -227,29 +309,147 @@
     </div>
   </header>
 
-  <div class="toolbar">
+  <div class="toolbar" id="toolbarWrap">
     <span class="count" id="count">0 stavki</span>
-    <label class="add-btn" for="fileInput">+ Dodaj sliku</label>
-    <input id="fileInput" type="file" accept="image/*" multiple>
+    <div class="toolbar-actions">
+      <label class="icon-btn" for="cameraInput" title="Slikaj">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+      </label>
+      <label class="add-btn" for="fileInput">
+        <span class="seal">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </span>
+        <span class="label">Dodaj</span>
+      </label>
+    </div>
+    <input id="fileInput" type="file" accept="image/*,application/pdf" multiple>
+    <input id="cameraInput" type="file" accept="image/*" capture="environment">
   </div>
 
-  <div id="gridArea"></div>
+  <div id="contentArea"></div>
+</div>
+
+<div class="sel-bar" id="selBar">
+  <button id="btnShare">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.6" y1="10.6" x2="15.4" y2="6.4"></line><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"></line></svg>
+    Podeli
+  </button>
+  <button id="btnAlbum">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 012-2h4l2 2.5h8a2 2 0 012 2V17a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
+    Dodaj u album
+  </button>
+  <button id="btnShortcut" hidden>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"></rect><path d="M12 8v8M8 12h8"></path></svg>
+    Prečica
+  </button>
+  <button id="btnDelete" class="danger">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path></svg>
+    Izbriši
+  </button>
 </div>
 
 <div class="modal-bg" id="modalBg">
-  <button class="modal-close" id="modalClose">✕</button>
+  <button class="back-btn modal-close" id="modalClose">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+  </button>
   <div>
-    <img id="modalImg" src="">
+    <div class="modal-frame"><img id="modalImg" src=""></div>
     <div class="modal-caption" id="modalCaption"></div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<script>
-let items = []; // {id, name, dataUrl, ts}
+<div class="sheet-bg" id="sheetBg">
+  <div class="sheet">
+    <div class="sheet-head"><button class="back-btn" id="sheetBgBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h3 id="sheetTitle">Dodaj u album</h3></div>
+    <div id="sheetList"></div>
+  </div>
+</div>
 
-const gridArea = document.getElementById('gridArea');
+<div class="sheet-bg" id="moveCopySheet">
+  <div class="sheet">
+    <div class="sheet-head"><button class="back-btn" id="moveCopyBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h3 id="moveCopyTitle">Album</h3></div>
+    <button id="btnMove" class="sheet-cta">Premesti</button>
+    <button id="btnCopy" class="sheet-cta secondary">Kopiraj</button>
+  </div>
+</div>
+
+<div class="sheet-bg" id="shortcutSheet">
+  <div class="sheet">
+    <div class="sheet-head"><button class="back-btn" id="shortcutBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h3>Prečica spremna</h3></div>
+    <p style="font-size:13.5px;color:var(--ink-dim);line-height:1.6;margin:0 0 16px;">
+      Ova stranica sad vodi direktno do slike <b id="shortcutName" style="color:var(--ink);font-style:italic;"></b>.
+      Da je zakačiš na početni ekran: dodirni meni (tri tačke) u Chrome traci, pa <b style="color:var(--brass);">"Dodaj na početni ekran"</b>.
+    </p>
+    <button id="shortcutOk" class="sheet-cta">Razumem</button>
+  </div>
+</div>
+
+<div class="sheet-bg" id="newFolderSheet">
+  <div class="sheet">
+    <div class="sheet-head"><button class="back-btn" id="newFolderBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h3 id="newFolderTitle">Novi album</h3></div>
+    <input id="newFolderInput" type="text" class="sheet-input" placeholder="Naziv albuma">
+    <button id="newFolderCreate" class="sheet-cta">Napravi album</button>
+  </div>
+</div>
+
+<div class="sheet-bg" id="albumContextSheet">
+  <div class="sheet">
+    <div class="sheet-head"><button class="back-btn" id="acBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h3 id="albumContextTitle">Album</h3></div>
+    <div class="sheet-row" id="acPin"><span>Zakači na vrh</span></div>
+    <div class="sheet-row" id="acRename"><span>Preimenuj album</span></div>
+    <div class="sheet-row" id="acCover"><span>Promeni naslovnu sliku</span></div>
+    <div class="sheet-row" id="acDelete" style="color:var(--danger);"><span>Izbriši album</span></div>
+  </div>
+</div>
+
+<div class="sheet-bg" id="coverPickerSheet">
+  <div class="sheet">
+    <div class="sheet-head"><button class="back-btn" id="coverPickerBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h3>Izaberi naslovnu sliku</h3></div>
+    <div id="coverPickerGrid" class="grid" style="grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:8px;max-height:50vh;overflow-y:auto;"></div>
+  </div>
+</div>
+
+<div class="sheet-bg" id="settingsSheet">
+  <div class="sheet">
+    <div class="sheet-head"><button class="back-btn" id="settingsBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h3>Podešavanja</h3></div>
+    <p id="storageInfo" style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink-faint);margin:0 0 18px;"></p>
+    <div class="sheet-row" id="settingsExport"><span>Izvezi rezervnu kopiju</span></div>
+    <div class="sheet-row" id="settingsImport"><span>Uvezi rezervnu kopiju</span></div>
+    <input type="file" id="importInput" accept="application/json" style="display:none">
+  </div>
+</div>
+
+<script>
+let items = [];
+let categories = [];
+let currentFolder = null;
+let sortMode = 'date';
+let pendingAssignItemId = null;
+let selectionMode = false;
+let selectedIds = new Set();
+let pendingBulkFolder = null;
+let renamingAlbum = null;
+let albumContextTarget = null;
+
+/* ---------- Back-button (history) support ---------- */
+let backStack = [];
+function pushBack(closer){
+  history.pushState({app:true, depth: backStack.length+1}, '');
+  backStack.push(closer);
+}
+function requestClose(){
+  if(backStack.length > 0){ history.back(); }
+}
+window.addEventListener('popstate', ()=>{
+  if(backStack.length > 0){
+    const fn = backStack.pop();
+    fn();
+  }
+});
+
+const contentArea = document.getElementById('contentArea');
 const countEl = document.getElementById('count');
 const searchEl = document.getElementById('search');
 const fileInput = document.getElementById('fileInput');
@@ -257,19 +457,46 @@ const modalBg = document.getElementById('modalBg');
 const modalImg = document.getElementById('modalImg');
 const modalCaption = document.getElementById('modalCaption');
 const toastEl = document.getElementById('toast');
+const crumb = document.getElementById('crumb');
+const crumbName = document.getElementById('crumbName');
+const crumbBack = document.getElementById('crumbBack');
+const sheetBg = document.getElementById('sheetBg');
+const sheetList = document.getElementById('sheetList');
+const sheetTitle = document.getElementById('sheetTitle');
+const newFolderSheet = document.getElementById('newFolderSheet');
+const newFolderInput = document.getElementById('newFolderInput');
+const selHeader = document.getElementById('selHeader');
+const selCount = document.getElementById('selCount');
+const selCancel = document.getElementById('selCancel');
+const selAll = document.getElementById('selAll');
+const selBar = document.getElementById('selBar');
+const searchbarWrap = document.getElementById('searchbarWrap');
+const toolbarWrap = document.getElementById('toolbarWrap');
+const moveCopySheet = document.getElementById('moveCopySheet');
+const moveCopyTitle = document.getElementById('moveCopyTitle');
 
 function toast(msg){
   toastEl.textContent = msg;
   toastEl.classList.add('show');
   setTimeout(()=>toastEl.classList.remove('show'), 2200);
 }
-
 function pad(n){ return String(n).padStart(3,'0'); }
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function normalizeSr(s){
+  return s.toLowerCase()
+    .replace(/š/g,'s').replace(/č/g,'c').replace(/ć/g,'c')
+    .replace(/ž/g,'z').replace(/đ/g,'d');
+}
 
 const LS_PREFIX = 'galerija:';
 
 function loadAll(){
   try{
+    const rawCats = localStorage.getItem(LS_PREFIX+'categories');
+    let parsed = rawCats ? JSON.parse(rawCats) : [];
+    categories = parsed.map(c => typeof c === 'string' ? {name:c, pinned:false, cover:null} : c);
     const raw = localStorage.getItem(LS_PREFIX+'item-ids');
     const ids = raw ? JSON.parse(raw) : [];
     const loaded = [];
@@ -286,80 +513,356 @@ function loadAll(){
   }
   render();
 }
+function saveCategories(){ localStorage.setItem(LS_PREFIX+'categories', JSON.stringify(categories)); }
+function saveIndex(){ localStorage.setItem(LS_PREFIX+'item-ids', JSON.stringify(items.map(i=>i.id))); }
 
-function saveIndex(){
-  const ids = items.map(i=>i.id);
-  localStorage.setItem(LS_PREFIX+'item-ids', JSON.stringify(ids));
+function folderIconSvg(){
+  return '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 012-2h4l2 2.5h8a2 2 0 012 2V17a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>';
+}
+function pdfIconSvg(){
+  return '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>';
+}
+async function openPdf(item){
+  try{
+    const res = await fetch(item.dataUrl);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+  }catch(e){
+    toast('Nije moguće otvoriti fajl.');
+  }
 }
 
+const INBOX = '__inbox__';
+
 function render(){
-  const q = searchEl.value.trim().toLowerCase();
-  const filtered = q ? items.filter(i=>i.name.toLowerCase().includes(q)) : items;
-  countEl.textContent = items.length + (items.length===1 ? ' stavka' : ' stavki') + (q ? ' · ' + filtered.length + ' prikazano' : '');
+  crumb.classList.toggle('show', !!currentFolder && !selectionMode);
+  if(currentFolder){ crumbName.textContent = currentFolder === INBOX ? 'Sve slike' : currentFolder; }
+  selHeader.classList.toggle('show', selectionMode);
+  selBar.classList.toggle('show', selectionMode);
+  document.body.style.paddingBottom = selectionMode ? '90px' : '70px';
+  searchbarWrap.style.display = selectionMode ? 'none' : 'flex';
+  toolbarWrap.style.display = selectionMode ? 'none' : 'flex';
+  document.getElementById('settingsBtn').style.display = selectionMode ? 'none' : 'flex';
+  if(selectionMode){
+    selCount.textContent = selectedIds.size + (selectedIds.size===1 ? ' odabrano' : ' odabrano');
+    document.getElementById('btnShortcut').hidden = selectedIds.size !== 1;
+  }
 
-  if(items.length === 0){
-    gridArea.innerHTML = '<div class="empty"><b>Još nema slika.</b><br>Dodaj prvu sliku dugmetom iznad.</div>';
+  const q = normalizeSr(searchEl.value.trim());
+
+  if(currentFolder){
+    let filtered = currentFolder === INBOX ? items.filter(i=>!i.category) : items.filter(i=>i.category === currentFolder);
+    if(q) filtered = filtered.filter(i=>normalizeSr(i.name).includes(q));
+    const totalHere = currentFolder === INBOX ? items.filter(i=>!i.category).length : items.filter(i=>i.category===currentFolder).length;
+    countEl.innerHTML = '<b>' + totalHere + '</b> u albumu' + (q ? ' &middot; ' + filtered.length + ' prikazano' : '');
+    contentArea.innerHTML = '';
+    if(filtered.length === 0){
+      const msg = q ? 'Nema rezultata za "'+escapeHtml(searchEl.value)+'".' : 'Ovaj album je prazan. Dodaj sliku dugmetom iznad.';
+      contentArea.innerHTML = '<div class="empty"><b>'+(q?'Nema rezultata':'Album je prazan')+'</b><span>'+msg+'</span></div>';
+      return;
+    }
+    const sortRow = document.createElement('div');
+    sortRow.style.cssText = 'display:flex;justify-content:flex-end;gap:6px;margin-bottom:16px;';
+    [['date','Datum'],['alpha','Abeceda']].forEach(([mode,label])=>{
+      const btn = document.createElement('button');
+      btn.textContent = label;
+      const active = sortMode === mode;
+      btn.style.cssText = 'font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;background:none;border:1px solid '+(active?'var(--brass)':'var(--line)')+';color:'+(active?'var(--brass)':'var(--ink-dim)')+';padding:7px 11px;cursor:pointer;';
+      btn.onclick = ()=>{ sortMode = mode; render(); };
+      sortRow.appendChild(btn);
+    });
+    contentArea.appendChild(sortRow);
+    if(sortMode === 'alpha'){
+      const sorted = filtered.slice().sort((a,b)=>normalizeSr(a.name).localeCompare(normalizeSr(b.name)));
+      const grid = document.createElement('div');
+      grid.className = 'grid';
+      sorted.forEach((item,i)=>grid.appendChild(buildCard(item, i+1)));
+      contentArea.appendChild(grid);
+    }else{
+      contentArea.appendChild(buildDatedPhotoSections(filtered));
+    }
     return;
   }
-  if(filtered.length === 0){
-    gridArea.innerHTML = '<div class="empty">Nema rezultata za "'+escapeHtml(searchEl.value)+'".</div>';
+
+  countEl.innerHTML = '<b>' + items.length + '</b> ukupno';
+  contentArea.innerHTML = '';
+
+  const label = document.createElement('p');
+  label.className = 'section-label';
+  label.textContent = 'Albumi';
+  contentArea.appendChild(label);
+
+  const fgrid = document.createElement('div');
+  fgrid.className = 'grid';
+
+const closeAlbumView = ()=>{ currentFolder = null; searchEl.value=''; render(); };
+
+  const inboxCount = items.filter(i=>!i.category).length;
+  const inboxTile = document.createElement('div');
+  inboxTile.className = 'folder-tile';
+  inboxTile.innerHTML = folderIconSvg() + '<span class="fname">Sve slike</span><span class="fcount">'+inboxCount+' '+(inboxCount===1?'stavka':'stavki')+'</span>';
+  inboxTile.onclick = ()=>{ currentFolder = INBOX; searchEl.value=''; pushBack(closeAlbumView); render(); };
+  fgrid.appendChild(inboxTile);
+
+  categories.slice().sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)).forEach(cat=>{
+    const name = cat.name;
+    const count = items.filter(i=>i.category===name).length;
+    const tile = document.createElement('div');
+    const coverItem = cat.cover ? items.find(i=>i.id===cat.cover) : null;
+    tile.className = 'folder-tile' + (coverItem ? ' has-cover' : '');
+    if(coverItem){
+      tile.innerHTML = '<img class="cover-img" src="'+coverItem.dataUrl+'"><div class="cover-shade"></div><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+count+' '+(count===1?'stavka':'stavki')+'</span>';
+    }else{
+      tile.innerHTML = folderIconSvg() + '<span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+count+' '+(count===1?'stavka':'stavki')+'</span>';
+    }
+    if(cat.pinned){
+      const pin = document.createElement('div');
+      pin.className = 'pin-mark';
+      pin.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"></line><path d="M5 10a7 7 0 0114 0c0 3-2 5-2 5H7s-2-2-2-5z"></path></svg>';
+      tile.appendChild(pin);
+    }
+
+    let tilePressTimer = null;
+    let tileLongFired = false;
+    const startTilePress = ()=>{
+      tileLongFired = false;
+      tilePressTimer = setTimeout(()=>{ tileLongFired = true; openAlbumContext(name); }, 480);
+    };
+    const cancelTilePress = ()=>{ if(tilePressTimer){ clearTimeout(tilePressTimer); tilePressTimer=null; } };
+    tile.addEventListener('touchstart', startTilePress, {passive:true});
+    tile.addEventListener('touchend', cancelTilePress);
+    tile.addEventListener('touchmove', cancelTilePress);
+    tile.addEventListener('mousedown', startTilePress);
+    tile.addEventListener('mouseup', cancelTilePress);
+    tile.addEventListener('mouseleave', cancelTilePress);
+    tile.onclick = ()=>{
+      if(tileLongFired){ tileLongFired = false; return; }
+      currentFolder = name; searchEl.value=''; pushBack(closeAlbumView); render();
+    };
+    fgrid.appendChild(tile);
+  });
+  contentArea.appendChild(fgrid);
+}
+
+function openAlbumContext(name){
+  albumContextTarget = name;
+  const cat = categories.find(c=>c.name===name);
+  document.getElementById('albumContextTitle').textContent = name;
+  document.getElementById('acPin').querySelector('span').textContent = cat && cat.pinned ? 'Otkači sa vrha' : 'Zakači na vrh';
+  document.getElementById('albumContextSheet').classList.add('open');
+  pushBack(closeAlbumContext);
+}
+const closeAlbumContext = ()=>{ albumContextTarget = null; document.getElementById('albumContextSheet').classList.remove('open'); };
+document.getElementById('acPin').onclick = ()=>{
+  const cat = categories.find(c=>c.name===albumContextTarget);
+  if(cat){ cat.pinned = !cat.pinned; saveCategories(); }
+  document.getElementById('albumContextSheet').classList.remove('open');
+  render();
+};
+document.getElementById('acRename').onclick = ()=>{
+  document.getElementById('albumContextSheet').classList.remove('open');
+  openRenameSheet(albumContextTarget);
+};
+document.getElementById('acCover').onclick = ()=>{
+  document.getElementById('albumContextSheet').classList.remove('open');
+  openCoverPicker(albumContextTarget);
+};
+document.getElementById('acDelete').onclick = ()=>{
+  document.getElementById('albumContextSheet').classList.remove('open');
+  if(!confirm('Obrisati album "'+albumContextTarget+'"? Slike ostaju sačuvane u "Sve slike".')) return;
+  const name = albumContextTarget;
+  items.forEach(it=>{
+    if(it.category === name){
+      it.category = null;
+      try{ localStorage.setItem(LS_PREFIX+'item:'+it.id, JSON.stringify(it)); }catch(e){}
+    }
+  });
+  categories = categories.filter(c=>c.name!==name);
+  saveCategories();
+  if(currentFolder === name) currentFolder = null;
+  render();
+  toast('Album obrisan.');
+};
+document.getElementById('acBack').onclick = ()=>requestClose();
+document.getElementById('albumContextSheet').onclick = (e)=>{ if(e.target===document.getElementById('albumContextSheet')) requestClose(); };
+
+function openCoverPicker(name){
+  const pool = items.filter(i=>i.category===name && i.type !== 'pdf');
+  const grid = document.getElementById('coverPickerGrid');
+  grid.innerHTML = '';
+  document.getElementById('coverPickerSheet').classList.add('open');
+  pushBack(closeCoverPicker);
+  if(pool.length === 0){
+    grid.innerHTML = '<p style="grid-column:1/-1;color:var(--ink-dim);font-size:13px;">Album je prazan, nema slika za naslovnu.</p>';
     return;
   }
+  pool.forEach(it=>{
+    const t = document.createElement('div');
+    t.style.aspectRatio = '1/1';
+    t.style.cursor = 'pointer';
+    t.style.border = '1px solid var(--line)';
+    t.innerHTML = '<img src="'+it.dataUrl+'" style="width:100%;height:100%;object-fit:cover;display:block;">';
+    t.onclick = ()=>{
+      const cat = categories.find(c=>c.name===name);
+      if(cat){ cat.cover = it.id; saveCategories(); }
+      document.getElementById('coverPickerSheet').classList.remove('open');
+      render();
+    };
+    grid.appendChild(t);
+  });
+}
+const closeCoverPicker = ()=>document.getElementById('coverPickerSheet').classList.remove('open');
+document.getElementById('coverPickerBack').onclick = ()=>requestClose();
+document.getElementById('coverPickerSheet').onclick = (e)=>{ if(e.target===document.getElementById('coverPickerSheet')) requestClose(); };
 
-  gridArea.innerHTML = '';
-  const grid = document.createElement('div');
-  grid.className = 'grid';
-  filtered.forEach((item, i)=>{
-    const card = document.createElement('div');
-    card.className = 'card';
+const MESECI = ['januar','februar','mart','april','maj','jun','jul','avgust','septembar','oktobar','novembar','decembar'];
+function formatDateLabel(ts){
+  const d = new Date(ts);
+  const now = new Date();
+  const sameDay = (a,b)=> a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+  const yesterday = new Date(now); yesterday.setDate(now.getDate()-1);
+  if(sameDay(d, now)) return 'Danas';
+  if(sameDay(d, yesterday)) return 'Juče';
+  const suffix = d.getFullYear() !== now.getFullYear() ? ' ' + d.getFullYear() + '.' : '';
+  return d.getDate() + '. ' + MESECI[d.getMonth()] + suffix;
+}
 
-    const thumbBox = document.createElement('div');
-    thumbBox.className = 'thumb-box';
+function buildCard(item, indexNumber){
+  const card = document.createElement('div');
+  card.className = 'card' + (selectionMode ? ' selectable' : '') + (selectedIds.has(item.id) ? ' selected' : '');
+
+  const thumbBox = document.createElement('div');
+  const isPdf = item.type === 'pdf';
+  thumbBox.className = 'thumb-box' + (isPdf ? ' pdf-thumb' : '');
+  const corner = document.createElement('div');
+  corner.className = 'corner';
+  if(isPdf){
+    thumbBox.innerHTML = pdfIconSvg() + '<span class="pdf-label">PDF</span>';
+    thumbBox.appendChild(corner);
+  }else{
     const img = document.createElement('img');
     img.src = item.dataUrl;
     img.loading = 'lazy';
     thumbBox.appendChild(img);
-    thumbBox.onclick = ()=>openModal(item);
-    card.appendChild(thumbBox);
+    thumbBox.appendChild(corner);
+  }
+  card.appendChild(thumbBox);
 
-    const tag = document.createElement('div');
-    tag.className = 'tag';
-    const num = document.createElement('span');
-    num.className = 'num';
-    num.textContent = '#' + pad(i+1);
-    const nameSpan = document.createElement('span');
-    nameSpan.className = 'name';
-    nameSpan.textContent = item.name;
-    nameSpan.title = 'Klikni da preimenuješ';
-    nameSpan.onclick = (e)=>{ e.stopPropagation(); startRename(item, nameSpan, tag, num); };
-    tag.appendChild(num);
-    tag.appendChild(nameSpan);
-    card.appendChild(tag);
+  const mark = document.createElement('div');
+  mark.className = 'select-mark';
+  mark.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+  card.appendChild(mark);
 
-    const del = document.createElement('button');
-    del.className = 'del-btn';
-    del.textContent = '✕';
-    del.title = 'Obriši';
-    del.onclick = (e)=>{ e.stopPropagation(); deleteItem(item.id); };
-    card.appendChild(del);
+  let pressTimer = null;
+  const startPress = ()=>{
+    pressTimer = setTimeout(()=>{
+      pressTimer = null;
+      if(!selectionMode){ enterSelectionMode(); }
+      toggleSelect(item.id);
+    }, 480);
+  };
+  const cancelPress = ()=>{ if(pressTimer){ clearTimeout(pressTimer); pressTimer = null; } };
+  thumbBox.addEventListener('touchstart', startPress, {passive:true});
+  thumbBox.addEventListener('touchend', cancelPress);
+  thumbBox.addEventListener('touchmove', cancelPress);
+  thumbBox.addEventListener('mousedown', startPress);
+  thumbBox.addEventListener('mouseup', cancelPress);
+  thumbBox.addEventListener('mouseleave', cancelPress);
 
-    grid.appendChild(card);
-  });
-  gridArea.appendChild(grid);
+  thumbBox.onclick = (e)=>{
+    if(pressTimer){ clearTimeout(pressTimer); pressTimer = null; }
+    if(selectionMode){ toggleSelect(item.id); }
+    else if(isPdf){ openPdf(item); }
+    else{ openModal(item); }
+  };
+
+  const meta = document.createElement('div');
+  meta.className = 'meta';
+  const idx = document.createElement('span');
+  idx.className = 'index';
+  idx.textContent = 'N\u00B0 ' + pad(indexNumber);
+  const nameSpan = document.createElement('span');
+  nameSpan.className = 'name';
+  nameSpan.textContent = item.name;
+  nameSpan.title = 'Dodirni da preimenuješ';
+  nameSpan.onclick = (e)=>{ e.stopPropagation(); if(!selectionMode) startRename(item, nameSpan, meta, idx); };
+  meta.appendChild(idx);
+  meta.appendChild(nameSpan);
+  card.appendChild(meta);
+
+  return card;
 }
 
-function startRename(item, nameSpan, tag, num){
+function buildDatedPhotoSections(list){
+  const frag = document.createDocumentFragment();
+  const sorted = list.slice().sort((a,b)=>b.ts-a.ts);
+  let lastKey = null;
+  let currentGrid = null;
+  let idx = 0;
+  sorted.forEach(item=>{
+    const d = new Date(item.ts);
+    const key = d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate();
+    if(key !== lastKey){
+      lastKey = key;
+      const label = document.createElement('p');
+      label.className = 'date-label';
+      label.textContent = formatDateLabel(item.ts);
+      frag.appendChild(label);
+      currentGrid = document.createElement('div');
+      currentGrid.className = 'grid';
+      frag.appendChild(currentGrid);
+    }
+    idx++;
+    currentGrid.appendChild(buildCard(item, idx));
+  });
+  return frag;
+}
+
+function enterSelectionMode(){
+  selectionMode = true;
+  selectedIds = new Set();
+  pushBack(closeSelectionMode);
+}
+const closeSelectionMode = ()=>{ selectionMode = false; selectedIds = new Set(); render(); };
+function toggleSelect(id){
+  if(selectedIds.has(id)) selectedIds.delete(id);
+  else selectedIds.add(id);
+  if(selectedIds.size === 0){ requestClose(); return; }
+  render();
+}
+function exitSelection(){
+  selectionMode = false;
+  selectedIds = new Set();
+  render();
+}
+selCancel.onclick = ()=>requestClose();
+selAll.onclick = ()=>{
+  const visible = currentFolder === INBOX
+    ? items.filter(i=>!i.category)
+    : items.filter(i=>i.category===currentFolder);
+  const q = normalizeSr(searchEl.value.trim());
+  const pool = q ? visible.filter(i=>normalizeSr(i.name).includes(q)) : visible;
+  if(selectedIds.size === pool.length && selectionMode){
+    requestClose();
+  }else{
+    if(!selectionMode){ selectionMode = true; pushBack(closeSelectionMode); }
+    selectedIds = new Set(pool.map(i=>i.id));
+    render();
+  }
+};
+
+function startRename(item, nameSpan, meta, idx){
   const input = document.createElement('input');
   input.value = item.name;
-  tag.replaceChild(input, nameSpan);
+  meta.replaceChild(input, nameSpan);
   input.focus();
   input.select();
   const commit = ()=>{
     const newName = input.value.trim() || item.name;
     item.name = newName;
-    try{
-      localStorage.setItem(LS_PREFIX+'item:'+item.id, JSON.stringify(item));
-    }catch(e){ toast('Greška pri čuvanju naziva.'); }
+    try{ localStorage.setItem(LS_PREFIX+'item:'+item.id, JSON.stringify(item)); }
+    catch(e){ toast('Greška pri čuvanju naziva.'); }
     render();
   };
   input.addEventListener('blur', commit);
@@ -369,39 +872,227 @@ function startRename(item, nameSpan, tag, num){
   });
 }
 
-function deleteItem(id){
-  if(!confirm('Obrisati ovu sliku?')) return;
-  items = items.filter(i=>i.id !== id);
-  try{
-    localStorage.removeItem(LS_PREFIX+'item:'+id);
-    saveIndex();
-    toast('Slika obrisana.');
-  }catch(e){
-    toast('Greška pri brisanju.');
-  }
-  render();
-}
-
 function openModal(item){
   modalImg.src = item.dataUrl;
   modalCaption.textContent = item.name;
   modalBg.classList.add('open');
+  pushBack(closeModal);
 }
-document.getElementById('modalClose').onclick = ()=>modalBg.classList.remove('open');
-modalBg.onclick = (e)=>{ if(e.target === modalBg) modalBg.classList.remove('open'); };
+const closeModal = ()=>{ modalBg.classList.remove('open'); clearDeepLink(); };
+document.getElementById('modalClose').onclick = ()=>requestClose();
+modalBg.onclick = (e)=>{ if(e.target === modalBg){ requestClose(); } };
 
-function escapeHtml(s){
-  return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+crumbBack.onclick = ()=>requestClose();
+
+function openMoveSheet(){
+  sheetTitle.textContent = 'Dodaj u album';
+  sheetList.innerHTML = '';
+
+  categories.forEach(cat=>{
+    const row = document.createElement('div');
+    row.className = 'sheet-row';
+    row.innerHTML = '<span>'+escapeHtml(cat.name)+'</span>';
+    row.onclick = ()=>{ sheetBg.classList.remove('open'); openMoveCopySheet(cat.name, cat.name); };
+    sheetList.appendChild(row);
+  });
+
+  const newRow = document.createElement('div');
+  newRow.className = 'sheet-row new';
+  newRow.textContent = '+ Novi album...';
+  newRow.onclick = ()=>{ sheetBg.classList.remove('open'); openNewFolderSheet('bulk'); };
+  sheetList.appendChild(newRow);
+
+  sheetBg.classList.add('open');
+  pushBack(closeSheetBg);
 }
+const closeSheetBg = ()=>sheetBg.classList.remove('open');
+
+function openMoveCopySheet(folderKey, label){
+  pendingBulkFolder = folderKey;
+  moveCopyTitle.textContent = 'Album \u201C' + label + '\u201D';
+  moveCopySheet.classList.add('open');
+  pushBack(closeMoveCopySheet);
+}
+const closeMoveCopySheet = ()=>moveCopySheet.classList.remove('open');
+document.getElementById('btnMove').onclick = ()=>{ moveCopySheet.classList.remove('open'); moveSelectedToFolder(pendingBulkFolder); };
+document.getElementById('btnCopy').onclick = ()=>{ moveCopySheet.classList.remove('open'); copySelectedToFolder(pendingBulkFolder); };
+document.getElementById('moveCopyBack').onclick = ()=>requestClose();
+moveCopySheet.onclick = (e)=>{ if(e.target === moveCopySheet) requestClose(); };
+
+function moveSelectedToFolder(folderName){
+  const ids = Array.from(selectedIds);
+  ids.forEach(id=>{
+    const item = items.find(i=>i.id===id);
+    if(item){
+      item.category = folderName || null;
+      try{ localStorage.setItem(LS_PREFIX+'item:'+item.id, JSON.stringify(item)); }catch(e){}
+    }
+  });
+  exitSelection();
+  toast(folderName ? 'Premešteno u "'+folderName+'".' : 'Uklonjeno iz albuma.');
+}
+function copySelectedToFolder(folderName){
+  const ids = Array.from(selectedIds);
+  ids.forEach(id=>{
+    const orig = items.find(i=>i.id===id);
+    if(orig){
+      const newId = 'i' + Date.now() + Math.random().toString(36).slice(2,8);
+      const clone = { id:newId, name:orig.name, dataUrl:orig.dataUrl, ts:Date.now(), category:folderName || null };
+      items.push(clone);
+      try{ localStorage.setItem(LS_PREFIX+'item:'+newId, JSON.stringify(clone)); }catch(e){}
+    }
+  });
+  saveIndex();
+  exitSelection();
+  toast('Kopirano u "'+folderName+'".');
+}
+
+function deleteSelected(){
+  if(selectedIds.size === 0) return;
+  if(!confirm(selectedIds.size===1 ? 'Obrisati ovu sliku?' : 'Obrisati '+selectedIds.size+' slika?')) return;
+  const ids = Array.from(selectedIds);
+  items = items.filter(i=>!selectedIds.has(i.id));
+  ids.forEach(id=>{ try{ localStorage.removeItem(LS_PREFIX+'item:'+id); }catch(e){} });
+  saveIndex();
+  exitSelection();
+  toast('Obrisano.');
+}
+document.getElementById('btnDelete').onclick = deleteSelected;
+document.getElementById('btnAlbum').onclick = openMoveSheet;
+
+async function shareSelected(){
+  const ids = Array.from(selectedIds);
+  const chosen = items.filter(i=>ids.includes(i.id));
+  if(chosen.length === 0) return;
+  try{
+    const files = await Promise.all(chosen.map(async (it, idx)=>{
+      const res = await fetch(it.dataUrl);
+      const blob = await res.blob();
+      const ext = (blob.type.split('/')[1] || 'jpg').replace('jpeg','jpg');
+      return new File([blob], (it.name||'slika')+'.'+ext, {type: blob.type});
+    }));
+    if(navigator.canShare && navigator.canShare({files})){
+      await navigator.share({files});
+    }else{
+      toast('Deljenje nije podržano u ovom browseru.');
+    }
+  }catch(e){
+    if(e && e.name !== 'AbortError'){ toast('Deljenje nije uspelo.'); }
+  }
+}
+document.getElementById('btnShare').onclick = shareSelected;
+
+const shortcutSheet = document.getElementById('shortcutSheet');
+const shortcutName = document.getElementById('shortcutName');
+document.getElementById('btnShortcut').onclick = ()=>{
+  const id = Array.from(selectedIds)[0];
+  const item = items.find(i=>i.id===id);
+  if(!item) return;
+  const url = location.origin + location.pathname + '#p=' + encodeURIComponent(item.id);
+  history.replaceState(null, '', url);
+  document.title = item.name;
+  exitSelection();
+  openModal(item);
+  shortcutName.textContent = item.name;
+  shortcutSheet.classList.add('open');
+  pushBack(closeShortcutSheet);
+};
+const closeShortcutSheet = ()=>shortcutSheet.classList.remove('open');
+document.getElementById('shortcutOk').onclick = ()=>requestClose();
+document.getElementById('shortcutBack').onclick = ()=>requestClose();
+shortcutSheet.onclick = (e)=>{ if(e.target===shortcutSheet) requestClose(); };
+
+function clearDeepLink(){
+  if(location.hash){
+    history.replaceState(null, '', location.pathname + location.search);
+    document.title = 'Arhiva';
+  }
+}
+sheetBg.onclick = (e)=>{ if(e.target === sheetBg) requestClose(); };
+document.getElementById('sheetBgBack').onclick = ()=>requestClose();
+
+function openNewFolderSheet(assignToItemId){
+  pendingAssignItemId = assignToItemId;
+  renamingAlbum = null;
+  document.getElementById('newFolderTitle').textContent = 'Novi album';
+  document.getElementById('newFolderCreate').textContent = 'Napravi album';
+  newFolderInput.value = '';
+  newFolderSheet.classList.add('open');
+  pushBack(closeNewFolderSheet);
+  setTimeout(()=>newFolderInput.focus(), 50);
+}
+function openRenameSheet(oldName){
+  pendingAssignItemId = null;
+  renamingAlbum = oldName;
+  document.getElementById('newFolderTitle').textContent = 'Preimenuj album';
+  document.getElementById('newFolderCreate').textContent = 'Sačuvaj';
+  newFolderInput.value = oldName;
+  newFolderSheet.classList.add('open');
+  pushBack(closeNewFolderSheet);
+  setTimeout(()=>{ newFolderInput.focus(); newFolderInput.select(); }, 50);
+}
+const closeNewFolderSheet = ()=>{ newFolderSheet.classList.remove('open'); pendingAssignItemId=null; renamingAlbum=null; };
+function createFolder(){
+  const name = newFolderInput.value.trim();
+  if(!name){ newFolderInput.focus(); return; }
+
+  if(renamingAlbum){
+    if(name !== renamingAlbum && categories.some(c=>c.name===name)){
+      toast('Album s tim imenom već postoji.');
+      return;
+    }
+    const cat = categories.find(c=>c.name===renamingAlbum);
+    if(cat){
+      const oldName = cat.name;
+      cat.name = name;
+      saveCategories();
+      items.forEach(it=>{
+        if(it.category === oldName){
+          it.category = name;
+          try{ localStorage.setItem(LS_PREFIX+'item:'+it.id, JSON.stringify(it)); }catch(e){}
+        }
+      });
+      if(currentFolder === oldName) currentFolder = name;
+    }
+    newFolderSheet.classList.remove('open');
+    renamingAlbum = null;
+    render();
+    toast('Album preimenovan.');
+    return;
+  }
+
+  if(!categories.some(c=>c.name===name)){
+    categories.push({name, pinned:false, cover:null});
+    saveCategories();
+  }
+  newFolderSheet.classList.remove('open');
+  if(pendingAssignItemId === 'bulk'){
+    pendingAssignItemId = null;
+    openMoveCopySheet(name, name);
+  }else if(pendingAssignItemId){
+    pendingAssignItemId = null;
+  }else{
+    currentFolder = name;
+    render();
+    toast('Album "'+name+'" napravljen.');
+  }
+}
+document.getElementById('newFolderCreate').onclick = createFolder;
+document.getElementById('newFolderBack').onclick = ()=>requestClose();
+newFolderInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') createFolder(); });
+newFolderSheet.onclick = (e)=>{ if(e.target === newFolderSheet){ requestClose(); } };
 
 fileInput.addEventListener('change', async (e)=>{
   const files = Array.from(e.target.files || []);
   fileInput.value = '';
-  for(const file of files){
-    await addFile(file);
-  }
+  for(const file of files){ await addFile(file, currentFolder && currentFolder !== INBOX ? currentFolder : null); }
 });
-
+const cameraInput = document.getElementById('cameraInput');
+cameraInput.addEventListener('change', async (e)=>{
+  const files = Array.from(e.target.files || []);
+  cameraInput.value = '';
+  for(const file of files){ await addFile(file, null); }
+});
 function readFileAsDataUrl(file){
   return new Promise((resolve, reject)=>{
     const r = new FileReader();
@@ -410,30 +1101,152 @@ function readFileAsDataUrl(file){
     r.readAsDataURL(file);
   });
 }
-
-async function addFile(file){
+function compressImage(file){
+  return new Promise((resolve, reject)=>{
+    const MAX_DIM = 1600;
+    const QUALITY = 0.85;
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        let w = img.width, h = img.height;
+        if(w > MAX_DIM || h > MAX_DIM){
+          if(w > h){ h = Math.round(h * MAX_DIM / w); w = MAX_DIM; }
+          else{ w = Math.round(w * MAX_DIM / h); h = MAX_DIM; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', QUALITY));
+      };
+      img.onerror = ()=>resolve(e.target.result); // fallback: use uncompressed if decode fails
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+async function addFile(file, category){
   try{
-    const dataUrl = await readFileAsDataUrl(file);
+    const isPdf = file.type === 'application/pdf';
+    const dataUrl = isPdf ? await readFileAsDataUrl(file) : await compressImage(file);
     const id = 'i' + Date.now() + Math.random().toString(36).slice(2,8);
     const baseName = file.name.replace(/\.[^.]+$/, '');
-    const item = { id, name: baseName || 'Slika', dataUrl, ts: Date.now() };
+    const item = { id, name: baseName || (isPdf ? 'Dokument' : 'Slika'), dataUrl, ts: Date.now(), category: category || null, type: isPdf ? 'pdf' : 'image' };
     localStorage.setItem(LS_PREFIX+'item:'+id, JSON.stringify(item));
     items.push(item);
     saveIndex();
     render();
   }catch(e){
     console.error(e);
-    if(e && e.name === 'QuotaExceededError'){
-      toast('Nema više prostora za nove slike u browseru.');
-    }else{
-      toast('Greška pri dodavanju slike.');
-    }
+    if(e && e.name === 'QuotaExceededError'){ toast('Nema više prostora za nove slike u browseru.'); }
+    else{ toast('Greška pri dodavanju slike.'); }
   }
 }
 
 searchEl.addEventListener('input', render);
 
 loadAll();
+
+/* ---------- Podešavanja: rezervna kopija ---------- */
+const settingsSheet = document.getElementById('settingsSheet');
+const closeSettingsSheet = ()=>settingsSheet.classList.remove('open');
+document.getElementById('settingsBtn').onclick = ()=>{
+  updateStorageInfo();
+  settingsSheet.classList.add('open');
+  pushBack(closeSettingsSheet);
+};
+document.getElementById('settingsBack').onclick = ()=>requestClose();
+settingsSheet.onclick = (e)=>{ if(e.target === settingsSheet) requestClose(); };
+
+function updateStorageInfo(){
+  let bytes = 0;
+  items.forEach(it=>{ bytes += (it.dataUrl ? it.dataUrl.length : 0); });
+  const mb = bytes / 1024 / 1024;
+  document.getElementById('storageInfo').textContent = 'Iskorišćeno: ~' + mb.toFixed(1) + ' MB \u00B7 ' + items.length + ' stavki';
+}
+
+function exportBackup(){
+  const data = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    categories: categories,
+    items: items
+  };
+  const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = 'arhiva-backup-' + stamp + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+  toast('Rezervna kopija sačuvana.');
+}
+document.getElementById('settingsExport').onclick = exportBackup;
+
+const importInput = document.getElementById('importInput');
+document.getElementById('settingsImport').onclick = ()=>importInput.click();
+importInput.addEventListener('change', (e)=>{
+  const file = e.target.files && e.target.files[0];
+  importInput.value = '';
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    try{
+      const data = JSON.parse(ev.target.result);
+      if(!data || !Array.isArray(data.items)) throw new Error('bad format');
+      (data.categories || []).forEach(c=>{
+        const catObj = typeof c === 'string' ? {name:c} : c;
+        if(catObj && catObj.name && !categories.some(existing=>existing.name === catObj.name)){
+          categories.push({name: catObj.name, pinned: !!catObj.pinned, cover: null});
+        }
+      });
+      saveCategories();
+      let added = 0;
+      data.items.forEach(it=>{
+        if(!it || !it.dataUrl) return;
+        const newId = 'i' + Date.now() + Math.random().toString(36).slice(2,8);
+        const clone = {
+          id: newId,
+          name: it.name || 'Stavka',
+          dataUrl: it.dataUrl,
+          ts: it.ts || Date.now(),
+          category: it.category && categories.some(c=>c.name===it.category) ? it.category : null,
+          type: it.type === 'pdf' ? 'pdf' : 'image'
+        };
+        items.push(clone);
+        try{ localStorage.setItem(LS_PREFIX+'item:'+newId, JSON.stringify(clone)); }catch(err){}
+        added++;
+      });
+      saveIndex();
+      updateStorageInfo();
+      render();
+      toast('Uvezeno ' + added + ' stavki.');
+    }catch(err){
+      console.error(err);
+      toast('Fajl nije prepoznat kao rezervna kopija.');
+    }
+  };
+  reader.readAsText(file);
+});
+
+function checkDeepLink(){
+  const m = location.hash.match(/^#p=(.+)$/);
+  if(m){
+    const id = decodeURIComponent(m[1]);
+    const item = items.find(i=>i.id === id);
+    if(item){
+      document.title = item.name;
+      if(item.type === 'pdf'){ openPdf(item); }
+      else{ openModal(item); }
+    }
+  }
+}
+checkDeepLink();
 </script>
 </body>
 </html>
