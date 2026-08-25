@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Arhiva</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='14' fill='%230d0e10'/%3E%3Cpath d='M50 22 L74 50 L50 78 L26 50 Z' fill='none' stroke='%23c9a355' stroke-width='5'/%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d0e10">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -163,6 +166,11 @@
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:18px 14px;}
   .grid + .section-label{margin-top:30px;}
   .grid.folders-grid{grid-template-columns:repeat(3,1fr);gap:10px 8px;}
+  .grid.photos-grid{grid-template-columns:repeat(3,1fr);gap:10px 8px;}
+  .photos-grid .meta .name{font-size:13px;}
+  .photos-grid .meta .index{font-size:9px;}
+  .photos-grid .pdf-thumb svg{width:22px;height:22px;}
+  .photos-grid .pdf-thumb .pdf-label{font-size:8.5px;}
   .folders-grid .folder-tile .fname{font-size:12.5px;}
   .folders-grid .folder-tile .fcount{font-size:10.5px;}
 
@@ -338,6 +346,9 @@
       <label class="icon-btn" for="cameraInput" title="Slikaj">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
       </label>
+      <label class="icon-btn" for="docInput" title="Dodaj dokument">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+      </label>
       <label class="add-btn" for="fileInput">
         <span class="seal">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -345,7 +356,8 @@
         <span class="label">Dodaj</span>
       </label>
     </div>
-    <input id="fileInput" type="file" accept="image/*,application/pdf" multiple>
+    <input id="fileInput" type="file" accept="image/*" multiple>
+    <input id="docInput" type="file" accept="*/*" multiple>
     <input id="cameraInput" type="file" accept="image/*" capture="environment">
   </div>
 
@@ -403,7 +415,7 @@
     <div class="sheet-head"><button class="back-btn" id="shortcutBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h3>Prečica spremna</h3></div>
     <p style="font-size:13.5px;color:var(--ink-dim);line-height:1.6;margin:0 0 16px;">
       Ova stranica sad vodi direktno do slike <b id="shortcutName" style="color:var(--ink);font-style:italic;"></b>.
-      Da je zakačiš na početni ekran: dodirni meni (tri tačke) u Chrome traci, pa <b style="color:var(--brass);">"Dodaj na početni ekran"</b>.
+      Da je zakačiš na početni ekran: dodirni meni (tri tačke) u Chrome traci, pa <b style="color:var(--brass);">"Instaliraj i kreiraj prečicu"</b> — u ponuđenom izboru odaberi <b style="color:var(--ink);">prečicu</b> (ne "Instaliraj").
     </p>
     <button id="shortcutOk" class="sheet-cta">Razumem</button>
   </div>
@@ -537,6 +549,11 @@ function loadAll(){
   render();
 }
 function saveCategories(){ localStorage.setItem(LS_PREFIX+'categories', JSON.stringify(categories)); }
+function maybeAutoCover(folderName, item){
+  if(!folderName || !item || item.type !== 'image') return;
+  const cat = categories.find(c=>c.name===folderName);
+  if(cat && !cat.cover){ cat.cover = item.id; saveCategories(); }
+}
 function saveIndex(){ localStorage.setItem(LS_PREFIX+'item-ids', JSON.stringify(items.map(i=>i.id))); }
 
 function folderIconSvg(){
@@ -581,7 +598,7 @@ function render(){
     countEl.innerHTML = '<b>' + totalHere + '</b> u albumu' + (q ? ' &middot; ' + filtered.length + ' prikazano' : '');
     contentArea.innerHTML = '';
     if(filtered.length === 0){
-      const msg = q ? 'Nema rezultata za "'+escapeHtml(searchEl.value)+'".' : 'Ovaj album je prazan. Dodaj sliku dugmetom iznad.';
+      const msg = q ? 'Nema rezultata za "'+escapeHtml(searchEl.value)+'".' : 'Ovaj album je prazan. Dodaj nešto dugmetom iznad.';
       contentArea.innerHTML = '<div class="empty"><b>'+(q?'Nema rezultata':'Album je prazan')+'</b><span>'+msg+'</span></div>';
       return;
     }
@@ -599,7 +616,7 @@ function render(){
     if(sortMode === 'alpha'){
       const sorted = filtered.slice().sort((a,b)=>normalizeSr(a.name).localeCompare(normalizeSr(b.name)));
       const grid = document.createElement('div');
-      grid.className = 'grid';
+      grid.className = 'grid photos-grid';
       sorted.forEach((item,i)=>grid.appendChild(buildCard(item, i+1)));
       contentArea.appendChild(grid);
     }else{
@@ -610,6 +627,62 @@ function render(){
 
   countEl.innerHTML = '<b>' + items.length + '</b> ukupno';
   contentArea.innerHTML = '';
+
+  const closeAlbumViewTop = ()=>{ currentFolder = null; searchEl.value=''; render(); };
+
+  if(q){
+    const matchedCats = categories.filter(c=>normalizeSr(c.name).includes(q));
+    const inboxMatches = normalizeSr('Sve slike').includes(q);
+    const matchedItems = items.filter(i=>normalizeSr(i.name).includes(q));
+
+    if(!inboxMatches && matchedCats.length === 0 && matchedItems.length === 0){
+      contentArea.innerHTML = '<div class="empty"><b>Nema rezultata</b><span>Nema rezultata za "'+escapeHtml(searchEl.value)+'".</span></div>';
+      return;
+    }
+
+    if(inboxMatches || matchedCats.length > 0){
+      const label = document.createElement('p');
+      label.className = 'section-label';
+      label.textContent = 'Albumi';
+      contentArea.appendChild(label);
+      if(inboxMatches){
+        const inboxCount = items.filter(i=>!i.category).length;
+        const inboxTile = document.createElement('div');
+        inboxTile.className = 'folder-tile-wide';
+        inboxTile.innerHTML = '<div class="fw-icon">'+folderIconSvg()+'</div><div class="fw-text"><span class="fw-name">Sve slike</span><span class="fw-count">'+inboxCount+' '+(inboxCount===1?'stavka':'stavki')+'</span></div>';
+        inboxTile.onclick = ()=>{ currentFolder = INBOX; searchEl.value=''; pushBack(closeAlbumViewTop); render(); };
+        contentArea.appendChild(inboxTile);
+      }
+      if(matchedCats.length > 0){
+        const fgrid = document.createElement('div');
+        fgrid.className = 'grid folders-grid';
+        matchedCats.forEach(cat=>{
+          const name = cat.name;
+          const count = items.filter(i=>i.category===name).length;
+          const tile = document.createElement('div');
+          const coverItem = cat.cover ? items.find(i=>i.id===cat.cover) : null;
+          tile.className = 'folder-tile';
+          if(coverItem){
+            tile.innerHTML = '<div class="ftile-cover"><img src="'+coverItem.dataUrl+'"></div><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+count+' '+(count===1?'stavka':'stavki')+'</span>';
+          }else{
+            tile.innerHTML = '<div class="ftile-cover">'+folderIconSvg()+'</div><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+count+' '+(count===1?'stavka':'stavki')+'</span>';
+          }
+          tile.onclick = ()=>{ currentFolder = name; searchEl.value=''; pushBack(closeAlbumViewTop); render(); };
+          fgrid.appendChild(tile);
+        });
+        contentArea.appendChild(fgrid);
+      }
+    }
+
+    if(matchedItems.length > 0){
+      const label2 = document.createElement('p');
+      label2.className = 'section-label';
+      label2.textContent = 'Slike i dokumenti';
+      contentArea.appendChild(label2);
+      contentArea.appendChild(buildDatedPhotoSections(matchedItems));
+    }
+    return;
+  }
 
   const label = document.createElement('p');
   label.className = 'section-label';
@@ -711,7 +784,7 @@ document.getElementById('acBack').onclick = ()=>requestClose();
 document.getElementById('albumContextSheet').onclick = (e)=>{ if(e.target===document.getElementById('albumContextSheet')) requestClose(); };
 
 function openCoverPicker(name){
-  const pool = items.filter(i=>i.category===name && i.type !== 'pdf');
+  const pool = items.filter(i=>i.category===name && i.type === 'image');
   const grid = document.getElementById('coverPickerGrid');
   grid.innerHTML = '';
   document.getElementById('coverPickerSheet').classList.add('open');
@@ -757,11 +830,12 @@ function buildCard(item, indexNumber){
 
   const thumbBox = document.createElement('div');
   const isPdf = item.type === 'pdf';
-  thumbBox.className = 'thumb-box' + (isPdf ? ' pdf-thumb' : '');
+  const isDoc = item.type === 'doc';
+  thumbBox.className = 'thumb-box' + ((isPdf || isDoc) ? ' pdf-thumb' : '');
   const corner = document.createElement('div');
   corner.className = 'corner';
-  if(isPdf){
-    thumbBox.innerHTML = pdfIconSvg() + '<span class="pdf-label">PDF</span>';
+  if(isPdf || isDoc){
+    thumbBox.innerHTML = pdfIconSvg() + '<span class="pdf-label">'+(isPdf ? 'PDF' : (item.ext || 'FAJL'))+'</span>';
     thumbBox.appendChild(corner);
   }else{
     const img = document.createElement('img');
@@ -796,7 +870,7 @@ function buildCard(item, indexNumber){
   thumbBox.onclick = (e)=>{
     if(pressTimer){ clearTimeout(pressTimer); pressTimer = null; }
     if(selectionMode){ toggleSelect(item.id); }
-    else if(isPdf){ openPdf(item); }
+    else if(isPdf || isDoc){ openPdf(item); }
     else{ openModal(item); }
   };
 
@@ -833,7 +907,7 @@ function buildDatedPhotoSections(list){
       label.textContent = formatDateLabel(item.ts);
       frag.appendChild(label);
       currentGrid = document.createElement('div');
-      currentGrid.className = 'grid';
+      currentGrid.className = 'grid photos-grid';
       frag.appendChild(currentGrid);
     }
     idx++;
@@ -949,6 +1023,7 @@ function moveSelectedToFolder(folderName){
     if(item){
       item.category = folderName || null;
       try{ localStorage.setItem(LS_PREFIX+'item:'+item.id, JSON.stringify(item)); }catch(e){}
+      maybeAutoCover(folderName, item);
     }
   });
   exitSelection();
@@ -960,9 +1035,10 @@ function copySelectedToFolder(folderName){
     const orig = items.find(i=>i.id===id);
     if(orig){
       const newId = 'i' + Date.now() + Math.random().toString(36).slice(2,8);
-      const clone = { id:newId, name:orig.name, dataUrl:orig.dataUrl, ts:Date.now(), category:folderName || null };
+      const clone = { id:newId, name:orig.name, dataUrl:orig.dataUrl, ts:Date.now(), category:folderName || null, type: orig.type, ext: orig.ext };
       items.push(clone);
       try{ localStorage.setItem(LS_PREFIX+'item:'+newId, JSON.stringify(clone)); }catch(e){}
+      maybeAutoCover(folderName, clone);
     }
   });
   saveIndex();
@@ -972,7 +1048,7 @@ function copySelectedToFolder(folderName){
 
 function deleteSelected(){
   if(selectedIds.size === 0) return;
-  if(!confirm(selectedIds.size===1 ? 'Obrisati ovu sliku?' : 'Obrisati '+selectedIds.size+' slika?')) return;
+  if(!confirm(selectedIds.size===1 ? 'Obrisati ovu stavku?' : 'Obrisati '+selectedIds.size+' stavki?')) return;
   const ids = Array.from(selectedIds);
   items = items.filter(i=>!selectedIds.has(i.id));
   ids.forEach(id=>{ try{ localStorage.removeItem(LS_PREFIX+'item:'+id); }catch(e){} });
@@ -1011,7 +1087,7 @@ document.getElementById('btnShortcut').onclick = ()=>{
   const id = Array.from(selectedIds)[0];
   const item = items.find(i=>i.id===id);
   if(!item) return;
-  const url = location.origin + location.pathname + '#p=' + encodeURIComponent(item.id);
+  const url = location.origin + location.pathname + '?p=' + encodeURIComponent(item.id);
   history.replaceState(null, '', url);
   document.title = item.name;
   exitSelection();
@@ -1026,8 +1102,8 @@ document.getElementById('shortcutBack').onclick = ()=>requestClose();
 shortcutSheet.onclick = (e)=>{ if(e.target===shortcutSheet) requestClose(); };
 
 function clearDeepLink(){
-  if(location.hash){
-    history.replaceState(null, '', location.pathname + location.search);
+  if(location.hash || location.search){
+    history.replaceState(null, '', location.pathname);
     document.title = 'Arhiva';
   }
 }
@@ -1116,6 +1192,12 @@ cameraInput.addEventListener('change', async (e)=>{
   cameraInput.value = '';
   for(const file of files){ await addFile(file, null); }
 });
+const docInput = document.getElementById('docInput');
+docInput.addEventListener('change', async (e)=>{
+  const files = Array.from(e.target.files || []);
+  docInput.value = '';
+  for(const file of files){ await addFile(file, currentFolder && currentFolder !== INBOX ? currentFolder : null); }
+});
 function readFileAsDataUrl(file){
   return new Promise((resolve, reject)=>{
     const r = new FileReader();
@@ -1153,18 +1235,30 @@ function compressImage(file){
 async function addFile(file, category){
   try{
     const isPdf = file.type === 'application/pdf';
-    const dataUrl = isPdf ? await readFileAsDataUrl(file) : await compressImage(file);
+    const isImage = file.type.startsWith('image/');
+    const isDoc = !isPdf && !isImage;
+    const dataUrl = isImage ? await compressImage(file) : await readFileAsDataUrl(file);
     const id = 'i' + Date.now() + Math.random().toString(36).slice(2,8);
     const baseName = file.name.replace(/\.[^.]+$/, '');
-    const item = { id, name: baseName || (isPdf ? 'Dokument' : 'Slika'), dataUrl, ts: Date.now(), category: category || null, type: isPdf ? 'pdf' : 'image' };
+    const ext = (file.name.match(/\.([^.]+)$/) || [,''])[1].toUpperCase();
+    const item = {
+      id,
+      name: baseName || (isPdf ? 'Dokument' : (isDoc ? 'Dokument' : 'Slika')),
+      dataUrl,
+      ts: Date.now(),
+      category: category || null,
+      type: isPdf ? 'pdf' : (isDoc ? 'doc' : 'image'),
+      ext: isDoc ? ext : undefined
+    };
     localStorage.setItem(LS_PREFIX+'item:'+id, JSON.stringify(item));
     items.push(item);
     saveIndex();
+    maybeAutoCover(category, item);
     render();
   }catch(e){
     console.error(e);
-    if(e && e.name === 'QuotaExceededError'){ toast('Nema više prostora za nove slike u browseru.'); }
-    else{ toast('Greška pri dodavanju slike.'); }
+    if(e && e.name === 'QuotaExceededError'){ toast('Nema više prostora za nove stavke u browseru.'); }
+    else{ toast('Greška pri dodavanju.'); }
   }
 }
 
@@ -1239,7 +1333,8 @@ importInput.addEventListener('change', (e)=>{
           dataUrl: it.dataUrl,
           ts: it.ts || Date.now(),
           category: it.category && categories.some(c=>c.name===it.category) ? it.category : null,
-          type: it.type === 'pdf' ? 'pdf' : 'image'
+          type: it.type === 'pdf' ? 'pdf' : (it.type === 'doc' ? 'doc' : 'image'),
+          ext: it.ext
         };
         items.push(clone);
         try{ localStorage.setItem(LS_PREFIX+'item:'+newId, JSON.stringify(clone)); }catch(err){}
@@ -1258,13 +1353,15 @@ importInput.addEventListener('change', (e)=>{
 });
 
 function checkDeepLink(){
-  const m = location.hash.match(/^#p=(.+)$/);
+  const hashMatch = location.hash.match(/^#p=(.+)$/);
+  const queryMatch = location.search.match(/[?&]p=([^&]+)/);
+  const m = hashMatch || queryMatch;
   if(m){
     const id = decodeURIComponent(m[1]);
     const item = items.find(i=>i.id === id);
     if(item){
       document.title = item.name;
-      if(item.type === 'pdf'){ openPdf(item); }
+      if(item.type === 'pdf' || item.type === 'doc'){ openPdf(item); }
       else{ openModal(item); }
     }
   }
