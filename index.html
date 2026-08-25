@@ -127,8 +127,8 @@
     display:flex;justify-content:space-between;align-items:center;
     margin:22px 0 20px;padding-bottom:14px;border-bottom:1px solid var(--line-soft);
   }
-  .count{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink-dim);}
-  .count b{color:var(--ink);font-weight:500;}
+  .count{font-family:'IBM Plex Mono',monospace;font-size:15px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink-dim);}
+  .count b{color:var(--ink);font-weight:600;font-size:17px;}
   .add-btn{display:flex;align-items:center;gap:9px;background:none;border:none;cursor:pointer;padding:2px;}
   .add-btn .seal{
     width:34px;height:34px;border-radius:50%;border:1.5px solid var(--brass);
@@ -162,25 +162,48 @@
 
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:18px 14px;}
   .grid + .section-label{margin-top:30px;}
+  .grid.folders-grid{grid-template-columns:repeat(3,1fr);gap:10px 8px;}
+  .folders-grid .folder-tile .fname{font-size:12.5px;}
+  .folders-grid .folder-tile .fcount{font-size:10.5px;}
+
+  .folder-tile-wide{
+    width:100%;display:flex;align-items:center;gap:14px;box-sizing:border-box;
+    background:var(--surface);border:1px solid var(--line);
+    padding:16px 18px;cursor:pointer;margin-bottom:16px;position:relative;transition:border-color .2s;
+  }
+  .folder-tile-wide:active{border-color:var(--brass-soft);}
+  .folder-tile-wide .fw-icon{
+    width:46px;height:46px;flex-shrink:0;border-radius:50%;
+    background:var(--surface-2);display:flex;align-items:center;justify-content:center;
+  }
+  .folder-tile-wide .fw-icon svg{stroke:var(--brass);}
+  .folder-tile-wide .fw-text{display:flex;flex-direction:column;min-width:0;}
+  .folder-tile-wide .fw-name{
+    font-family:'Fraunces',serif;font-style:italic;font-size:16px;color:var(--ink);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .folder-tile-wide .fw-count{
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-faint);margin-top:3px;
+  }
 
   .folder-tile{
+    display:flex;flex-direction:column;gap:6px;min-width:0;
+    cursor:pointer;position:relative;
+  }
+  .folder-tile .ftile-cover{
     aspect-ratio:1/1;background:var(--surface);border:1px solid var(--line);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
-    cursor:pointer;position:relative;transition:border-color .2s;
+    display:flex;align-items:center;justify-content:center;overflow:hidden;
+    position:relative;transition:border-color .2s;
   }
-  .folder-tile:active{border-color:var(--brass-soft);}
+  .folder-tile:active .ftile-cover{border-color:var(--brass-soft);}
   .folder-tile svg{stroke:var(--brass);}
+  .folder-tile .ftile-cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
   .folder-tile .fname{
-    font-family:'Fraunces',serif;font-style:italic;font-size:13.5px;color:var(--ink);
-    text-align:center;padding:0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
+    display:block;font-family:'Fraunces',serif;font-style:italic;font-size:13.5px;color:var(--ink);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
+    height:17px;line-height:17px;
   }
-  .folder-tile .fcount{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-faint);}
-  .folder-tile.has-cover{padding:0;overflow:hidden;justify-content:flex-end;}
-  .folder-tile.has-cover .cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
-  .folder-tile.has-cover .cover-shade{position:absolute;inset:0;background:linear-gradient(to top, rgba(6,6,7,0.88), rgba(6,6,7,0.1) 55%);}
-  .folder-tile.has-cover .fname, .folder-tile.has-cover .fcount{position:relative;z-index:1;padding:0 10px;}
-  .folder-tile.has-cover .fname{color:var(--ink);}
-  .folder-tile.has-cover .fcount{color:rgba(237,233,225,0.75);margin-bottom:8px;}
+  .folder-tile .fcount{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-faint);height:13px;line-height:13px;}
   .pin-mark{
     position:absolute;top:6px;right:6px;width:18px;height:18px;border-radius:50%;
     background:var(--brass);display:flex;align-items:center;justify-content:center;z-index:2;
@@ -593,34 +616,34 @@ function render(){
   label.textContent = 'Albumi';
   contentArea.appendChild(label);
 
-  const fgrid = document.createElement('div');
-  fgrid.className = 'grid';
-
-const closeAlbumView = ()=>{ currentFolder = null; searchEl.value=''; render(); };
+  const closeAlbumView = ()=>{ currentFolder = null; searchEl.value=''; render(); };
 
   const inboxCount = items.filter(i=>!i.category).length;
   const inboxTile = document.createElement('div');
-  inboxTile.className = 'folder-tile';
-  inboxTile.innerHTML = folderIconSvg() + '<span class="fname">Sve slike</span><span class="fcount">'+inboxCount+' '+(inboxCount===1?'stavka':'stavki')+'</span>';
+  inboxTile.className = 'folder-tile-wide';
+  inboxTile.innerHTML = '<div class="fw-icon">'+folderIconSvg()+'</div><div class="fw-text"><span class="fw-name">Sve slike</span><span class="fw-count">'+inboxCount+' '+(inboxCount===1?'stavka':'stavki')+'</span></div>';
   inboxTile.onclick = ()=>{ currentFolder = INBOX; searchEl.value=''; pushBack(closeAlbumView); render(); };
-  fgrid.appendChild(inboxTile);
+  contentArea.appendChild(inboxTile);
+
+  const fgrid = document.createElement('div');
+  fgrid.className = 'grid folders-grid';
 
   categories.slice().sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)).forEach(cat=>{
     const name = cat.name;
     const count = items.filter(i=>i.category===name).length;
     const tile = document.createElement('div');
     const coverItem = cat.cover ? items.find(i=>i.id===cat.cover) : null;
-    tile.className = 'folder-tile' + (coverItem ? ' has-cover' : '');
+    tile.className = 'folder-tile';
     if(coverItem){
-      tile.innerHTML = '<img class="cover-img" src="'+coverItem.dataUrl+'"><div class="cover-shade"></div><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+count+' '+(count===1?'stavka':'stavki')+'</span>';
+      tile.innerHTML = '<div class="ftile-cover"><img src="'+coverItem.dataUrl+'"></div><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+count+' '+(count===1?'stavka':'stavki')+'</span>';
     }else{
-      tile.innerHTML = folderIconSvg() + '<span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+count+' '+(count===1?'stavka':'stavki')+'</span>';
+      tile.innerHTML = '<div class="ftile-cover">'+folderIconSvg()+'</div><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+count+' '+(count===1?'stavka':'stavki')+'</span>';
     }
     if(cat.pinned){
       const pin = document.createElement('div');
       pin.className = 'pin-mark';
       pin.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"></line><path d="M5 10a7 7 0 0114 0c0 3-2 5-2 5H7s-2-2-2-5z"></path></svg>';
-      tile.appendChild(pin);
+      tile.querySelector('.ftile-cover').appendChild(pin);
     }
 
     let tilePressTimer = null;
