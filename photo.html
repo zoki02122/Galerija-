@@ -61,7 +61,10 @@ if(!item){
     '<a class="back" href="index.html">\u2190 Nazad u Arhivu</a>';
 }else{
   document.title = item.name;
-  if(item.type === 'image'){
+  const mimeMatch = /^data:([^;]+);/.exec(item.dataUrl || '');
+  const mime = mimeMatch ? mimeMatch[1] : '';
+  const isImage = item.type === 'image' || (item.type !== 'pdf' && item.type !== 'doc' && mime.indexOf('image/') === 0);
+  if(isImage){
     content.innerHTML =
       '<div class="frame"><div class="photo" oncontextmenu="return false;" style="width:min(84vw,420px);height:58vh;background-image:url(\''+item.dataUrl.replace(/'/g,"%27")+'\')"></div></div>' +
       '<div class="cap">'+escapeHtml(item.name)+'</div>' +
