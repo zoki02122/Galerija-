@@ -20,8 +20,8 @@
     min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
     padding:28px 20px;text-align:center;-webkit-font-smoothing:antialiased;
   }
-  .frame{border:1px solid var(--brass-soft);padding:6px;background:var(--surface);max-width:100%;}
-  img{max-width:100%;max-height:58vh;display:block;}
+  .frame{border:1px solid var(--brass-soft);padding:6px;background:var(--surface);max-width:100%;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;}
+  .frame .photo{max-width:100%;max-height:58vh;display:block;background-size:contain;background-position:center;background-repeat:no-repeat;min-width:200px;min-height:200px;}
   .cap{font-family:'Fraunces',serif;font-style:italic;font-size:17px;margin:18px 0 4px;color:var(--ink);}
   .hint{font-size:13px;color:var(--ink-dim);max-width:340px;line-height:1.65;margin-top:20px;}
   .hint b{color:var(--brass);font-weight:600;}
@@ -63,9 +63,9 @@ if(!item){
   document.title = item.name;
   if(item.type === 'image'){
     content.innerHTML =
-      '<div class="frame"><img src="'+item.dataUrl+'"></div>' +
+      '<div class="frame"><div class="photo" oncontextmenu="return false;" style="width:min(84vw,420px);height:58vh;background-image:url(\''+item.dataUrl.replace(/'/g,"%27")+'\')"></div></div>' +
       '<div class="cap">'+escapeHtml(item.name)+'</div>' +
-      '<div class="hint">Da zakačiš ovu sliku na početni ekran: dodirni meni (tri tačke) u Chrome traci, pa <b>"Dodaj na početni ekran"</b>.</div>' +
+      '<div class="hint">Da zakačiš ovu sliku na početni ekran: dodirni meni (tri tačke) u Chrome traci, pa <b>"Dodaj na početni ekran"</b>. (Ne dodiruj sliku iznad — samo meni gore desno.)</div>' +
       '<a class="back" href="index.html">\u2190 Nazad u Arhivu</a>';
   }else{
     const label = item.type === 'pdf' ? 'PDF' : (item.ext || 'FAJL');
