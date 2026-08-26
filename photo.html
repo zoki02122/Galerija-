@@ -104,9 +104,16 @@ const content = document.getElementById('content');
       '<div class="stage"><div class="photo" oncontextmenu="return false;" style="background-image:url(\''+item.dataUrl.replace(/'/g,"%27")+'\')"></div></div>' +
       backTiny;
   }else if(isPdf){
-    content.innerHTML =
-      '<iframe class="pdf-frame" src="'+item.dataUrl+'"></iframe>' +
-      backTiny;
+    content.innerHTML = '<iframe class="pdf-frame" id="pdfFrame"></iframe>' + backTiny;
+    try{
+      const res = await fetch(item.dataUrl);
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      document.getElementById('pdfFrame').src = blobUrl;
+    }catch(e){
+      content.innerHTML =
+        '<div class="missing"><p style="margin:0;">Nije moguće prikazati PDF u browseru.</p></div>' + backTiny;
+    }
   }else{
     const label = item.ext || 'FAJL';
     const fileName = (item.name || 'dokument') + (item.ext ? '.'+item.ext.toLowerCase() : '');
