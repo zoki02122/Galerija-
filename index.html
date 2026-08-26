@@ -237,11 +237,12 @@
   }
 
   .select-mark{
-    position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;
+    position:absolute;top:6px;right:6px;width:34px;height:34px;border-radius:50%;
     background:rgba(13,14,16,0.82);border:1.5px solid var(--brass-soft);
     display:none;align-items:center;justify-content:center;
     transition:background .15s, border-color .15s;
   }
+  .select-mark svg{width:16px;height:16px;}
   .card.selectable .select-mark{display:flex;}
   .card.selected .select-mark{background:var(--brass);border-color:var(--brass);}
   .select-mark svg{opacity:0;stroke:#1a1400;stroke-width:3;}
