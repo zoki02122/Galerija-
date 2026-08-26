@@ -164,6 +164,7 @@ const content = document.getElementById('content');
       canvas.style.width = (viewport.width / dpr) + 'px';
       canvas.style.height = (viewport.height / dpr) + 'px';
       await page.render({canvasContext: ctx, viewport}).promise;
+      document.title = item.name;
       if(pdf.numPages > 1){
         const link = document.createElement('a');
         link.className = 'full-doc-link';
@@ -227,6 +228,7 @@ const content = document.getElementById('content');
         content.innerHTML =
           '<div class="doc-reader"><div class="doc-reader-inner">'+result.value+'</div></div>' +
           '<div class="doc-reader-bar"><a class="back-inline" href="index.html">\u2190 Arhiva</a><p class="cap">'+escapeHtml(item.name)+'</p><button class="open-btn" id="openDoc">Preuzmi</button></div>';
+        document.title = item.name;
         document.getElementById('openDoc').onclick = downloadFile;
       }catch(e){
         console.error(e);
@@ -251,6 +253,7 @@ const content = document.getElementById('content');
           content.innerHTML =
             '<div class="doc-reader"><div class="doc-reader-inner">'+tabsHtml+html+'</div></div>' +
             '<div class="doc-reader-bar"><a class="back-inline" href="index.html">\u2190 Arhiva</a><p class="cap">'+escapeHtml(item.name)+'</p><button class="open-btn" id="openDoc">Preuzmi</button></div>';
+          document.title = item.name;
           document.getElementById('openDoc').onclick = downloadFile;
           content.querySelectorAll('.sheet-tabs button').forEach(btn=>{
             btn.onclick = ()=>renderSheet(btn.getAttribute('data-sheet'));
