@@ -900,13 +900,13 @@ function buildCard(item, indexNumber){
   mark.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
   card.appendChild(mark);
 
-  thumbBox.addEventListener('contextmenu', (e)=>{
+  card.addEventListener('contextmenu', (e)=>{
     e.preventDefault();
     if(!selectionMode){ enterSelectionMode(); }
     toggleSelect(item.id);
   });
 
-  thumbBox.onclick = (e)=>{
+  card.onclick = (e)=>{
     if(selectionMode){ toggleSelect(item.id); }
     else if(isPdf || isDoc){ openPdf(item); }
     else{ openModal(item); }
