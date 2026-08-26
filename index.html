@@ -900,23 +900,37 @@ function buildCard(item, indexNumber){
   card.appendChild(mark);
 
   let pressTimer = null;
-  const startPress = ()=>{
+  let justLongPressed = false;
+  let touchStartX = 0, touchStartY = 0;
+  const startPress = (e)=>{
+    if(e.touches && e.touches[0]){
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }
     pressTimer = setTimeout(()=>{
       pressTimer = null;
+      justLongPressed = true;
       if(!selectionMode){ enterSelectionMode(); }
       toggleSelect(item.id);
     }, 480);
   };
   const cancelPress = ()=>{ if(pressTimer){ clearTimeout(pressTimer); pressTimer = null; } };
+  const moveCheck = (e)=>{
+    if(!pressTimer || !e.touches || !e.touches[0]) return;
+    const dx = e.touches[0].clientX - touchStartX;
+    const dy = e.touches[0].clientY - touchStartY;
+    if(Math.sqrt(dx*dx + dy*dy) > 12){ cancelPress(); }
+  };
   thumbBox.addEventListener('touchstart', startPress, {passive:true});
   thumbBox.addEventListener('touchend', cancelPress);
-  thumbBox.addEventListener('touchmove', cancelPress);
+  thumbBox.addEventListener('touchmove', moveCheck, {passive:true});
   thumbBox.addEventListener('mousedown', startPress);
   thumbBox.addEventListener('mouseup', cancelPress);
   thumbBox.addEventListener('mouseleave', cancelPress);
 
   thumbBox.onclick = (e)=>{
     if(pressTimer){ clearTimeout(pressTimer); pressTimer = null; }
+    if(justLongPressed){ justLongPressed = false; return; }
     if(selectionMode){ toggleSelect(item.id); }
     else if(isPdf || isDoc){ openPdf(item); }
     else{ openModal(item); }
