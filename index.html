@@ -159,6 +159,8 @@
     font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;
     color:var(--ink-faint);margin:0 0 12px;
   }
+  .section-label-top{margin-top:0;}
+  .grid + .section-label{margin-top:22px;}
   .date-label{
     font-family:'Fraunces',serif;font-style:italic;font-size:14px;color:var(--ink-dim);
     margin:26px 0 12px;
@@ -166,7 +168,6 @@
   .date-label:first-child{margin-top:0;}
 
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:18px 14px;}
-  .grid + .section-label{margin-top:30px;}
   .album-summary{
     font-family:'Fraunces',serif;font-style:italic;font-size:16px;color:var(--ink);
     margin:0 0 14px;
@@ -771,10 +772,10 @@ function render(){
 
   contentArea.appendChild(inboxRow);
 
-  const fgrid = document.createElement('div');
-  fgrid.className = 'grid folders-grid';
+  const pinnedCats = categories.filter(c=>c.pinned);
+  const otherCats = categories.filter(c=>!c.pinned);
 
-  categories.slice().sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)).forEach(cat=>{
+  const buildFolderTile = (cat)=>{
     const name = cat.name;
     const count = items.filter(i=>i.category===name).length;
     const tile = document.createElement('div');
@@ -809,8 +810,28 @@ function render(){
       if(tileLongFired){ tileLongFired = false; return; }
       currentFolder = name; searchEl.value=''; pushBack(closeAlbumView); render();
     };
-    fgrid.appendChild(tile);
-  });
+    return tile;
+  };
+
+  if(pinnedCats.length > 0){
+    const pinLabel = document.createElement('p');
+    pinLabel.className = 'album-summary section-label-top';
+    pinLabel.textContent = 'Pinovano';
+    contentArea.appendChild(pinLabel);
+    const pinGrid = document.createElement('div');
+    pinGrid.className = 'grid folders-grid';
+    pinnedCats.forEach(cat=>pinGrid.appendChild(buildFolderTile(cat)));
+    contentArea.appendChild(pinGrid);
+  }
+
+  const albumsLabel = document.createElement('p');
+  albumsLabel.className = 'album-summary' + (pinnedCats.length === 0 ? ' section-label-top' : '');
+  albumsLabel.textContent = 'Albumi';
+  contentArea.appendChild(albumsLabel);
+
+  const fgrid = document.createElement('div');
+  fgrid.className = 'grid folders-grid';
+  otherCats.forEach(cat=>fgrid.appendChild(buildFolderTile(cat)));
   contentArea.appendChild(fgrid);
 }
 
