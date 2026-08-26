@@ -14,24 +14,34 @@
     --brass:#c9a355; --brass-soft:#8a7240; --line:#2a2c30;
   }
   *{box-sizing:border-box;}
+  html,body{height:100%;}
   html{-webkit-tap-highlight-color:transparent;}
   body{
     margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;
-    min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    padding:28px 20px;text-align:center;-webkit-font-smoothing:antialiased;
+    overflow:hidden;-webkit-font-smoothing:antialiased;
   }
-  .frame{border:1px solid var(--brass-soft);padding:6px;background:var(--surface);max-width:100%;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;}
-  .frame .photo{max-width:100%;max-height:58vh;display:block;background-size:contain;background-position:center;background-repeat:no-repeat;min-width:200px;min-height:200px;}
-  .cap{font-family:'Fraunces',serif;font-style:italic;font-size:17px;margin:18px 0 4px;color:var(--ink);}
-  .hint{font-size:13px;color:var(--ink-dim);max-width:340px;line-height:1.65;margin-top:20px;}
+  .stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;}
+  .photo{
+    position:absolute;inset:0;background-size:contain;background-position:center;background-repeat:no-repeat;
+    -webkit-touch-callout:none;-webkit-user-select:none;user-select:none;
+  }
+  .overlay{
+    position:fixed;left:0;right:0;bottom:0;padding:16px 20px calc(18px + env(safe-area-inset-bottom));
+    background:linear-gradient(to top, rgba(13,14,16,0.92), rgba(13,14,16,0));
+    text-align:center;
+  }
+  .cap{font-family:'Fraunces',serif;font-style:italic;font-size:16px;margin:0 0 6px;color:var(--ink);}
+  .hint{font-size:12.5px;color:var(--ink-dim);max-width:340px;margin:0 auto;line-height:1.6;}
   .hint b{color:var(--brass);font-weight:600;}
-  a.back{color:var(--brass);font-family:'Fraunces',serif;font-style:italic;font-size:14px;margin-top:26px;
+  a.back{color:var(--brass);font-family:'Fraunces',serif;font-style:italic;font-size:13.5px;margin-top:10px;
     text-decoration:none;border-bottom:1px solid var(--brass-soft);padding-bottom:2px;display:inline-block;}
   a.back.tiny{position:fixed;bottom:14px;right:16px;font-size:11px;opacity:0.45;margin-top:0;border-bottom:none;}
-  .missing{font-family:'Fraunces',serif;font-style:italic;color:var(--ink-dim);font-size:15px;}
+  .missing{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+    font-family:'Fraunces',serif;font-style:italic;color:var(--ink-dim);font-size:15px;text-align:center;padding:20px;}
+  .doc-stage{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px;text-align:center;}
   .doc-icon{width:64px;height:64px;color:var(--brass);}
   .open-btn{
-    margin-top:18px;background:var(--brass);color:#1a1400;border:none;
+    background:var(--brass);color:#1a1400;border:none;
     padding:12px 22px;font-family:'Fraunces',serif;font-weight:600;font-size:14.5px;cursor:pointer;
   }
   .open-btn:active{opacity:0.85;}
@@ -75,8 +85,8 @@ const content = document.getElementById('content');
 
   if(!item){
     content.innerHTML =
-      '<p class="missing">Stavka nije pronađena u ovom browseru.</p>' +
-      '<a class="back" href="index.html">\u2190 Nazad u Arhivu</a>';
+      '<div class="missing"><p style="margin:0;">Stavka nije pronađena u ovom browseru.</p>' +
+      '<a class="back" href="index.html">\u2190 Nazad u Arhivu</a></div>';
     return;
   }
   document.title = item.name;
@@ -89,23 +99,25 @@ const content = document.getElementById('content');
   const mimeMatch = /^data:([^;]+);/.exec(item.dataUrl || '');
   const mime = mimeMatch ? mimeMatch[1] : '';
   const isImage = item.type === 'image' || (item.type !== 'pdf' && item.type !== 'doc' && mime.indexOf('image/') === 0);
-  const photoHeight = fromApp ? '58vh' : '82vh';
   const hintHtml = fromApp
-    ? '<div class="hint">Da zakačiš ovu sliku na početni ekran: dodirni meni (tri tačke) u Chrome traci, pa <b>"Dodaj na početni ekran"</b>. (Ne dodiruj sliku iznad — samo meni gore desno.)</div>' +
+    ? '<div class="cap">'+escapeHtml(item.name)+'</div>' +
+      '<div class="hint">Da zakačiš ovu sliku na početni ekran: dodirni meni (tri tačke) u Chrome traci, pa <b>"Dodaj na početni ekran"</b>. (Ne dodiruj sliku iznad — samo meni gore desno.)</div>' +
       '<a class="back" href="index.html">\u2190 Nazad u Arhivu</a>'
     : '<a class="back tiny" href="index.html">Arhiva</a>';
   if(isImage){
     content.innerHTML =
-      '<div class="frame"><div class="photo" oncontextmenu="return false;" style="width:min(92vw,460px);height:'+photoHeight+';background-image:url(\''+item.dataUrl.replace(/'/g,"%27")+'\')"></div></div>' +
-      (fromApp ? '<div class="cap">'+escapeHtml(item.name)+'</div>' : '') +
-      hintHtml;
+      '<div class="stage"><div class="photo" oncontextmenu="return false;" style="background-image:url(\''+item.dataUrl.replace(/'/g,"%27")+'\')"></div></div>' +
+      (fromApp ? '<div class="overlay">'+hintHtml+'</div>' : hintHtml);
   }else{
     const label = item.type === 'pdf' ? 'PDF' : (item.ext || 'FAJL');
     content.innerHTML =
-      '<svg class="doc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>' +
-      '<div class="cap">'+escapeHtml(item.name)+' <span style="color:var(--ink-dim);font-family:\'IBM Plex Mono\',monospace;font-style:normal;font-size:11px;">('+label+')</span></div>' +
-      '<button class="open-btn" id="openDoc">Otvori</button>' +
-      hintHtml;
+      '<div class="doc-stage">' +
+        '<svg class="doc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>' +
+        '<div class="cap">'+escapeHtml(item.name)+' <span style="color:var(--ink-dim);font-family:\'IBM Plex Mono\',monospace;font-style:normal;font-size:11px;">('+label+')</span></div>' +
+        '<button class="open-btn" id="openDoc">Otvori</button>' +
+        (fromApp ? '<div class="hint">Da zakačiš ovu stavku na početni ekran: dodirni meni (tri tačke) u Chrome traci, pa <b>"Dodaj na početni ekran"</b>.</div><a class="back" href="index.html">\u2190 Nazad u Arhivu</a>' : '') +
+      '</div>' +
+      (fromApp ? '' : '<a class="back tiny" href="index.html">Arhiva</a>');
     document.getElementById('openDoc').onclick = async ()=>{
       try{
         const res = await fetch(item.dataUrl);
