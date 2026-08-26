@@ -987,7 +987,11 @@ const closeSelectionMode = ()=>{ selectionMode = false; selectedIds = new Set();
 function toggleSelect(id){
   if(selectedIds.has(id)) selectedIds.delete(id);
   else selectedIds.add(id);
-  if(selectedIds.size === 0){ requestClose(); return; }
+  if(selectedIds.size === 0){
+    selectionMode = false;
+    render();
+    return;
+  }
   render();
 }
 function exitSelection(){
