@@ -127,6 +127,7 @@ const content = document.getElementById('content');
     content.innerHTML =
       '<div class="stage"><div class="photo" oncontextmenu="return false;" style="background-image:url(\''+item.dataUrl.replace(/'/g,"%27")+'\')"></div></div>' +
       backTiny;
+    document.title = item.name;
   }else if(isPdf){
     content.innerHTML = '<div class="stage"><canvas class="pdf-canvas" id="pdfCanvas"></canvas></div>' + backTiny;
     const openFullDoc = async ()=>{
