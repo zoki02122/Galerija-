@@ -91,31 +91,22 @@ const content = document.getElementById('content');
     return;
   }
   document.title = item.name;
-  let fromApp = false;
-  try{
-    fromApp = sessionStorage.getItem('arhiva_from_app') === '1';
-    sessionStorage.removeItem('arhiva_from_app');
-  }catch(e){}
 
   const mimeMatch = /^data:([^;]+);/.exec(item.dataUrl || '');
   const mime = mimeMatch ? mimeMatch[1] : '';
   const isPdf = item.type === 'pdf' || mime === 'application/pdf';
   const isImage = !isPdf && (item.type === 'image' || (item.type !== 'doc' && mime.indexOf('image/') === 0));
 
-  const hintHtml = fromApp
-    ? '<div class="cap">'+escapeHtml(item.name)+'</div>' +
-      '<div class="hint">Da zakačiš ovu stavku na početni ekran: dodirni meni (tri tačke) u Chrome traci, pa <b>"Dodaj na početni ekran"</b>. (Ne dodiruj sadržaj iznad — samo meni gore desno.)</div>' +
-      '<a class="back" href="index.html">\u2190 Nazad u Arhivu</a>'
-    : '<a class="back tiny" href="index.html">Arhiva</a>';
+  const backTiny = '<a class="back tiny" href="index.html">Arhiva</a>';
 
   if(isImage){
     content.innerHTML =
       '<div class="stage"><div class="photo" oncontextmenu="return false;" style="background-image:url(\''+item.dataUrl.replace(/'/g,"%27")+'\')"></div></div>' +
-      (fromApp ? '<div class="overlay">'+hintHtml+'</div>' : hintHtml);
+      backTiny;
   }else if(isPdf){
     content.innerHTML =
       '<iframe class="pdf-frame" src="'+item.dataUrl+'"></iframe>' +
-      (fromApp ? '<div class="overlay">'+hintHtml+'</div>' : hintHtml);
+      backTiny;
   }else{
     const label = item.ext || 'FAJL';
     const fileName = (item.name || 'dokument') + (item.ext ? '.'+item.ext.toLowerCase() : '');
@@ -124,10 +115,9 @@ const content = document.getElementById('content');
         '<svg class="doc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>' +
         '<div class="cap">'+escapeHtml(item.name)+' <span style="color:var(--ink-dim);font-family:\'IBM Plex Mono\',monospace;font-style:normal;font-size:11px;">('+label+')</span></div>' +
         '<button class="open-btn" id="openDoc">Otvori</button>' +
-        (fromApp ? '<div class="hint">Da zakačiš ovu stavku na početni ekran: dodirni meni (tri tačke) u Chrome traci, pa <b>"Dodaj na početni ekran"</b>.</div><a class="back" href="index.html">\u2190 Nazad u Arhivu</a>' : '') +
       '</div>' +
-      (fromApp ? '' : '<a class="back tiny" href="index.html">Arhiva</a>');
-    const openDocFn = async ()=>{
+      backTiny;
+    document.getElementById('openDoc').onclick = async ()=>{
       try{
         const res = await fetch(item.dataUrl);
         const blob = await res.blob();
@@ -140,8 +130,6 @@ const content = document.getElementById('content');
         a.remove();
       }catch(e){}
     };
-    document.getElementById('openDoc').onclick = openDocFn;
-    if(!fromApp){ openDocFn(); }
   }
 })();
 </script>
