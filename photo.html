@@ -45,6 +45,7 @@
     padding:12px 22px;font-family:'Fraunces',serif;font-weight:600;font-size:14.5px;cursor:pointer;
   }
   .open-btn:active{opacity:0.85;}
+  .pdf-frame{position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;border:none;background:var(--surface);}
 </style>
 </head>
 <body>
@@ -100,39 +101,30 @@ const content = document.getElementById('content');
   const mime = mimeMatch ? mimeMatch[1] : '';
   const isPdf = item.type === 'pdf' || mime === 'application/pdf';
   const isImage = !isPdf && (item.type === 'image' || (item.type !== 'doc' && mime.indexOf('image/') === 0));
-  const isDoc = !isPdf && !isImage;
-
-  if(isPdf && !fromApp){
-    location.href = item.dataUrl;
-    return;
-  }
 
   const hintHtml = fromApp
     ? '<div class="cap">'+escapeHtml(item.name)+'</div>' +
       '<div class="hint">Da zakačiš ovu stavku na početni ekran: dodirni meni (tri tačke) u Chrome traci, pa <b>"Dodaj na početni ekran"</b>. (Ne dodiruj sadržaj iznad — samo meni gore desno.)</div>' +
       '<a class="back" href="index.html">\u2190 Nazad u Arhivu</a>'
     : '<a class="back tiny" href="index.html">Arhiva</a>';
+
   if(isImage){
     content.innerHTML =
       '<div class="stage"><div class="photo" oncontextmenu="return false;" style="background-image:url(\''+item.dataUrl.replace(/'/g,"%27")+'\')"></div></div>' +
       (fromApp ? '<div class="overlay">'+hintHtml+'</div>' : hintHtml);
   }else if(isPdf){
     content.innerHTML =
-      '<div class="doc-stage">' +
-        '<svg class="doc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>' +
-        '<div class="cap">'+escapeHtml(item.name)+' <span style="color:var(--ink-dim);font-family:\'IBM Plex Mono\',monospace;font-style:normal;font-size:11px;">(PDF)</span></div>' +
-        '<button class="open-btn" id="openDoc">Otvori</button>' +
-        '<div class="hint">Da zakačiš ovu stavku na početni ekran: dodirni meni (tri tačke) u Chrome traci, pa <b>"Dodaj na početni ekran"</b>.</div><a class="back" href="index.html">\u2190 Nazad u Arhivu</a>' +
-      '</div>';
-    document.getElementById('openDoc').onclick = ()=>{ location.href = item.dataUrl; };
+      '<iframe class="pdf-frame" src="'+item.dataUrl+'"></iframe>' +
+      (fromApp ? '<div class="overlay">'+hintHtml+'</div>' : hintHtml);
   }else{
     const label = item.ext || 'FAJL';
+    const fileName = (item.name || 'dokument') + (item.ext ? '.'+item.ext.toLowerCase() : '');
     content.innerHTML =
       '<div class="doc-stage">' +
         '<svg class="doc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>' +
         '<div class="cap">'+escapeHtml(item.name)+' <span style="color:var(--ink-dim);font-family:\'IBM Plex Mono\',monospace;font-style:normal;font-size:11px;">('+label+')</span></div>' +
         '<button class="open-btn" id="openDoc">Otvori</button>' +
-        (fromApp ? '<div class="hint">Da zakačiš ovu stavku na početni ekran: dodirni meni (tri tačke) u Chrome traci, pa <b>"Dodaj na početni ekran"</b>.</div><a class="back" href="index.html">\u2190 Nazad u Arhivu</a>' : '<p class="hint" style="margin-top:6px;">Otvara se automatski...</p>') +
+        (fromApp ? '<div class="hint">Da zakačiš ovu stavku na početni ekran: dodirni meni (tri tačke) u Chrome traci, pa <b>"Dodaj na početni ekran"</b>.</div><a class="back" href="index.html">\u2190 Nazad u Arhivu</a>' : '') +
       '</div>' +
       (fromApp ? '' : '<a class="back tiny" href="index.html">Arhiva</a>');
     const openDocFn = async ()=>{
@@ -140,7 +132,12 @@ const content = document.getElementById('content');
         const res = await fetch(item.dataUrl);
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
-        location.href = url;
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
       }catch(e){}
     };
     document.getElementById('openDoc').onclick = openDocFn;
