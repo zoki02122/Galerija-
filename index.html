@@ -42,7 +42,7 @@
   }
   .wrap{max-width:900px;margin:0 auto;}
 
-  header{margin-bottom:26px;}
+  header{margin-bottom:10px;}
   .mark-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:0;}
   .mark-title{display:flex;align-items:center;gap:10px;}
   .mark{width:15px;height:15px;border:2px solid var(--brass);transform:rotate(45deg);flex:none;}
@@ -181,25 +181,27 @@
   .folders-grid .folder-tile .fname{font-size:12.5px;}
   .folders-grid .folder-tile .fcount{font-size:10.5px;}
 
+  .inbox-row{display:flex;align-items:center;gap:14px;margin-bottom:10px;}
   .folder-tile-wide{
-    width:100%;display:flex;align-items:center;gap:14px;box-sizing:border-box;
+    width:50%;flex:none;display:flex;align-items:center;gap:12px;box-sizing:border-box;
     background:var(--surface);border:1px solid var(--line);
-    padding:16px 18px;cursor:pointer;margin-bottom:16px;position:relative;transition:border-color .2s;
+    padding:14px 16px;cursor:pointer;margin-bottom:0;position:relative;transition:border-color .2s;
   }
   .folder-tile-wide:active{border-color:var(--brass-soft);}
   .folder-tile-wide .fw-icon{
-    width:46px;height:46px;flex-shrink:0;border-radius:50%;
+    width:40px;height:40px;flex-shrink:0;border-radius:50%;
     background:var(--surface-2);display:flex;align-items:center;justify-content:center;
   }
-  .folder-tile-wide .fw-icon svg{stroke:var(--brass);}
+  .folder-tile-wide .fw-icon svg{stroke:var(--brass);width:16px;height:16px;}
   .folder-tile-wide .fw-text{display:flex;flex-direction:column;min-width:0;}
   .folder-tile-wide .fw-name{
-    font-family:'Fraunces',serif;font-style:italic;font-size:16px;color:var(--ink);
+    font-family:'Fraunces',serif;font-style:italic;font-size:15px;color:var(--ink);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
   .folder-tile-wide .fw-count{
-    font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-faint);margin-top:3px;
+    font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-faint);margin-top:2px;
   }
+  .inbox-row .album-summary{margin:0;min-width:0;}
 
   .folder-tile{
     display:flex;flex-direction:column;gap:6px;min-width:0;
@@ -750,19 +752,24 @@ function render(){
     return;
   }
 
-  const label = document.createElement('p');
-  label.className = 'album-summary';
-  label.innerHTML = 'Svi albumi <span class="count-part">&middot; ' + items.length + ' stavki u arhivi</span>';
-  contentArea.appendChild(label);
-
   const closeAlbumView = ()=>{ currentFolder = null; searchEl.value=''; render(); };
+
+  const inboxRow = document.createElement('div');
+  inboxRow.className = 'inbox-row';
 
   const inboxCount = items.filter(i=>!i.category).length;
   const inboxTile = document.createElement('div');
   inboxTile.className = 'folder-tile-wide';
   inboxTile.innerHTML = '<div class="fw-icon">'+folderIconSvg()+'</div><div class="fw-text"><span class="fw-name">Sve slike</span><span class="fw-count">'+inboxCount+' '+(inboxCount===1?'stavka':'stavki')+'</span></div>';
   inboxTile.onclick = ()=>{ currentFolder = INBOX; searchEl.value=''; pushBack(closeAlbumView); render(); };
-  contentArea.appendChild(inboxTile);
+  inboxRow.appendChild(inboxTile);
+
+  const label = document.createElement('p');
+  label.className = 'album-summary';
+  label.innerHTML = 'Svi albumi <span class="count-part">&middot; ' + items.length + ' stavki u arhivi</span>';
+  inboxRow.appendChild(label);
+
+  contentArea.appendChild(inboxRow);
 
   const fgrid = document.createElement('div');
   fgrid.className = 'grid folders-grid';
