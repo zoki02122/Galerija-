@@ -64,6 +64,8 @@
   .doc-reader-bar .cap{font-size:13px;margin:0;color:var(--ink);text-align:left;flex:1;overflow:hidden;
     text-overflow:ellipsis;white-space:nowrap;}
   .doc-reader-bar .open-btn{padding:9px 16px;font-size:13px;white-space:nowrap;}
+  .back-inline{color:var(--brass);font-family:'Fraunces',serif;font-style:italic;font-size:12.5px;
+    text-decoration:none;white-space:nowrap;}
   .sheet-tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;padding-bottom:4px;}
   .sheet-tabs button{flex:none;background:none;border:1px solid #c9c3b4;color:#5b5648;padding:5px 12px;
     font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;border-radius:2px;}
@@ -224,7 +226,7 @@ const content = document.getElementById('content');
         const result = await mammoth.convertToHtml({arrayBuffer: bytes.buffer});
         content.innerHTML =
           '<div class="doc-reader"><div class="doc-reader-inner">'+result.value+'</div></div>' +
-          '<div class="doc-reader-bar"><p class="cap">'+escapeHtml(item.name)+'</p><button class="open-btn" id="openDoc">Preuzmi</button></div>';
+          '<div class="doc-reader-bar"><a class="back-inline" href="index.html">\u2190 Arhiva</a><p class="cap">'+escapeHtml(item.name)+'</p><button class="open-btn" id="openDoc">Preuzmi</button></div>';
         document.getElementById('openDoc').onclick = downloadFile;
       }catch(e){
         console.error(e);
@@ -248,7 +250,7 @@ const content = document.getElementById('content');
             : '';
           content.innerHTML =
             '<div class="doc-reader"><div class="doc-reader-inner">'+tabsHtml+html+'</div></div>' +
-            '<div class="doc-reader-bar"><p class="cap">'+escapeHtml(item.name)+'</p><button class="open-btn" id="openDoc">Preuzmi</button></div>';
+            '<div class="doc-reader-bar"><a class="back-inline" href="index.html">\u2190 Arhiva</a><p class="cap">'+escapeHtml(item.name)+'</p><button class="open-btn" id="openDoc">Preuzmi</button></div>';
           document.getElementById('openDoc').onclick = downloadFile;
           content.querySelectorAll('.sheet-tabs button').forEach(btn=>{
             btn.onclick = ()=>renderSheet(btn.getAttribute('data-sheet'));
