@@ -27,6 +27,7 @@
   .hint b{color:var(--brass);font-weight:600;}
   a.back{color:var(--brass);font-family:'Fraunces',serif;font-style:italic;font-size:14px;margin-top:26px;
     text-decoration:none;border-bottom:1px solid var(--brass-soft);padding-bottom:2px;display:inline-block;}
+  a.back.tiny{position:fixed;bottom:14px;right:16px;font-size:11px;opacity:0.45;margin-top:0;border-bottom:none;}
   .missing{font-family:'Fraunces',serif;font-style:italic;color:var(--ink-dim);font-size:15px;}
   .doc-icon{width:64px;height:64px;color:var(--brass);}
   .open-btn{
@@ -79,23 +80,32 @@ const content = document.getElementById('content');
     return;
   }
   document.title = item.name;
+  let fromApp = false;
+  try{
+    fromApp = sessionStorage.getItem('arhiva_from_app') === '1';
+    sessionStorage.removeItem('arhiva_from_app');
+  }catch(e){}
+
   const mimeMatch = /^data:([^;]+);/.exec(item.dataUrl || '');
   const mime = mimeMatch ? mimeMatch[1] : '';
   const isImage = item.type === 'image' || (item.type !== 'pdf' && item.type !== 'doc' && mime.indexOf('image/') === 0);
+  const photoHeight = fromApp ? '58vh' : '82vh';
+  const hintHtml = fromApp
+    ? '<div class="hint">Da zakačiš ovu sliku na početni ekran: dodirni meni (tri tačke) u Chrome traci, pa <b>"Dodaj na početni ekran"</b>. (Ne dodiruj sliku iznad — samo meni gore desno.)</div>' +
+      '<a class="back" href="index.html">\u2190 Nazad u Arhivu</a>'
+    : '<a class="back tiny" href="index.html">Arhiva</a>';
   if(isImage){
     content.innerHTML =
-      '<div class="frame"><div class="photo" oncontextmenu="return false;" style="width:min(84vw,420px);height:58vh;background-image:url(\''+item.dataUrl.replace(/'/g,"%27")+'\')"></div></div>' +
-      '<div class="cap">'+escapeHtml(item.name)+'</div>' +
-      '<div class="hint">Da zakačiš ovu sliku na početni ekran: dodirni meni (tri tačke) u Chrome traci, pa <b>"Dodaj na početni ekran"</b>. (Ne dodiruj sliku iznad — samo meni gore desno.)</div>' +
-      '<a class="back" href="index.html">\u2190 Nazad u Arhivu</a>';
+      '<div class="frame"><div class="photo" oncontextmenu="return false;" style="width:min(92vw,460px);height:'+photoHeight+';background-image:url(\''+item.dataUrl.replace(/'/g,"%27")+'\')"></div></div>' +
+      (fromApp ? '<div class="cap">'+escapeHtml(item.name)+'</div>' : '') +
+      hintHtml;
   }else{
     const label = item.type === 'pdf' ? 'PDF' : (item.ext || 'FAJL');
     content.innerHTML =
       '<svg class="doc-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>' +
       '<div class="cap">'+escapeHtml(item.name)+' <span style="color:var(--ink-dim);font-family:\'IBM Plex Mono\',monospace;font-style:normal;font-size:11px;">('+label+')</span></div>' +
       '<button class="open-btn" id="openDoc">Otvori</button>' +
-      '<div class="hint">Da zakačiš ovu stavku na početni ekran: dodirni meni (tri tačke) u Chrome traci, pa <b>"Dodaj na početni ekran"</b>.</div>' +
-      '<a class="back" href="index.html">\u2190 Nazad u Arhivu</a>';
+      hintHtml;
     document.getElementById('openDoc').onclick = async ()=>{
       try{
         const res = await fetch(item.dataUrl);
