@@ -147,13 +147,18 @@
 
   .toolbar-actions{display:flex;align-items:center;gap:14px;}
   .icon-btn{
-    width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line);
+    width:40px;height:40px;border-radius:50%;border:1.5px solid var(--line);
     display:flex;align-items:center;justify-content:center;color:var(--ink-dim);
     cursor:pointer;background:none;flex:none;
     transition:border-color .2s, color .2s;
   }
   .icon-btn:active{transform:scale(0.93);}
   .icon-btn:hover, .icon-btn:focus-visible{border-color:var(--brass-soft);color:var(--brass);}
+  .search-close{
+    background:none;border:none;color:var(--ink-faint);cursor:pointer;flex:none;
+    display:flex;align-items:center;justify-content:center;padding:2px;
+  }
+  .search-close:active{color:var(--brass);}
 
   .section-label{
     font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;
@@ -327,11 +332,14 @@
         <h1>Arhiva</h1>
       </div>
       <div class="header-actions">
+        <button class="icon-btn" id="searchBtn" title="Pretraga">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>
+        </button>
         <button class="icon-btn" id="addBtn" type="button" title="Dodaj">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
         </button>
         <button class="icon-btn" id="settingsBtn" title="Podešavanja">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"></path></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"></path></svg>
         </button>
       </div>
     </div>
@@ -349,12 +357,15 @@
       <button class="all" id="selAll">Izaberi sve</button>
     </div>
 
-    <div class="searchbar" id="searchbarWrap">
+    <div class="searchbar" id="searchbarWrap" style="display:none;">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
         <circle cx="11" cy="11" r="7"></circle>
         <line x1="21" y1="21" x2="16.2" y2="16.2"></line>
       </svg>
       <input id="search" type="text" placeholder="Pretraži po nazivu...">
+      <button id="searchCloseBtn" class="search-close" type="button" title="Zatvori pretragu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
     </div>
   </header>
 
@@ -465,6 +476,7 @@ let currentFolder = null;
 let sortMode = 'date';
 let pendingAssignItemId = null;
 let selectionMode = false;
+let searchOpen = false;
 let selectedIds = new Set();
 let pendingBulkFolder = null;
 let renamingAlbum = null;
@@ -640,10 +652,11 @@ function render(){
   selHeader.classList.toggle('show', selectionMode);
   selBar.classList.toggle('show', selectionMode);
   document.body.style.paddingBottom = selectionMode ? '90px' : '70px';
-  searchbarWrap.style.display = selectionMode ? 'none' : 'flex';
+  searchbarWrap.style.display = (selectionMode || !searchOpen) ? 'none' : 'flex';
   toolbarWrap.style.display = 'none';
   document.getElementById('settingsBtn').style.display = selectionMode ? 'none' : 'flex';
   document.getElementById('addBtn').style.display = selectionMode ? 'none' : 'flex';
+  document.getElementById('searchBtn').style.display = selectionMode ? 'none' : 'flex';
   if(selectionMode){
     selCount.textContent = selectedIds.size + (selectedIds.size===1 ? ' odabrano' : ' odabrano');
     document.getElementById('btnShortcut').hidden = selectedIds.size !== 1;
@@ -1345,6 +1358,16 @@ async function addFile(file, category){
 }
 
 searchEl.addEventListener('input', render);
+document.getElementById('searchBtn').onclick = ()=>{
+  searchOpen = true;
+  render();
+  setTimeout(()=>searchEl.focus(), 50);
+};
+document.getElementById('searchCloseBtn').onclick = ()=>{
+  searchOpen = false;
+  searchEl.value = '';
+  render();
+};
 
 loadAll().then(checkDeepLink);
 
