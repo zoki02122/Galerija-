@@ -47,15 +47,15 @@
   .mark-title{display:flex;align-items:center;gap:10px;}
   .mark{width:15px;height:15px;border:2px solid var(--brass);transform:rotate(45deg);flex:none;}
   h1{
-    font-family:'Fraunces',serif;font-weight:600;font-size:24px;
+    font-family:'Fraunces',serif;font-weight:600;font-size:25px;
     letter-spacing:2px;text-transform:uppercase;margin:0;color:var(--ink);
   }
-  .sub{color:var(--ink-dim);font-size:13.5px;margin:2px 0 0 25px;font-style:italic;font-family:'Fraunces',serif;}
+  .sub{color:var(--ink-dim);font-size:15px;margin:2px 0 0 25px;font-style:italic;font-family:'Fraunces',serif;}
 
   .crumb{display:flex;align-items:center;gap:8px;min-width:0;flex:1;}
-  .crumb .here{font-family:'Fraunces',serif;font-style:italic;color:var(--ink);font-size:17px;line-height:1.1;
+  .crumb .here{font-family:'Fraunces',serif;font-style:italic;color:var(--ink);font-size:20.5px;line-height:1.1;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
-  .crumb .crumb-count{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.5px;color:var(--ink-dim);white-space:nowrap;flex:none;}
+  .crumb .crumb-count{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.5px;color:var(--ink-dim);white-space:nowrap;flex:none;}
   .header-actions{display:flex;align-items:center;gap:10px;}
 
   .back-btn{
@@ -81,15 +81,15 @@
     font-family:'Inter',sans-serif;
   }
   .sel-header .cancel{
-    color:var(--ink);font-size:19px;line-height:1;
+    color:var(--ink);font-size:20px;line-height:1;
     width:30px;height:30px;border-radius:50%;
     display:flex;align-items:center;justify-content:center;
     border:1px solid var(--line);
   }
   .sel-header .count{
-    font-family:'Fraunces',serif;font-style:italic;font-size:15px;color:var(--ink);
+    font-family:'Fraunces',serif;font-style:italic;font-size:16.5px;color:var(--ink);
   }
-  .sel-header .all{color:var(--brass);font-size:13px;letter-spacing:0.3px;}
+  .sel-header .all{color:var(--brass);font-size:14.5px;letter-spacing:0.3px;}
 
   /* ---------- Bottom action bar ---------- */
   .sel-bar{
@@ -106,7 +106,7 @@
     background:none;border:none;cursor:pointer;
     display:flex;flex-direction:column;align-items:center;gap:5px;
     color:var(--ink-dim);
-    font-family:'Inter',sans-serif;font-size:11px;
+    font-family:'Inter',sans-serif;font-size:12.5px;
     padding:4px 10px;
   }
   .sel-bar button svg{stroke:var(--ink-dim);}
@@ -125,15 +125,15 @@
   .searchbar:focus-within{border-color:var(--brass-soft);box-shadow:0 0 0 3px var(--brass-glow);}
   .searchbar svg{flex:none;stroke:var(--ink-faint);transition:stroke .2s;}
   .searchbar:focus-within svg{stroke:var(--brass);}
-  .searchbar input{flex:1;background:none;border:none;outline:none;color:var(--ink);font-family:'Inter',sans-serif;font-size:15px;}
+  .searchbar input{flex:1;background:none;border:none;outline:none;color:var(--ink);font-family:'Inter',sans-serif;font-size:16.5px;}
   .searchbar input::placeholder{color:var(--ink-faint);}
 
   .toolbar{
     display:flex;justify-content:space-between;align-items:center;
     margin:22px 0 20px;padding-bottom:14px;border-bottom:1px solid var(--line-soft);
   }
-  .count{font-family:'IBM Plex Mono',monospace;font-size:15px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink-dim);}
-  .count b{color:var(--ink);font-weight:600;font-size:17px;}
+  .count{font-family:'IBM Plex Mono',monospace;font-size:16.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink-dim);}
+  .count b{color:var(--ink);font-weight:600;font-size:18.5px;}
   .add-btn{display:flex;align-items:center;gap:9px;background:none;border:none;cursor:pointer;padding:2px;font-family:inherit;}
   .add-btn .seal{
     width:34px;height:34px;border-radius:50%;border:1.5px solid var(--brass);
@@ -142,7 +142,7 @@
   }
   .add-btn:active .seal{transform:scale(0.93);}
   .add-btn .seal:hover, .add-btn:focus-visible .seal{background:var(--brass-glow);box-shadow:0 0 0 4px var(--brass-glow);}
-  .add-btn .label{font-family:'Fraunces',serif;font-style:italic;font-size:14.5px;color:var(--ink-dim);}
+  .add-btn .label{font-family:'Fraunces',serif;font-style:italic;font-size:16px;color:var(--ink-dim);}
   input[type=file]{display:none;}
 
   .toolbar-actions{display:flex;align-items:center;gap:14px;}
@@ -161,31 +161,63 @@
   .search-close:active{color:var(--brass);}
 
   .section-label{
-    font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:1.5px;text-transform:uppercase;
     color:var(--ink-faint);margin:0 0 12px;
   }
   .section-label-top{margin-top:0;}
   .grid + .section-label{margin-top:22px;}
   .date-label{
-    font-family:'Fraunces',serif;font-style:italic;font-size:14px;color:var(--ink-dim);
+    font-family:'Fraunces',serif;font-style:italic;font-size:15.5px;color:var(--ink-dim);
     margin:26px 0 12px;
   }
   .date-label:first-child{margin-top:0;}
 
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:18px 14px;}
   .album-summary{
-    font-family:'Fraunces',serif;font-style:italic;font-size:16px;color:var(--ink);
+    font-family:'Fraunces',serif;font-style:italic;font-size:19px;color:var(--ink);
     margin:0 0 14px;
   }
-  .album-summary .count-part{font-size:13px;color:var(--ink-dim);margin-left:2px;}
+  .album-summary .count-part{font-size:15.5px;color:var(--ink-dim);margin-left:2px;}
   .grid.folders-grid{grid-template-columns:repeat(3,1fr);gap:10px 8px;}
+  .grid.folders-grid.folders-list{display:flex;flex-direction:column;gap:8px;}
   .grid.photos-grid{grid-template-columns:repeat(3,1fr);gap:10px 8px;}
-  .photos-grid .meta .name{font-size:13px;}
-  .photos-grid .meta .index{font-size:9px;}
+  .photos-grid .meta .name{font-size:15.5px;}
+  .photos-grid .meta .index{font-size:10px;}
   .photos-grid .pdf-thumb svg{width:22px;height:22px;}
-  .photos-grid .pdf-thumb .pdf-label{font-size:8.5px;}
-  .folders-grid .folder-tile .fname{font-size:12.5px;}
-  .folders-grid .folder-tile .fcount{font-size:10.5px;}
+  .photos-grid .pdf-thumb .pdf-label{font-size:9.5px;}
+  .folders-grid .folder-tile .fname{font-size:15.5px;}
+  .folders-grid .folder-tile .fcount{font-size:12.5px;}
+
+  .album-summary-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;}
+  .album-summary-row .album-summary{margin:0;}
+  .view-toggle-btn{
+    width:32px;height:32px;border-radius:50%;border:1.5px solid var(--line);
+    display:flex;align-items:center;justify-content:center;color:var(--ink-dim);
+    cursor:pointer;background:none;flex:none;transition:border-color .2s, color .2s;
+  }
+  .view-toggle-btn:active{transform:scale(0.93);}
+  .view-toggle-btn:hover, .view-toggle-btn:focus-visible{border-color:var(--brass-soft);color:var(--brass);}
+
+  .folder-tile-row{
+    display:flex;align-items:center;gap:12px;box-sizing:border-box;width:100%;
+    background:var(--surface);border:1px solid var(--line);
+    padding:12px 14px;cursor:pointer;position:relative;transition:border-color .2s;
+  }
+  .folder-tile-row:active{border-color:var(--brass-soft);}
+  .folder-tile-row .ftile-cover{
+    width:44px;height:44px;flex-shrink:0;border-radius:50%;overflow:hidden;
+    background:var(--surface-2);display:flex;align-items:center;justify-content:center;position:relative;
+  }
+  .folder-tile-row .ftile-cover img{width:100%;height:100%;object-fit:cover;}
+  .folder-tile-row .ftile-cover svg{stroke:var(--brass);width:18px;height:18px;}
+  .folder-tile-row .fr-text{display:flex;flex-direction:column;min-width:0;flex:1;}
+  .folder-tile-row .fname{
+    font-family:'Fraunces',serif;font-style:italic;font-size:17px;color:var(--ink);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .folder-tile-row .fcount{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-faint);margin-top:2px;
+  }
 
   .inbox-row{display:flex;align-items:center;gap:14px;margin-bottom:10px;}
   .folder-tile-wide{
@@ -201,11 +233,11 @@
   .folder-tile-wide .fw-icon svg{stroke:var(--brass);width:16px;height:16px;}
   .folder-tile-wide .fw-text{display:flex;flex-direction:column;min-width:0;}
   .folder-tile-wide .fw-name{
-    font-family:'Fraunces',serif;font-style:italic;font-size:15px;color:var(--ink);
+    font-family:'Fraunces',serif;font-style:italic;font-size:18px;color:var(--ink);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
   .folder-tile-wide .fw-count{
-    font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-faint);margin-top:2px;
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-faint);margin-top:2px;
   }
   .inbox-row .album-summary{margin:0;min-width:0;}
 
@@ -222,11 +254,11 @@
   .folder-tile svg{stroke:var(--brass);}
   .folder-tile .ftile-cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
   .folder-tile .fname{
-    display:block;font-family:'Fraunces',serif;font-style:italic;font-size:13.5px;color:var(--ink);
+    display:block;font-family:'Fraunces',serif;font-style:italic;font-size:16px;color:var(--ink);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
-    height:17px;line-height:17px;
+    height:18px;line-height:18px;
   }
-  .folder-tile .fcount{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-faint);height:13px;line-height:13px;}
+  .folder-tile .fcount{display:block;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-faint);height:14px;line-height:14px;}
   .pin-mark{
     position:absolute;top:6px;right:6px;width:18px;height:18px;border-radius:50%;
     background:var(--brass);display:flex;align-items:center;justify-content:center;z-index:2;
@@ -242,7 +274,7 @@
   .card:active .thumb-box{border-color:var(--brass-soft);}
   .thumb-box img{width:100%;height:100%;object-fit:cover;display:block;}
   .thumb-box.pdf-thumb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--brass);}
-  .thumb-box.pdf-thumb .pdf-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1.5px;}
+  .thumb-box.pdf-thumb .pdf-label{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1.5px;}
 
   .corner{
     position:absolute;top:0;left:0;width:0;height:0;
@@ -265,27 +297,43 @@
   .card.selected .thumb-box{border-color:var(--brass);}
 
   .meta{padding:8px 1px 0;}
-  .meta .index{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--brass-soft);margin-bottom:2px;}
-  .meta .name{display:block;font-family:'Fraunces',serif;font-style:italic;font-size:16.5px;color:var(--ink);white-space:normal;overflow-wrap:break-word;line-height:1.3;}
-  .meta input{background:none;border:none;border-bottom:1px solid var(--brass);outline:none;color:var(--ink);font-size:16.5px;font-family:'Fraunces',serif;font-style:italic;width:100%;padding:0;}
+  .meta .index{display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1px;color:var(--brass-soft);margin-bottom:2px;}
+  .meta .name{display:block;font-family:'Fraunces',serif;font-style:italic;font-size:19.5px;color:var(--ink);white-space:normal;overflow-wrap:break-word;line-height:1.3;}
+  .meta input{background:none;border:none;border-bottom:1px solid var(--brass);outline:none;color:var(--ink);font-size:19.5px;font-family:'Fraunces',serif;font-style:italic;width:100%;padding:0;}
 
   .empty{text-align:center;padding:56px 20px;color:var(--ink-dim);border:1px solid var(--line-soft);position:relative;}
   .empty::before{content:'';position:absolute;inset:8px;border:1px dashed var(--line);pointer-events:none;}
   .empty .mark{margin:0 auto 14px;}
-  .empty b{display:block;color:var(--ink);font-family:'Fraunces',serif;font-style:italic;font-size:16px;font-weight:500;margin-bottom:6px;}
-  .empty span{font-size:13px;}
+  .empty b{display:block;color:var(--ink);font-family:'Fraunces',serif;font-style:italic;font-size:17.5px;font-weight:500;margin-bottom:6px;}
+  .empty span{font-size:14.5px;}
 
-  .modal-bg{display:none;position:fixed;inset:0;background:rgba(6,6,7,0.92);z-index:50;align-items:center;justify-content:center;padding:24px;}
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(6,6,7,0.92);z-index:50;align-items:center;justify-content:center;padding:0;}
   .modal-bg.open{display:flex;}
-  .modal-frame{border:1px solid var(--brass-soft);padding:6px;background:var(--surface);max-width:100%;}
-  .modal-frame img{max-width:100%;max-height:66vh;display:block;}
-  .modal-caption{text-align:center;color:var(--ink-dim);font-family:'Fraunces',serif;font-style:italic;font-size:14px;margin-top:14px;}
+  .modal-inner{width:100%;}
+  .modal-frame{width:100%;max-width:100%;padding:0;border:none;background:none;}
+  .modal-frame img{width:100%;max-height:80vh;object-fit:contain;display:block;}
+  .modal-caption{text-align:center;color:var(--ink-dim);font-family:'Fraunces',serif;font-style:italic;font-size:16px;margin-top:14px;padding:0 20px;}
   .modal-close{position:absolute;top:20px;left:20px;}
+  .modal-nav{
+    position:absolute;top:50%;transform:translateY(-50%);
+    width:42px;height:42px;border-radius:50%;background:rgba(13,14,16,0.6);
+    border:1.5px solid var(--line);color:var(--ink-dim);display:flex;align-items:center;justify-content:center;
+    cursor:pointer;transition:border-color .2s, color .2s;
+  }
+  .modal-nav:active{transform:translateY(-50%) scale(0.93);}
+  .modal-nav:hover, .modal-nav:focus-visible{border-color:var(--brass-soft);color:var(--brass);}
+  .modal-nav.prev{left:4px;}
+  .modal-nav.next{right:4px;}
+  .modal-nav[hidden]{display:none;}
+  .modal-position{
+    text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1px;
+    color:var(--ink-faint);margin-top:6px;
+  }
 
   .toast{
     position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(8px);
     background:var(--surface);border:1px solid var(--brass-soft);color:var(--ink);
-    padding:11px 18px;font-size:13px;font-family:'Inter',sans-serif;
+    padding:11px 18px;font-size:14.5px;font-family:'Inter',sans-serif;
     opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;z-index:60;
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
@@ -293,10 +341,10 @@
   .sheet-bg{display:none;position:fixed;inset:0;background:rgba(6,6,7,0.85);z-index:55;align-items:flex-end;justify-content:center;}
   .sheet-bg.open{display:flex;}
   .sheet{background:var(--surface);border-top:1px solid var(--brass-soft);width:100%;max-width:500px;padding:18px 16px 26px;}
-  .sheet h3{font-family:'Fraunces',serif;font-style:italic;font-weight:500;font-size:15px;color:var(--ink-dim);margin:0 0 12px;}
+  .sheet h3{font-family:'Fraunces',serif;font-style:italic;font-weight:500;font-size:16.5px;color:var(--ink-dim);margin:0 0 12px;}
   .sheet-row{
     display:flex;align-items:center;justify-content:space-between;padding:13px 4px;
-    border-bottom:1px solid var(--line-soft);cursor:pointer;color:var(--ink);font-size:14.5px;
+    border-bottom:1px solid var(--line-soft);cursor:pointer;color:var(--ink);font-size:16px;
   }
   .sheet-row:last-child{border-bottom:none;}
   .sheet-row .dot{width:7px;height:7px;border-radius:50%;background:var(--brass);opacity:0;}
@@ -305,13 +353,13 @@
 
   .sheet-input{
     width:100%;background:var(--surface-2);border:1px solid var(--line);
-    color:var(--ink);font-family:'Inter',sans-serif;font-size:15px;
+    color:var(--ink);font-family:'Inter',sans-serif;font-size:16.5px;
     padding:12px 14px;outline:none;margin-bottom:12px;
   }
   .sheet-input:focus{border-color:var(--brass-soft);box-shadow:0 0 0 3px var(--brass-glow);}
   .sheet-cta{
     width:100%;background:var(--brass);color:#1a1400;border:none;
-    font-family:'Fraunces',serif;font-weight:600;font-size:14.5px;
+    font-family:'Fraunces',serif;font-weight:600;font-size:16px;
     padding:13px;cursor:pointer;
   }
   .sheet-cta:active{opacity:0.85;}
@@ -402,9 +450,16 @@
   <button class="back-btn modal-close" id="modalClose">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
   </button>
-  <div>
-    <div class="modal-frame"><img id="modalImg" src=""></div>
+  <button class="modal-nav prev" id="modalPrev">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+  </button>
+  <button class="modal-nav next" id="modalNext">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+  </button>
+  <div class="modal-inner">
+    <div class="modal-frame" id="modalFrame"><img id="modalImg" src=""></div>
     <div class="modal-caption" id="modalCaption"></div>
+    <div class="modal-position" id="modalPosition"></div>
   </div>
 </div>
 
@@ -462,7 +517,7 @@
 <div class="sheet-bg" id="settingsSheet">
   <div class="sheet">
     <div class="sheet-head"><button class="back-btn" id="settingsBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h3>Podešavanja</h3></div>
-    <p id="storageInfo" style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink-faint);margin:0 0 18px;"></p>
+    <p id="storageInfo" style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-faint);margin:0 0 18px;"></p>
     <div class="sheet-row" id="settingsExport"><span>Izvezi rezervnu kopiju</span></div>
     <div class="sheet-row" id="settingsImport"><span>Uvezi rezervnu kopiju</span></div>
     <input type="file" id="importInput" accept="application/json" style="display:none">
@@ -476,6 +531,9 @@ let currentFolder = null;
 let sortMode = 'date';
 let pendingAssignItemId = null;
 let selectionMode = false;
+let currentGalleryItems = [];
+let currentGalleryIndex = -1;
+let albumViewMode = 'grid';
 let searchOpen = false;
 let selectedIds = new Set();
 let pendingBulkFolder = null;
@@ -484,6 +542,7 @@ let albumContextTarget = null;
 
 /* ---------- Back-button (history) support ---------- */
 let backStack = [];
+let pendingAfterClose = null;
 function pushBack(closer){
   history.pushState({app:true, depth: backStack.length+1}, '');
   backStack.push(closer);
@@ -491,10 +550,19 @@ function pushBack(closer){
 function requestClose(){
   if(backStack.length > 0){ history.back(); }
 }
+function requestCloseThen(fn){
+  pendingAfterClose = fn;
+  requestClose();
+}
 window.addEventListener('popstate', ()=>{
   if(backStack.length > 0){
     const fn = backStack.pop();
     fn();
+    if(pendingAfterClose){
+      const next = pendingAfterClose;
+      pendingAfterClose = null;
+      next();
+    }
   }
 });
 
@@ -541,6 +609,7 @@ function normalizeSr(s){
 }
 
 const LS_PREFIX = 'galerija:';
+try{ albumViewMode = localStorage.getItem(LS_PREFIX+'albumViewMode') || 'grid'; }catch(e){}
 
 /* ---------- IndexedDB sloj za stavke (slike/dokumenti) ---------- */
 const IDB_NAME = 'galerijaDB';
@@ -680,7 +749,7 @@ function render(){
       const btn = document.createElement('button');
       btn.textContent = label;
       const active = sortMode === mode;
-      btn.style.cssText = 'font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;background:none;border:1px solid '+(active?'var(--brass)':'var(--line)')+';color:'+(active?'var(--brass)':'var(--ink-dim)')+';padding:7px 11px;cursor:pointer;';
+      btn.style.cssText = 'font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;background:none;border:1px solid '+(active?'var(--brass)':'var(--line)')+';color:'+(active?'var(--brass)':'var(--ink-dim)')+';padding:7px 11px;cursor:pointer;';
       btn.onclick = ()=>{ sortMode = mode; render(); };
       sortBtns.appendChild(btn);
     });
@@ -693,15 +762,18 @@ function render(){
       emptyDiv.className = 'empty';
       emptyDiv.innerHTML = '<b>'+(q?'Nema rezultata':'Album je prazan')+'</b><span>'+msg+'</span>';
       contentArea.appendChild(emptyDiv);
+      currentGalleryItems = [];
       return;
     }
     if(sortMode === 'alpha'){
       const sorted = filtered.slice().sort((a,b)=>normalizeSr(a.name).localeCompare(normalizeSr(b.name)));
+      currentGalleryItems = sorted.filter(i=>i.type==='image');
       const grid = document.createElement('div');
       grid.className = 'grid photos-grid';
       sorted.forEach((item,i)=>grid.appendChild(buildCard(item, i+1)));
       contentArea.appendChild(grid);
     }else{
+      currentGalleryItems = filtered.slice().sort((a,b)=>b.ts-a.ts).filter(i=>i.type==='image');
       contentArea.appendChild(buildDatedPhotoSections(filtered));
     }
     return;
@@ -761,6 +833,7 @@ function render(){
       label2.className = 'section-label';
       label2.textContent = 'Slike i dokumenti';
       contentArea.appendChild(label2);
+      currentGalleryItems = matchedItems.slice().sort((a,b)=>b.ts-a.ts).filter(i=>i.type==='image');
       contentArea.appendChild(buildDatedPhotoSections(matchedItems));
     }
     return;
@@ -793,11 +866,13 @@ function render(){
     const count = items.filter(i=>i.category===name).length;
     const tile = document.createElement('div');
     const coverItem = cat.cover ? items.find(i=>i.id===cat.cover) : null;
-    tile.className = 'folder-tile';
-    if(coverItem){
-      tile.innerHTML = '<div class="ftile-cover"><img src="'+coverItem.dataUrl+'"></div><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+count+' '+(count===1?'stavka':'stavki')+'</span>';
+    const isList = albumViewMode === 'list';
+    tile.className = isList ? 'folder-tile-row' : 'folder-tile';
+    const coverInner = coverItem ? '<img src="'+coverItem.dataUrl+'">' : folderIconSvg();
+    if(isList){
+      tile.innerHTML = '<div class="ftile-cover">'+coverInner+'</div><div class="fr-text"><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+count+' '+(count===1?'stavka':'stavki')+'</span></div>';
     }else{
-      tile.innerHTML = '<div class="ftile-cover">'+folderIconSvg()+'</div><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+count+' '+(count===1?'stavka':'stavki')+'</span>';
+      tile.innerHTML = '<div class="ftile-cover">'+coverInner+'</div><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+count+' '+(count===1?'stavka':'stavki')+'</span>';
     }
     if(cat.pinned){
       const pin = document.createElement('div');
@@ -826,24 +901,48 @@ function render(){
     return tile;
   };
 
+  const viewToggleBtn = ()=>{
+    const btn = document.createElement('button');
+    btn.className = 'view-toggle-btn';
+    btn.title = albumViewMode === 'grid' ? 'Prikaži kao listu' : 'Prikaži kao mrežu';
+    btn.innerHTML = albumViewMode === 'grid'
+      ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>'
+      : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>';
+    btn.onclick = ()=>{
+      albumViewMode = albumViewMode === 'grid' ? 'list' : 'grid';
+      try{ localStorage.setItem(LS_PREFIX+'albumViewMode', albumViewMode); }catch(e){}
+      render();
+    };
+    return btn;
+  };
+
+  const gridClass = 'grid folders-grid' + (albumViewMode === 'list' ? ' folders-list' : '');
+
   if(pinnedCats.length > 0){
+    const pinLabelRow = document.createElement('div');
+    pinLabelRow.className = 'album-summary-row section-label-top';
     const pinLabel = document.createElement('p');
-    pinLabel.className = 'album-summary section-label-top';
+    pinLabel.className = 'album-summary';
     pinLabel.textContent = 'Pinovano';
-    contentArea.appendChild(pinLabel);
+    pinLabelRow.appendChild(pinLabel);
+    contentArea.appendChild(pinLabelRow);
     const pinGrid = document.createElement('div');
-    pinGrid.className = 'grid folders-grid';
+    pinGrid.className = gridClass;
     pinnedCats.forEach(cat=>pinGrid.appendChild(buildFolderTile(cat)));
     contentArea.appendChild(pinGrid);
   }
 
+  const albumsLabelRow = document.createElement('div');
+  albumsLabelRow.className = 'album-summary-row' + (pinnedCats.length === 0 ? ' section-label-top' : '');
   const albumsLabel = document.createElement('p');
-  albumsLabel.className = 'album-summary' + (pinnedCats.length === 0 ? ' section-label-top' : '');
+  albumsLabel.className = 'album-summary';
   albumsLabel.textContent = 'Albumi';
-  contentArea.appendChild(albumsLabel);
+  albumsLabelRow.appendChild(albumsLabel);
+  albumsLabelRow.appendChild(viewToggleBtn());
+  contentArea.appendChild(albumsLabelRow);
 
   const fgrid = document.createElement('div');
-  fgrid.className = 'grid folders-grid';
+  fgrid.className = gridClass;
   otherCats.forEach(cat=>fgrid.appendChild(buildFolderTile(cat)));
   contentArea.appendChild(fgrid);
 }
@@ -860,21 +959,21 @@ const closeAlbumContext = ()=>{ albumContextTarget = null; document.getElementBy
 document.getElementById('acPin').onclick = ()=>{
   const cat = categories.find(c=>c.name===albumContextTarget);
   if(cat){ cat.pinned = !cat.pinned; saveCategories(); }
-  document.getElementById('albumContextSheet').classList.remove('open');
   render();
+  requestClose();
 };
 document.getElementById('acRename').onclick = ()=>{
-  document.getElementById('albumContextSheet').classList.remove('open');
-  openRenameSheet(albumContextTarget);
+  const target = albumContextTarget;
+  requestCloseThen(()=>openRenameSheet(target));
 };
 document.getElementById('acCover').onclick = ()=>{
-  document.getElementById('albumContextSheet').classList.remove('open');
-  openCoverPicker(albumContextTarget);
+  const target = albumContextTarget;
+  requestCloseThen(()=>openCoverPicker(target));
 };
 document.getElementById('acDelete').onclick = ()=>{
-  document.getElementById('albumContextSheet').classList.remove('open');
-  if(!confirm('Obrisati album "'+albumContextTarget+'"? Slike ostaju sačuvane u "Sve slike".')) return;
   const name = albumContextTarget;
+  requestClose();
+  if(!confirm('Obrisati album "'+name+'"? Slike ostaju sačuvane u "Sve slike".')) return;
   items.forEach(it=>{
     if(it.category === name){
       it.category = null;
@@ -897,7 +996,7 @@ function openCoverPicker(name){
   document.getElementById('coverPickerSheet').classList.add('open');
   pushBack(closeCoverPicker);
   if(pool.length === 0){
-    grid.innerHTML = '<p style="grid-column:1/-1;color:var(--ink-dim);font-size:13px;">Album je prazan, nema slika za naslovnu.</p>';
+    grid.innerHTML = '<p style="grid-column:1/-1;color:var(--ink-dim);font-size:14.5px;">Album je prazan, nema slika za naslovnu.</p>';
     return;
   }
   pool.forEach(it=>{
@@ -909,8 +1008,8 @@ function openCoverPicker(name){
     t.onclick = ()=>{
       const cat = categories.find(c=>c.name===name);
       if(cat){ cat.cover = it.id; saveCategories(); }
-      document.getElementById('coverPickerSheet').classList.remove('open');
       render();
+      requestClose();
     };
     grid.appendChild(t);
   });
@@ -1029,9 +1128,7 @@ function toggleSelect(id){
   render();
 }
 function exitSelection(){
-  selectionMode = false;
-  selectedIds = new Set();
-  render();
+  requestClose();
 }
 selCancel.onclick = ()=>requestClose();
 selAll.onclick = ()=>{
@@ -1069,11 +1166,43 @@ function startRename(item, nameSpan, meta, idx){
 }
 
 function openModal(item){
-  modalImg.src = item.dataUrl;
-  modalCaption.textContent = item.name;
+  currentGalleryIndex = currentGalleryItems.findIndex(i=>i.id===item.id);
+  showModalItem(item);
   modalBg.classList.add('open');
   pushBack(closeModal);
 }
+function showModalItem(item){
+  modalImg.src = item.dataUrl;
+  modalCaption.textContent = item.name;
+  const total = currentGalleryItems.length;
+  const showNav = total > 1;
+  document.getElementById('modalPrev').hidden = !showNav;
+  document.getElementById('modalNext').hidden = !showNav;
+  document.getElementById('modalPosition').textContent = showNav && currentGalleryIndex >= 0
+    ? (currentGalleryIndex+1) + ' / ' + total : '';
+}
+function modalNav(dir){
+  if(currentGalleryItems.length < 2 || currentGalleryIndex < 0) return;
+  currentGalleryIndex = (currentGalleryIndex + dir + currentGalleryItems.length) % currentGalleryItems.length;
+  showModalItem(currentGalleryItems[currentGalleryIndex]);
+}
+document.getElementById('modalPrev').onclick = (e)=>{ e.stopPropagation(); modalNav(-1); };
+document.getElementById('modalNext').onclick = (e)=>{ e.stopPropagation(); modalNav(1); };
+
+let modalTouchStartX = 0, modalTouchStartY = 0;
+const modalFrame = document.getElementById('modalFrame');
+modalFrame.addEventListener('touchstart', (e)=>{
+  if(e.touches[0]){ modalTouchStartX = e.touches[0].clientX; modalTouchStartY = e.touches[0].clientY; }
+}, {passive:true});
+modalFrame.addEventListener('touchend', (e)=>{
+  if(!e.changedTouches[0]) return;
+  const dx = e.changedTouches[0].clientX - modalTouchStartX;
+  const dy = e.changedTouches[0].clientY - modalTouchStartY;
+  if(Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)*1.4){
+    modalNav(dx < 0 ? 1 : -1);
+  }
+});
+
 const closeModal = ()=>{ modalBg.classList.remove('open'); clearDeepLink(); };
 document.getElementById('modalClose').onclick = ()=>requestClose();
 modalBg.onclick = (e)=>{ if(e.target === modalBg){ requestClose(); } };
@@ -1088,14 +1217,14 @@ function openMoveSheet(){
     const row = document.createElement('div');
     row.className = 'sheet-row';
     row.innerHTML = '<span>'+escapeHtml(cat.name)+'</span>';
-    row.onclick = ()=>{ sheetBg.classList.remove('open'); openMoveCopySheet(cat.name, cat.name); };
+    row.onclick = ()=>{ requestCloseThen(()=>openMoveCopySheet(cat.name, cat.name)); };
     sheetList.appendChild(row);
   });
 
   const newRow = document.createElement('div');
   newRow.className = 'sheet-row new';
   newRow.textContent = '+ Novi album...';
-  newRow.onclick = ()=>{ sheetBg.classList.remove('open'); openNewFolderSheet('bulk'); };
+  newRow.onclick = ()=>{ requestCloseThen(()=>openNewFolderSheet('bulk')); };
   sheetList.appendChild(newRow);
 
   sheetBg.classList.add('open');
@@ -1110,8 +1239,8 @@ function openMoveCopySheet(folderKey, label){
   pushBack(closeMoveCopySheet);
 }
 const closeMoveCopySheet = ()=>moveCopySheet.classList.remove('open');
-document.getElementById('btnMove').onclick = ()=>{ moveCopySheet.classList.remove('open'); moveSelectedToFolder(pendingBulkFolder); };
-document.getElementById('btnCopy').onclick = ()=>{ moveCopySheet.classList.remove('open'); copySelectedToFolder(pendingBulkFolder); };
+document.getElementById('btnMove').onclick = ()=>{ moveSelectedToFolder(pendingBulkFolder); requestClose(); };
+document.getElementById('btnCopy').onclick = ()=>{ copySelectedToFolder(pendingBulkFolder); requestClose(); };
 document.getElementById('moveCopyBack').onclick = ()=>requestClose();
 moveCopySheet.onclick = (e)=>{ if(e.target === moveCopySheet) requestClose(); };
 
@@ -1237,10 +1366,9 @@ function createFolder(){
       });
       if(currentFolder === oldName) currentFolder = name;
     }
-    newFolderSheet.classList.remove('open');
-    renamingAlbum = null;
     render();
     toast('Album preimenovan.');
+    requestClose();
     return;
   }
 
@@ -1248,16 +1376,15 @@ function createFolder(){
     categories.push({name, pinned:false, cover:null});
     saveCategories();
   }
-  newFolderSheet.classList.remove('open');
   if(pendingAssignItemId === 'bulk'){
-    pendingAssignItemId = null;
-    openMoveCopySheet(name, name);
+    requestCloseThen(()=>openMoveCopySheet(name, name));
   }else if(pendingAssignItemId){
-    pendingAssignItemId = null;
+    requestClose();
   }else{
     currentFolder = name;
     render();
     toast('Album "'+name+'" napravljen.');
+    requestClose();
   }
 }
 document.getElementById('newFolderCreate').onclick = createFolder;
@@ -1265,22 +1392,60 @@ document.getElementById('newFolderBack').onclick = ()=>requestClose();
 newFolderInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') createFolder(); });
 newFolderSheet.onclick = (e)=>{ if(e.target === newFolderSheet){ requestClose(); } };
 
+function toastPersist(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+}
+function toastHide(){
+  toastEl.classList.remove('show');
+}
+async function addFilesWithProgress(files, category){
+  if(files.length === 0) return;
+  if(files.length === 1){ await addFile(files[0], category); return; }
+  const total = files.length;
+  let completed = 0;
+  _diag = { worker: 0, fallback: 0, errors: [] };
+  const t0 = performance.now();
+  toastPersist('Obrađujem 0 / ' + total + '...');
+  const CONCURRENCY = 3;
+  let nextIndex = 0;
+  const lane = async ()=>{
+    while(nextIndex < files.length){
+      const idx = nextIndex++;
+      await addFile(files[idx], category);
+      completed++;
+      toastPersist('Obrađujem ' + completed + ' / ' + total + '...');
+    }
+  };
+  const lanes = [];
+  for(let i=0;i<Math.min(CONCURRENCY, files.length);i++){ lanes.push(lane()); }
+  await Promise.all(lanes);
+  const secs = ((performance.now() - t0) / 1000).toFixed(1);
+  toastHide();
+  const diagMsg = 'Dodato ' + total + ' za ' + secs + 's \u00b7 brzo:' + _diag.worker + ' sporo:' + _diag.fallback
+    + (_diag.errors.length ? ' \u00b7 greške:' + _diag.errors.length : '');
+  toastEl.textContent = diagMsg;
+  toastEl.classList.add('show');
+  setTimeout(()=>toastEl.classList.remove('show'), 8000);
+  console.log('Arhiva diag:', diagMsg, _diag.errors);
+}
+
 fileInput.addEventListener('change', async (e)=>{
   const files = Array.from(e.target.files || []);
   fileInput.value = '';
-  for(const file of files){ await addFile(file, currentFolder && currentFolder !== INBOX ? currentFolder : null); }
+  await addFilesWithProgress(files, currentFolder && currentFolder !== INBOX ? currentFolder : null);
 });
 const cameraInput = document.getElementById('cameraInput');
 cameraInput.addEventListener('change', async (e)=>{
   const files = Array.from(e.target.files || []);
   cameraInput.value = '';
-  for(const file of files){ await addFile(file, null); }
+  await addFilesWithProgress(files, null);
 });
 const docInput = document.getElementById('docInput');
 docInput.addEventListener('change', async (e)=>{
   const files = Array.from(e.target.files || []);
   docInput.value = '';
-  for(const file of files){ await addFile(file, currentFolder && currentFolder !== INBOX ? currentFolder : null); }
+  await addFilesWithProgress(files, currentFolder && currentFolder !== INBOX ? currentFolder : null);
 });
 
 const addSheet = document.getElementById('addSheet');
@@ -1302,7 +1467,92 @@ function readFileAsDataUrl(file){
     r.readAsDataURL(file);
   });
 }
-function compressImage(file){
+/* ---------- Kompresija slike u pozadinskim nitima (Web Worker pool), da ne blokira UI i da ide paralelno ---------- */
+const COMPRESS_POOL_SIZE = 3;
+let _compressWorkers = [];
+let _compressWorkerBroken = false;
+let _compressReqId = 0;
+const _compressPending = new Map();
+let _compressNextWorker = 0;
+
+const COMPRESS_WORKER_CODE = [
+  "self.onmessage = async (e)=>{",
+  "  const { id, buffer, mime, maxDim, quality } = e.data;",
+  "  try{",
+  "    const blob = new Blob([buffer], {type: mime || 'image/jpeg'});",
+  "    const bitmap = await createImageBitmap(blob);",
+  "    let w = bitmap.width, h = bitmap.height;",
+  "    if(w > maxDim || h > maxDim){",
+  "      if(w > h){ h = Math.round(h * maxDim / w); w = maxDim; }",
+  "      else{ w = Math.round(w * maxDim / h); h = maxDim; }",
+  "    }",
+  "    const canvas = new OffscreenCanvas(w, h);",
+  "    const ctx = canvas.getContext('2d');",
+  "    ctx.drawImage(bitmap, 0, 0, w, h);",
+  "    bitmap.close();",
+  "    const outBlob = await canvas.convertToBlob({type:'image/jpeg', quality});",
+  "    const outBuffer = await outBlob.arrayBuffer();",
+  "    self.postMessage({id, buffer: outBuffer}, [outBuffer]);",
+  "  }catch(err){",
+  "    self.postMessage({id, error: String(err && err.message || err)});",
+  "  }",
+  "};"
+].join('\n');
+
+function getCompressWorker(){
+  if(_compressWorkerBroken) return null;
+  if(typeof Worker === 'undefined' || typeof OffscreenCanvas === 'undefined' || typeof createImageBitmap === 'undefined'){
+    _compressWorkerBroken = true;
+    return null;
+  }
+  if(_compressWorkers.length < COMPRESS_POOL_SIZE){
+    try{
+      const blob = new Blob([COMPRESS_WORKER_CODE], {type:'application/javascript'});
+      const worker = new Worker(URL.createObjectURL(blob));
+      worker.onmessage = (e)=>{
+        const { id, buffer, error } = e.data;
+        const p = _compressPending.get(id);
+        if(!p) return;
+        _compressPending.delete(id);
+        if(error){ p.reject(new Error(error)); }
+        else{ p.resolve(buffer); }
+      };
+      worker.onerror = ()=>{ _compressWorkerBroken = true; _compressWorkers = []; };
+      _compressWorkers.push(worker);
+    }catch(e){
+      _compressWorkerBroken = true;
+      return null;
+    }
+  }
+  if(_compressWorkers.length === 0) return null;
+  const w = _compressWorkers[_compressNextWorker % _compressWorkers.length];
+  _compressNextWorker++;
+  return w;
+}
+
+function bufferToDataUrl(buffer, mime){
+  return new Promise((resolve)=>{
+    const blob = new Blob([buffer], {type: mime});
+    const reader = new FileReader();
+    reader.onload = ()=>resolve(reader.result);
+    reader.onerror = ()=>resolve(null);
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function compressImageViaWorker(file){
+  const worker = getCompressWorker();
+  if(!worker) return null;
+  const buffer = await file.arrayBuffer();
+  const id = ++_compressReqId;
+  const resultBuffer = await new Promise((resolve, reject)=>{
+    _compressPending.set(id, {resolve, reject});
+    worker.postMessage({id, buffer, mime: file.type, maxDim: 1600, quality: 0.85}, [buffer]);
+  });
+  return await bufferToDataUrl(resultBuffer, 'image/jpeg');
+}
+
+function compressImageMainThread(file){
   return new Promise((resolve, reject)=>{
     const MAX_DIM = 1600;
     const QUALITY = 0.85;
@@ -1327,6 +1577,19 @@ function compressImage(file){
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+let _diag = { worker: 0, fallback: 0, errors: [] };
+async function compressImage(file){
+  try{
+    const viaWorker = await compressImageViaWorker(file);
+    if(viaWorker){ _diag.worker++; return viaWorker; }
+  }catch(e){
+    console.error('Compress worker failed, falling back to main thread:', e);
+    _diag.errors.push(String(e && e.message || e));
+  }
+  _diag.fallback++;
+  return compressImageMainThread(file);
 }
 async function addFile(file, category){
   try{
