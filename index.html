@@ -43,6 +43,10 @@
   .wrap{max-width:900px;margin:0 auto;}
 
   header{margin-bottom:10px;}
+  #stickyTop{
+    position:sticky;top:-28px;z-index:20;background:var(--bg);
+    padding-top:28px;margin-top:-28px;padding-bottom:10px;
+  }
   .mark-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:0;}
   .mark-title{display:flex;align-items:center;gap:10px;}
   .mark{width:15px;height:15px;border:2px solid var(--brass);transform:rotate(45deg);flex:none;}
@@ -159,6 +163,12 @@
     display:flex;align-items:center;justify-content:center;padding:2px;
   }
   .search-close:active{color:var(--brass);}
+  .deep-search-toggle{
+    flex:none;background:none;border:1px solid var(--line);color:var(--ink-faint);
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.5px;
+    padding:6px 9px;cursor:pointer;border-radius:3px;white-space:nowrap;transition:border-color .2s,color .2s;
+  }
+  .deep-search-toggle.active{border-color:var(--brass);color:var(--brass);background:var(--brass-glow);}
 
   .section-label{
     font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:1.5px;text-transform:uppercase;
@@ -188,7 +198,7 @@
   .folders-grid .folder-tile .fname{font-size:15.5px;}
   .folders-grid .folder-tile .fcount{font-size:12.5px;}
 
-  .album-summary-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;}
+  .album-summary-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
   .album-summary-row .album-summary{margin:0;}
   .view-toggle-btn{
     width:32px;height:32px;border-radius:50%;border:1.5px solid var(--line);
@@ -221,30 +231,43 @@
 
   .inbox-row{display:flex;align-items:center;gap:14px;margin-bottom:10px;}
   .folder-tile-wide{
-    width:50%;flex:none;display:flex;align-items:center;gap:12px;box-sizing:border-box;
+    width:50%;flex:none;display:flex;align-items:center;gap:10px;box-sizing:border-box;
     background:var(--surface);border:1px solid var(--line);
-    padding:14px 16px;cursor:pointer;margin-bottom:0;position:relative;transition:border-color .2s;
+    padding:9px 12px;cursor:pointer;margin-bottom:0;position:relative;transition:border-color .2s;
   }
   .folder-tile-wide:active{border-color:var(--brass-soft);}
   .folder-tile-wide .fw-icon{
-    width:40px;height:40px;flex-shrink:0;border-radius:50%;
+    width:32px;height:32px;flex-shrink:0;border-radius:50%;
     background:var(--surface-2);display:flex;align-items:center;justify-content:center;
   }
-  .folder-tile-wide .fw-icon svg{stroke:var(--brass);width:16px;height:16px;}
+  .folder-tile-wide .fw-icon svg{stroke:var(--brass);width:13px;height:13px;}
   .folder-tile-wide .fw-text{display:flex;flex-direction:column;min-width:0;}
   .folder-tile-wide .fw-name{
-    font-family:'Fraunces',serif;font-style:italic;font-size:18px;color:var(--ink);
+    font-family:'Fraunces',serif;font-style:italic;font-size:15.5px;color:var(--ink);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
   .folder-tile-wide .fw-count{
-    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-faint);margin-top:2px;
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-faint);margin-top:1px;
   }
   .inbox-row .album-summary{margin:0;min-width:0;}
 
   .folder-tile{
     display:flex;flex-direction:column;gap:6px;min-width:0;
-    cursor:pointer;position:relative;
+    cursor:pointer;position:relative;touch-action:pan-y;
+    -webkit-touch-callout:none;-webkit-user-select:none;user-select:none;
   }
+  .folder-tile-row{touch-action:pan-y;}
+  .drag-handle{
+    position:absolute;display:flex;align-items:center;justify-content:center;
+    width:30px;height:30px;color:var(--ink-faint);touch-action:none;z-index:3;
+    cursor:grab;
+  }
+  .folder-tile .drag-handle{bottom:2px;right:2px;top:auto;}
+  .folder-tile-row .drag-handle{top:50%;right:2px;transform:translateY(-50%);}
+  .drag-handle:active{color:var(--brass);}
+  .tile-armed{transform:scale(1.04);box-shadow:0 6px 18px rgba(0,0,0,0.4);z-index:5;transition:transform .15s;}
+  .tile-dragging{transform:scale(1.06);box-shadow:0 10px 26px rgba(0,0,0,0.55);opacity:0.96;}
+  .drag-placeholder{border:1.5px dashed var(--brass-soft);background:var(--brass-glow);border-radius:2px;}
   .folder-tile .ftile-cover{
     aspect-ratio:1/1;background:var(--surface);border:1px solid var(--line);
     display:flex;align-items:center;justify-content:center;overflow:hidden;
@@ -332,11 +355,25 @@
 
   .toast{
     position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(8px);
-    background:var(--surface);border:1px solid var(--brass-soft);color:var(--ink);
-    padding:11px 18px;font-size:14.5px;font-family:'Inter',sans-serif;
+    background:none;border:none;color:var(--ink);
+    padding:0;font-size:14px;font-family:'Inter',sans-serif;
     opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;z-index:60;
+    display:flex;align-items:center;gap:10px;max-width:94vw;
   }
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;}
+  .toast-msg{
+    background:var(--surface);border:1px solid var(--line);color:var(--ink);
+    padding:11px 16px;border-radius:8px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    display:flex;align-items:center;flex:1;min-width:0;
+  }
+  .toast-undo{
+    background:var(--brass);color:#1a1400;font-weight:700;cursor:pointer;
+    font-family:'Inter',sans-serif;font-size:13px;white-space:nowrap;flex:none;
+    padding:11px 18px;border-radius:8px;
+    display:flex;align-items:center;
+  }
+  .toast-undo:active{opacity:0.75;}
 
   .sheet-bg{display:none;position:fixed;inset:0;background:rgba(6,6,7,0.85);z-index:55;align-items:flex-end;justify-content:center;}
   .sheet-bg.open{display:flex;}
@@ -370,9 +407,13 @@
 
   @media (prefers-reduced-motion: reduce){*{transition:none !important;}}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 <div class="wrap">
+  <div id="stickyTop">
   <header>
     <div class="mark-row">
       <div class="mark-title">
@@ -411,6 +452,7 @@
         <line x1="21" y1="21" x2="16.2" y2="16.2"></line>
       </svg>
       <input id="search" type="text" placeholder="Pretraži po nazivu...">
+      <button id="deepSearchToggle" class="deep-search-toggle" type="button" title="Detaljna pretraga — uključi i sadržaj dokumenata">Detaljno</button>
       <button id="searchCloseBtn" class="search-close" type="button" title="Zatvori pretragu">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
@@ -424,6 +466,8 @@
     <input id="cameraInput" type="file" accept="image/*" capture="environment">
   </div>
 
+  <div id="albumHeaderZone"></div>
+  </div>
   <div id="contentArea"></div>
 </div>
 
@@ -520,6 +564,8 @@
     <p id="storageInfo" style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-faint);margin:0 0 18px;"></p>
     <div class="sheet-row" id="settingsExport"><span>Izvezi rezervnu kopiju</span></div>
     <div class="sheet-row" id="settingsImport"><span>Uvezi rezervnu kopiju</span></div>
+    <div class="sheet-row" id="settingsWipe" style="color:var(--danger);"><span>Obriši sve podatke</span></div>
+    <p style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-faint);margin:18px 0 0;text-align:center;">build 2026-09-11</p>
     <input type="file" id="importInput" accept="application/json" style="display:none">
   </div>
 </div>
@@ -536,6 +582,7 @@ let currentGalleryIndex = -1;
 let albumViewMode = 'grid';
 let searchOpen = false;
 let selectedIds = new Set();
+let deepSearchMode = false;
 let pendingBulkFolder = null;
 let renamingAlbum = null;
 let albumContextTarget = null;
@@ -567,6 +614,7 @@ window.addEventListener('popstate', ()=>{
 });
 
 const contentArea = document.getElementById('contentArea');
+const albumHeaderZone = document.getElementById('albumHeaderZone');
 const countEl = document.getElementById('count');
 const searchEl = document.getElementById('search');
 const fileInput = document.getElementById('fileInput');
@@ -594,7 +642,7 @@ const moveCopySheet = document.getElementById('moveCopySheet');
 const moveCopyTitle = document.getElementById('moveCopyTitle');
 
 function toast(msg){
-  toastEl.textContent = msg;
+  toastEl.innerHTML = '<span class="toast-msg">'+escapeHtml(msg)+'</span>';
   toastEl.classList.add('show');
   setTimeout(()=>toastEl.classList.remove('show'), 2200);
 }
@@ -606,6 +654,73 @@ function normalizeSr(s){
   return s.toLowerCase()
     .replace(/š/g,'s').replace(/č/g,'c').replace(/ć/g,'c')
     .replace(/ž/g,'z').replace(/đ/g,'d');
+}
+function matchItemQuery(item, q){
+  if(normalizeSr(item.name).includes(q)) return true;
+  if(deepSearchMode && item.content && item.content.includes(q)) return true;
+  return false;
+}
+
+/* ---------- Izvlačenje teksta iz dokumenata (za detaljnu pretragu) ---------- */
+function base64ToUint8Array(dataUrl){
+  const base64 = dataUrl.split(',')[1];
+  const raw = atob(base64);
+  const bytes = new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++){ bytes[i] = raw.charCodeAt(i); }
+  return bytes;
+}
+async function extractContentForItem(item){
+  try{
+    if(item.type === 'pdf'){
+      if(typeof pdfjsLib === 'undefined') return null;
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      const bytes = base64ToUint8Array(item.dataUrl);
+      const pdf = await pdfjsLib.getDocument({data: bytes}).promise;
+      let text = '';
+      const maxPages = Math.min(pdf.numPages, 15);
+      for(let p=1;p<=maxPages;p++){
+        const page = await pdf.getPage(p);
+        const tc = await page.getTextContent();
+        text += tc.items.map(t=>t.str).join(' ') + ' ';
+      }
+      return text.slice(0, 20000);
+    }else if(item.type === 'doc'){
+      const ext = (item.ext || '').toLowerCase();
+      if(ext === 'docx' && typeof mammoth !== 'undefined'){
+        const bytes = base64ToUint8Array(item.dataUrl);
+        const result = await mammoth.extractRawText({arrayBuffer: bytes.buffer});
+        return result.value.slice(0, 20000);
+      }else if((ext === 'xlsx' || ext === 'xls') && typeof XLSX !== 'undefined'){
+        const base64 = item.dataUrl.split(',')[1];
+        const wb = XLSX.read(base64, {type:'base64'});
+        let text = '';
+        wb.SheetNames.forEach(name=>{
+          text += XLSX.utils.sheet_to_csv(wb.Sheets[name]) + ' ';
+        });
+        return text.slice(0, 20000);
+      }
+    }
+  }catch(e){
+    console.error('extractContentForItem failed:', e);
+  }
+  return null;
+}
+async function backfillContent(){
+  const targets = items.filter(i=>(i.type==='pdf' || i.type==='doc') && !i.content);
+  if(targets.length === 0) return;
+  toastPersist('Priprema detaljne pretrage: 0 / ' + targets.length + '...');
+  let done = 0;
+  for(const it of targets){
+    const content = await extractContentForItem(it);
+    if(content){
+      it.content = normalizeSr(content);
+      idbPut(it).catch(e=>console.error(e));
+    }
+    done++;
+    toastPersist('Priprema detaljne pretrage: ' + done + ' / ' + targets.length + '...');
+  }
+  toastHide();
+  render();
 }
 
 const LS_PREFIX = 'galerija:';
@@ -716,6 +831,7 @@ function openPdf(item){
 const INBOX = '__inbox__';
 
 function render(){
+  albumHeaderZone.innerHTML = '';
   if(!currentFolder || selectionMode){ crumb.remove(); }
   if(currentFolder){ crumbName.textContent = currentFolder === INBOX ? 'Sve slike' : currentFolder; }
   selHeader.classList.toggle('show', selectionMode);
@@ -735,7 +851,7 @@ function render(){
 
   if(currentFolder){
     let filtered = currentFolder === INBOX ? items.filter(i=>!i.category) : items.filter(i=>i.category === currentFolder);
-    if(q) filtered = filtered.filter(i=>normalizeSr(i.name).includes(q));
+    if(q) filtered = filtered.filter(i=>matchItemQuery(i, q));
     const totalHere = currentFolder === INBOX ? items.filter(i=>!i.category).length : items.filter(i=>i.category===currentFolder).length;
     crumbCount.textContent = totalHere + (totalHere===1 ? ' stavka' : ' stavki');
     contentArea.innerHTML = '';
@@ -787,7 +903,7 @@ function render(){
   if(q){
     const matchedCats = categories.filter(c=>normalizeSr(c.name).includes(q));
     const inboxMatches = normalizeSr('Sve slike').includes(q);
-    const matchedItems = items.filter(i=>normalizeSr(i.name).includes(q));
+    const matchedItems = items.filter(i=>matchItemQuery(i, q));
 
     if(!inboxMatches && matchedCats.length === 0 && matchedItems.length === 0){
       contentArea.innerHTML = '<div class="empty"><b>Nema rezultata</b><span>Nema rezultata za "'+escapeHtml(searchEl.value)+'".</span></div>';
@@ -856,15 +972,27 @@ function render(){
   label.innerHTML = 'Svi albumi <span class="count-part">&middot; ' + items.length + ' stavki u arhivi</span>';
   inboxRow.appendChild(label);
 
-  contentArea.appendChild(inboxRow);
+  albumHeaderZone.appendChild(inboxRow);
 
   const pinnedCats = categories.filter(c=>c.pinned);
   const otherCats = categories.filter(c=>!c.pinned);
 
-  const buildFolderTile = (cat)=>{
+  function commitGroupOrder(groupCats, container){
+    const orderedNames = Array.from(container.children)
+      .map(el=>el.dataset && el.dataset.catName)
+      .filter(Boolean);
+    const newGroupCats = orderedNames.map(n=>groupCats.find(c=>c.name===n)).filter(Boolean);
+    if(newGroupCats.length !== groupCats.length) return;
+    let gi = 0;
+    categories = categories.map(c=> groupCats.includes(c) ? newGroupCats[gi++] : c);
+    saveCategories();
+  }
+
+  const buildFolderTile = (cat, groupCats)=>{
     const name = cat.name;
     const count = items.filter(i=>i.category===name).length;
     const tile = document.createElement('div');
+    tile.dataset.catName = name;
     const coverItem = cat.cover ? items.find(i=>i.id===cat.cover) : null;
     const isList = albumViewMode === 'list';
     tile.className = isList ? 'folder-tile-row' : 'folder-tile';
@@ -881,21 +1009,114 @@ function render(){
       tile.querySelector('.ftile-cover').appendChild(pin);
     }
 
-    let tilePressTimer = null;
-    let tileLongFired = false;
-    const startTilePress = ()=>{
-      tileLongFired = false;
-      tilePressTimer = setTimeout(()=>{ tileLongFired = true; openAlbumContext(name); }, 480);
+    const handle = document.createElement('div');
+    handle.className = 'drag-handle';
+    handle.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.6"></circle><circle cx="16" cy="6" r="1.6"></circle><circle cx="8" cy="12" r="1.6"></circle><circle cx="16" cy="12" r="1.6"></circle><circle cx="8" cy="18" r="1.6"></circle><circle cx="16" cy="18" r="1.6"></circle></svg>';
+    tile.appendChild(handle);
+
+    /* Dugi pritisak bilo gde na plocici (osim rucke) -> meni */
+    let pressTimer = null;
+    let menuArmed = false;
+    let mStartX = 0, mStartY = 0;
+    const cancelMenuTimer = ()=>{ if(pressTimer){ clearTimeout(pressTimer); pressTimer = null; } };
+    tile.addEventListener('pointerdown', (e)=>{
+      if(e.target.closest('.drag-handle')) return;
+      if(e.button !== undefined && e.button !== 0) return;
+      mStartX = e.clientX; mStartY = e.clientY;
+      menuArmed = false;
+      pressTimer = setTimeout(()=>{
+        menuArmed = true;
+        if(navigator.vibrate){ try{ navigator.vibrate(15); }catch(err){} }
+        openAlbumContext(name);
+      }, 480);
+    });
+    tile.addEventListener('pointermove', (e)=>{
+      if(pressTimer){
+        const dx = e.clientX - mStartX, dy = e.clientY - mStartY;
+        if(Math.sqrt(dx*dx + dy*dy) > 12){ cancelMenuTimer(); }
+      }
+    });
+    tile.addEventListener('pointerup', ()=>{
+      cancelMenuTimer();
+      if(menuArmed){ tile.dataset.suppressClick = '1'; menuArmed = false; }
+    });
+    tile.addEventListener('pointercancel', ()=>{ cancelMenuTimer(); menuArmed = false; });
+
+    /* Prevlačenje samo preko rucke */
+    let dragging = false;
+    let startX = 0, startY = 0, startRect = null, placeholder = null;
+
+    const beginDrag = ()=>{
+      dragging = true;
+      tile.classList.add('tile-dragging');
+      startRect = tile.getBoundingClientRect();
+      tile.style.position = 'fixed';
+      tile.style.left = startRect.left + 'px';
+      tile.style.top = startRect.top + 'px';
+      tile.style.width = startRect.width + 'px';
+      tile.style.height = startRect.height + 'px';
+      tile.style.zIndex = '200';
+      tile.style.pointerEvents = 'none';
+      placeholder = document.createElement('div');
+      placeholder.className = tile.className.replace('tile-dragging','') + ' drag-placeholder';
+      placeholder.style.width = startRect.width + 'px';
+      placeholder.style.height = startRect.height + 'px';
+      tile.parentNode.insertBefore(placeholder, tile.nextSibling);
+      if(navigator.vibrate){ try{ navigator.vibrate(15); }catch(err){} }
     };
-    const cancelTilePress = ()=>{ if(tilePressTimer){ clearTimeout(tilePressTimer); tilePressTimer=null; } };
-    tile.addEventListener('touchstart', startTilePress, {passive:true});
-    tile.addEventListener('touchend', cancelTilePress);
-    tile.addEventListener('touchmove', cancelTilePress);
-    tile.addEventListener('mousedown', startTilePress);
-    tile.addEventListener('mouseup', cancelTilePress);
-    tile.addEventListener('mouseleave', cancelTilePress);
-    tile.onclick = ()=>{
-      if(tileLongFired){ tileLongFired = false; return; }
+
+    handle.addEventListener('pointerdown', (e)=>{
+      if(e.button !== undefined && e.button !== 0) return;
+      e.stopPropagation();
+      startX = e.clientX; startY = e.clientY;
+      try{ handle.setPointerCapture(e.pointerId); }catch(err){}
+      beginDrag();
+    });
+    handle.addEventListener('pointermove', (e)=>{
+      if(!dragging) return;
+      e.stopPropagation();
+      if(e.cancelable) e.preventDefault();
+      const dx = e.clientX - startX, dy = e.clientY - startY;
+      tile.style.left = (startRect.left + dx) + 'px';
+      tile.style.top = (startRect.top + dy) + 'px';
+      const under = document.elementFromPoint(e.clientX, e.clientY);
+      const overTile = under && under.closest('.folder-tile, .folder-tile-row');
+      if(overTile && overTile !== tile && overTile !== placeholder && overTile.parentNode === placeholder.parentNode){
+        const overRect = overTile.getBoundingClientRect();
+        const isGrid = !isList;
+        const before = isGrid
+          ? (e.clientY < overRect.top + overRect.height/2) || (e.clientY < overRect.bottom && e.clientX < overRect.left + overRect.width/2)
+          : (e.clientY < overRect.top + overRect.height/2);
+        overTile.parentNode.insertBefore(placeholder, before ? overTile : overTile.nextSibling);
+      }
+    });
+    const endDrag = (e)=>{
+      if(!dragging) return;
+      e.stopPropagation();
+      try{ if(e && e.pointerId !== undefined) handle.releasePointerCapture(e.pointerId); }catch(err){}
+      dragging = false;
+      tile.classList.remove('tile-dragging');
+      tile.style.position = '';
+      tile.style.left = '';
+      tile.style.top = '';
+      tile.style.width = '';
+      tile.style.height = '';
+      tile.style.zIndex = '';
+      tile.style.pointerEvents = '';
+      if(placeholder && placeholder.parentNode){
+        placeholder.parentNode.insertBefore(tile, placeholder);
+        const container = placeholder.parentNode;
+        placeholder.remove();
+        placeholder = null;
+        commitGroupOrder(groupCats, container);
+      }
+    };
+    handle.addEventListener('pointerup', endDrag);
+    handle.addEventListener('pointercancel', endDrag);
+    handle.onclick = (e)=>{ e.stopPropagation(); };
+
+    tile.onclick = (e)=>{
+      if(tile.dataset.suppressClick === '1'){ tile.dataset.suppressClick = ''; return; }
       currentFolder = name; searchEl.value=''; pushBack(closeAlbumView); render();
     };
     return tile;
@@ -928,7 +1149,7 @@ function render(){
     contentArea.appendChild(pinLabelRow);
     const pinGrid = document.createElement('div');
     pinGrid.className = gridClass;
-    pinnedCats.forEach(cat=>pinGrid.appendChild(buildFolderTile(cat)));
+    pinnedCats.forEach(cat=>pinGrid.appendChild(buildFolderTile(cat, pinnedCats)));
     contentArea.appendChild(pinGrid);
   }
 
@@ -939,11 +1160,11 @@ function render(){
   albumsLabel.textContent = 'Albumi';
   albumsLabelRow.appendChild(albumsLabel);
   albumsLabelRow.appendChild(viewToggleBtn());
-  contentArea.appendChild(albumsLabelRow);
+  albumHeaderZone.appendChild(albumsLabelRow);
 
   const fgrid = document.createElement('div');
   fgrid.className = gridClass;
-  otherCats.forEach(cat=>fgrid.appendChild(buildFolderTile(cat)));
+  otherCats.forEach(cat=>fgrid.appendChild(buildFolderTile(cat, otherCats)));
   contentArea.appendChild(fgrid);
 }
 
@@ -962,6 +1183,22 @@ document.getElementById('acPin').onclick = ()=>{
   render();
   requestClose();
 };
+function moveAlbum(name, dir){
+  const cat = categories.find(c=>c.name===name);
+  if(!cat) return;
+  const groupIndices = categories
+    .map((c,i)=>({c,i}))
+    .filter(x=>!!x.c.pinned === !!cat.pinned)
+    .map(x=>x.i);
+  const pos = groupIndices.indexOf(categories.indexOf(cat));
+  const swapWith = pos + dir;
+  if(swapWith < 0 || swapWith >= groupIndices.length) return;
+  const realIdx = categories.indexOf(cat);
+  const otherRealIdx = groupIndices[swapWith];
+  [categories[realIdx], categories[otherRealIdx]] = [categories[otherRealIdx], categories[realIdx]];
+  saveCategories();
+  render();
+}
 document.getElementById('acRename').onclick = ()=>{
   const target = albumContextTarget;
   requestCloseThen(()=>openRenameSheet(target));
@@ -973,18 +1210,27 @@ document.getElementById('acCover').onclick = ()=>{
 document.getElementById('acDelete').onclick = ()=>{
   const name = albumContextTarget;
   requestClose();
-  if(!confirm('Obrisati album "'+name+'"? Slike ostaju sačuvane u "Sve slike".')) return;
-  items.forEach(it=>{
-    if(it.category === name){
-      it.category = null;
-      idbPut(it).catch(e=>console.error(e));
-    }
-  });
+  const cat = categories.find(c=>c.name===name);
+  if(!cat) return;
+  const catIndex = categories.indexOf(cat);
+  const affectedItems = items.filter(it=>it.category===name);
+  affectedItems.forEach(it=>{ it.category = null; });
   categories = categories.filter(c=>c.name!==name);
   saveCategories();
   if(currentFolder === name) currentFolder = null;
   render();
-  toast('Album obrisan.');
+  toastUndo(
+    'Album "'+name+'" obrisan.',
+    ()=>{
+      categories.splice(catIndex, 0, cat);
+      affectedItems.forEach(it=>{ it.category = name; });
+      saveCategories();
+      render();
+    },
+    ()=>{
+      affectedItems.forEach(it=>{ idbPut(it).catch(e=>console.error(e)); });
+    }
+  );
 };
 document.getElementById('acBack').onclick = ()=>requestClose();
 document.getElementById('albumContextSheet').onclick = (e)=>{ if(e.target===document.getElementById('albumContextSheet')) requestClose(); };
@@ -1136,7 +1382,7 @@ selAll.onclick = ()=>{
     ? items.filter(i=>!i.category)
     : items.filter(i=>i.category===currentFolder);
   const q = normalizeSr(searchEl.value.trim());
-  const pool = q ? visible.filter(i=>normalizeSr(i.name).includes(q)) : visible;
+  const pool = q ? visible.filter(i=>matchItemQuery(i, q)) : visible;
   if(selectedIds.size === pool.length && selectionMode){
     requestClose();
   }else{
@@ -1275,12 +1521,16 @@ function copySelectedToFolder(folderName){
 
 function deleteSelected(){
   if(selectedIds.size === 0) return;
-  if(!confirm(selectedIds.size===1 ? 'Obrisati ovu stavku?' : 'Obrisati '+selectedIds.size+' stavki?')) return;
   const ids = Array.from(selectedIds);
+  const removedItems = items.filter(i=>selectedIds.has(i.id));
   items = items.filter(i=>!selectedIds.has(i.id));
-  ids.forEach(id=>{ idbDelete(id).catch(e=>console.error(e)); });
   exitSelection();
-  toast('Obrisano.');
+  render();
+  toastUndo(
+    ids.length===1 ? 'Obrisano.' : 'Obrisano '+ids.length+' stavki.',
+    ()=>{ items.push(...removedItems); render(); },
+    ()=>{ ids.forEach(id=>{ idbDelete(id).catch(e=>console.error(e)); }); }
+  );
 }
 document.getElementById('btnDelete').onclick = deleteSelected;
 document.getElementById('btnAlbum').onclick = openMoveSheet;
@@ -1393,11 +1643,31 @@ newFolderInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') createFo
 newFolderSheet.onclick = (e)=>{ if(e.target === newFolderSheet){ requestClose(); } };
 
 function toastPersist(msg){
-  toastEl.textContent = msg;
+  toastEl.innerHTML = '<span class="toast-msg">'+escapeHtml(msg)+'</span>';
   toastEl.classList.add('show');
 }
 function toastHide(){
   toastEl.classList.remove('show');
+}
+let _undoTimer = null;
+function toastUndo(msg, undoFn, finalizeFn){
+  if(_undoTimer){ clearTimeout(_undoTimer); _undoTimer = null; }
+  toastEl.innerHTML = '<span class="toast-msg">'+escapeHtml(msg)+'</span><span class="toast-undo" id="toastUndoBtn">Opozovi</span>';
+  toastEl.classList.add('show');
+  let done = false;
+  document.getElementById('toastUndoBtn').onclick = ()=>{
+    if(done) return;
+    done = true;
+    clearTimeout(_undoTimer); _undoTimer = null;
+    toastEl.classList.remove('show');
+    undoFn();
+  };
+  _undoTimer = setTimeout(()=>{
+    if(done) return;
+    done = true;
+    toastEl.classList.remove('show');
+    finalizeFn();
+  }, 5000);
 }
 async function addFilesWithProgress(files, category){
   if(files.length === 0) return;
@@ -1424,7 +1694,7 @@ async function addFilesWithProgress(files, category){
   toastHide();
   const diagMsg = 'Dodato ' + total + ' za ' + secs + 's \u00b7 brzo:' + _diag.worker + ' sporo:' + _diag.fallback
     + (_diag.errors.length ? ' \u00b7 greške:' + _diag.errors.length : '');
-  toastEl.textContent = diagMsg;
+  toastEl.innerHTML = '<span class="toast-msg">'+escapeHtml(diagMsg)+'</span>';
   toastEl.classList.add('show');
   setTimeout(()=>toastEl.classList.remove('show'), 8000);
   console.log('Arhiva diag:', diagMsg, _diag.errors);
@@ -1593,6 +1863,13 @@ async function compressImage(file){
 }
 async function addFile(file, category){
   try{
+    const sourceSig = file.name + '|' + file.size;
+    const dup = items.find(i => i.sourceSig === sourceSig);
+    if(dup){
+      if(!confirm('Izgleda da "'+dup.name+'" već postoji u arhivi (isti naziv i veličina fajla). Dodati je ipak?')){
+        return;
+      }
+    }
     const isPdf = file.type === 'application/pdf';
     const isImage = file.type.startsWith('image/');
     const isDoc = !isPdf && !isImage;
@@ -1607,12 +1884,21 @@ async function addFile(file, category){
       ts: Date.now(),
       category: category || null,
       type: isPdf ? 'pdf' : (isDoc ? 'doc' : 'image'),
-      ext: isDoc ? ext : undefined
+      ext: isDoc ? ext : undefined,
+      sourceSig
     };
     await idbPut(item);
     items.push(item);
     maybeAutoCover(category, item);
     render();
+    if(item.type === 'pdf' || item.type === 'doc'){
+      extractContentForItem(item).then(content=>{
+        if(content){
+          item.content = normalizeSr(content);
+          idbPut(item).catch(e=>console.error(e));
+        }
+      });
+    }
   }catch(e){
     console.error(e);
     if(e && (e.name === 'QuotaExceededError' || (e.target && e.target.error && e.target.error.name === 'QuotaExceededError'))){ toast('Nema više prostora za nove stavke u browseru.'); }
@@ -1629,6 +1915,12 @@ document.getElementById('searchBtn').onclick = ()=>{
 document.getElementById('searchCloseBtn').onclick = ()=>{
   searchOpen = false;
   searchEl.value = '';
+  render();
+};
+document.getElementById('deepSearchToggle').onclick = ()=>{
+  deepSearchMode = !deepSearchMode;
+  document.getElementById('deepSearchToggle').classList.toggle('active', deepSearchMode);
+  if(deepSearchMode){ backfillContent(); }
   render();
 };
 
@@ -1649,7 +1941,18 @@ function updateStorageInfo(){
   let bytes = 0;
   items.forEach(it=>{ bytes += (it.dataUrl ? it.dataUrl.length : 0); });
   const mb = bytes / 1024 / 1024;
-  document.getElementById('storageInfo').textContent = 'Iskorišćeno: ~' + mb.toFixed(1) + ' MB \u00B7 ' + items.length + ' stavki';
+  const infoEl = document.getElementById('storageInfo');
+  infoEl.textContent = 'Iskorišćeno: ~' + mb.toFixed(1) + ' MB \u00B7 ' + items.length + ' stavki';
+  if(navigator.storage && navigator.storage.estimate){
+    navigator.storage.estimate().then(est=>{
+      if(est && est.quota){
+        const usedMb = (est.usage || 0) / 1024 / 1024;
+        const quotaMb = est.quota / 1024 / 1024;
+        const freeMb = Math.max(0, quotaMb - usedMb);
+        infoEl.textContent = 'Iskorišćeno: ~' + mb.toFixed(1) + ' MB \u00B7 ' + items.length + ' stavki \u00B7 Slobodno još ~' + freeMb.toFixed(0) + ' MB';
+      }
+    }).catch(()=>{});
+  }
 }
 
 function exportBackup(){
@@ -1675,6 +1978,24 @@ document.getElementById('settingsExport').onclick = exportBackup;
 
 const importInput = document.getElementById('importInput');
 document.getElementById('settingsImport').onclick = ()=>importInput.click();
+document.getElementById('settingsWipe').onclick = async ()=>{
+  if(!confirm('Ovo trajno briše SVE slike, dokumente i albume iz Arhive na ovom uređaju. Nema opoziva. Da li si siguran/na?')) return;
+  if(!confirm('Poslednja potvrda — stvarno obrisati baš sve?')) return;
+  try{
+    for(const it of items.slice()){ await idbDelete(it.id).catch(()=>{}); }
+    items = [];
+    categories = [];
+    saveCategories();
+    currentFolder = null;
+    render();
+    updateStorageInfo();
+    toast('Sve je obrisano.');
+    requestClose();
+  }catch(e){
+    console.error(e);
+    toast('Greška pri brisanju.');
+  }
+};
 importInput.addEventListener('change', (e)=>{
   const file = e.target.files && e.target.files[0];
   importInput.value = '';
