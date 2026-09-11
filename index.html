@@ -129,7 +129,7 @@
   .searchbar:focus-within{border-color:var(--brass-soft);box-shadow:0 0 0 3px var(--brass-glow);}
   .searchbar svg{flex:none;stroke:var(--ink-faint);transition:stroke .2s;}
   .searchbar:focus-within svg{stroke:var(--brass);}
-  .searchbar input{flex:1;background:none;border:none;outline:none;color:var(--ink);font-family:'Inter',sans-serif;font-size:16.5px;}
+  .searchbar input{flex:1;min-width:0;background:none;border:none;outline:none;color:var(--ink);font-family:'Inter',sans-serif;font-size:16.5px;}
   .searchbar input::placeholder{color:var(--ink-faint);}
 
   .toolbar{
@@ -212,6 +212,7 @@
     display:flex;align-items:center;gap:12px;box-sizing:border-box;width:100%;
     background:var(--surface);border:1px solid var(--line);
     padding:12px 14px;cursor:pointer;position:relative;transition:border-color .2s;
+    touch-action:pan-y;
   }
   .folder-tile-row:active{border-color:var(--brass-soft);}
   .folder-tile-row .ftile-cover{
@@ -256,7 +257,6 @@
     cursor:pointer;position:relative;touch-action:pan-y;
     -webkit-touch-callout:none;-webkit-user-select:none;user-select:none;
   }
-  .folder-tile-row{touch-action:pan-y;}
   .drag-handle{
     position:absolute;display:flex;align-items:center;justify-content:center;
     width:30px;height:30px;color:var(--ink-faint);touch-action:none;z-index:3;
@@ -265,7 +265,6 @@
   .folder-tile .drag-handle{bottom:2px;right:2px;top:auto;}
   .folder-tile-row .drag-handle{top:50%;right:2px;transform:translateY(-50%);}
   .drag-handle:active{color:var(--brass);}
-  .tile-armed{transform:scale(1.04);box-shadow:0 6px 18px rgba(0,0,0,0.4);z-index:5;transition:transform .15s;}
   .tile-dragging{transform:scale(1.06);box-shadow:0 10px 26px rgba(0,0,0,0.55);opacity:0.96;}
   .drag-placeholder{border:1.5px dashed var(--brass-soft);background:var(--brass-glow);border-radius:2px;}
   .folder-tile .ftile-cover{
@@ -565,7 +564,7 @@
     <div class="sheet-row" id="settingsExport"><span>Izvezi rezervnu kopiju</span></div>
     <div class="sheet-row" id="settingsImport"><span>Uvezi rezervnu kopiju</span></div>
     <div class="sheet-row" id="settingsWipe" style="color:var(--danger);"><span>Obriši sve podatke</span></div>
-    <p style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-faint);margin:18px 0 0;text-align:center;">build 2026-09-11</p>
+    <p style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-faint);margin:18px 0 0;text-align:center;">build 2026-09-11b</p>
     <input type="file" id="importInput" accept="application/json" style="display:none">
   </div>
 </div>
@@ -816,7 +815,6 @@ function maybeAutoCover(folderName, item){
   const cat = categories.find(c=>c.name===folderName);
   if(cat && !cat.cover){ cat.cover = item.id; saveCategories(); }
 }
-function saveIndex(){ /* IndexedDB čuva svaku stavku pojedinačno preko idbPut; ova funkcija više nije potrebna, ostavljena zbog kompatibilnosti poziva. */ }
 
 function folderIconSvg(){
   return '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 012-2h4l2 2.5h8a2 2 0 012 2V17a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>';
@@ -1183,22 +1181,6 @@ document.getElementById('acPin').onclick = ()=>{
   render();
   requestClose();
 };
-function moveAlbum(name, dir){
-  const cat = categories.find(c=>c.name===name);
-  if(!cat) return;
-  const groupIndices = categories
-    .map((c,i)=>({c,i}))
-    .filter(x=>!!x.c.pinned === !!cat.pinned)
-    .map(x=>x.i);
-  const pos = groupIndices.indexOf(categories.indexOf(cat));
-  const swapWith = pos + dir;
-  if(swapWith < 0 || swapWith >= groupIndices.length) return;
-  const realIdx = categories.indexOf(cat);
-  const otherRealIdx = groupIndices[swapWith];
-  [categories[realIdx], categories[otherRealIdx]] = [categories[otherRealIdx], categories[realIdx]];
-  saveCategories();
-  render();
-}
 document.getElementById('acRename').onclick = ()=>{
   const target = albumContextTarget;
   requestCloseThen(()=>openRenameSheet(target));
@@ -1692,12 +1674,8 @@ async function addFilesWithProgress(files, category){
   await Promise.all(lanes);
   const secs = ((performance.now() - t0) / 1000).toFixed(1);
   toastHide();
-  const diagMsg = 'Dodato ' + total + ' za ' + secs + 's \u00b7 brzo:' + _diag.worker + ' sporo:' + _diag.fallback
-    + (_diag.errors.length ? ' \u00b7 greške:' + _diag.errors.length : '');
-  toastEl.innerHTML = '<span class="toast-msg">'+escapeHtml(diagMsg)+'</span>';
-  toastEl.classList.add('show');
-  setTimeout(()=>toastEl.classList.remove('show'), 8000);
-  console.log('Arhiva diag:', diagMsg, _diag.errors);
+  toast(total===1 ? 'Dodato 1 stavka.' : 'Dodato ' + total + ' stavki.');
+  console.log('Arhiva: obrada '+total+' fajlova za '+secs+'s (brzo:'+_diag.worker+' sporo:'+_diag.fallback+')', _diag.errors);
 }
 
 fileInput.addEventListener('change', async (e)=>{
@@ -1907,16 +1885,18 @@ async function addFile(file, category){
 }
 
 searchEl.addEventListener('input', render);
-document.getElementById('searchBtn').onclick = ()=>{
-  searchOpen = true;
-  render();
-  setTimeout(()=>searchEl.focus(), 50);
-};
-document.getElementById('searchCloseBtn').onclick = ()=>{
+const closeSearch = ()=>{
   searchOpen = false;
   searchEl.value = '';
   render();
 };
+document.getElementById('searchBtn').onclick = ()=>{
+  searchOpen = true;
+  render();
+  pushBack(closeSearch);
+  setTimeout(()=>searchEl.focus(), 50);
+};
+document.getElementById('searchCloseBtn').onclick = ()=>requestClose();
 document.getElementById('deepSearchToggle').onclick = ()=>{
   deepSearchMode = !deepSearchMode;
   document.getElementById('deepSearchToggle').classList.toggle('active', deepSearchMode);
