@@ -43,6 +43,8 @@
   .wrap{max-width:900px;margin:0 auto;}
 
   header{margin-bottom:10px;}
+  #backupReminderRow{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--danger);color:#fff;font-size:12px;font-weight:600;padding:9px 11px;border-radius:11px;margin-bottom:10px;}
+  #backupReminderRow button{flex:none;background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.4);padding:6px 11px;border-radius:8px;font-weight:700;font-size:11.5px;font-family:inherit;cursor:pointer;}
   #stickyTop{
     position:sticky;top:-28px;z-index:20;background:var(--bg);
     padding-top:28px;margin-top:-28px;padding-bottom:10px;
@@ -413,6 +415,10 @@
 <body>
 <div class="wrap">
   <div id="stickyTop">
+  <div id="backupReminderRow" style="display:none;">
+    <span id="backupReminderText"></span>
+    <button type="button" id="backupReminderBtn">Izvezi bekap</button>
+  </div>
   <header>
     <div class="mark-row">
       <div class="mark-title">
@@ -563,6 +569,11 @@
     <p id="storageInfo" style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-faint);margin:0 0 18px;"></p>
     <div class="sheet-row" id="settingsExport"><span>Izvezi rezervnu kopiju</span></div>
     <div class="sheet-row" id="settingsImport"><span>Uvezi rezervnu kopiju</span></div>
+    <div class="sheet-row" style="display:block;padding:14px;">
+      <span style="display:block;margin-bottom:6px;">Podseti me na svakih (dana) bez bekapa</span>
+      <input type="number" min="1" id="backupIntervalInput" style="width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:9px 11px;color:var(--ink);font-size:15px;font-family:inherit;">
+      <span id="lastBackupHint" style="display:block;margin-top:8px;font-size:11.5px;color:var(--ink-dim);"></span>
+    </div>
     <div class="sheet-row" id="settingsWipe" style="color:var(--danger);"><span>Obriši sve podatke</span></div>
     <p style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-faint);margin:18px 0 0;text-align:center;">build 2026-09-11b</p>
     <input type="file" id="importInput" accept="application/json" style="display:none">
@@ -808,8 +819,8 @@ async function loadAll(){
     items = [];
   }
   render();
+  checkBackupReminder();
 }
-function saveCategories(){ localStorage.setItem(LS_PREFIX+'categories', JSON.stringify(categories)); }
 function maybeAutoCover(folderName, item){
   if(!folderName || !item || item.type !== 'image') return;
   const cat = categories.find(c=>c.name===folderName);
@@ -1906,11 +1917,52 @@ document.getElementById('deepSearchToggle').onclick = ()=>{
 
 loadAll().then(checkDeepLink);
 
+/* ---------- BACKUP REMINDER ---------- */
+function getBackupIntervalDays(){
+  const v = parseInt(localStorage.getItem(LS_PREFIX+'backupIntervalDays'));
+  return (v && v > 0) ? v : 7;
+}
+function setBackupIntervalDays(days){ localStorage.setItem(LS_PREFIX+'backupIntervalDays', String(days)); }
+function getLastBackupDate(){
+  const v = localStorage.getItem(LS_PREFIX+'lastBackup');
+  return v ? new Date(v) : null;
+}
+function markBackupDone(){ localStorage.setItem(LS_PREFIX+'lastBackup', new Date().toISOString()); checkBackupReminder(); }
+function daysSinceBackup(date){ return Math.floor((Date.now() - date.getTime()) / 86400000); }
+function lastBackupDisplay(){
+  const last = getLastBackupDate();
+  if(!last) return 'Poslednji bekap: nikad';
+  return 'Poslednji bekap: '+String(last.getDate()).padStart(2,'0')+'.'+String(last.getMonth()+1).padStart(2,'0')+'.'+last.getFullYear()+'.';
+}
+function checkBackupReminder(){
+  const row = document.getElementById('backupReminderRow');
+  const textEl = document.getElementById('backupReminderText');
+  if(!row || !textEl) return;
+  const last = getLastBackupDate();
+  const interval = getBackupIntervalDays();
+  let msg = null;
+  if(!last){
+    msg = 'Nikad nisi napravio bekap podataka.';
+  } else {
+    const d = daysSinceBackup(last);
+    if(d >= interval) msg = 'Prošlo je '+d+' dana od poslednjeg bekapa.';
+  }
+  if(msg){ textEl.textContent = msg; row.style.display = 'flex'; }
+  else { row.style.display = 'none'; }
+}
+document.getElementById('backupReminderBtn').addEventListener('click', exportBackup);
+document.getElementById('backupIntervalInput').addEventListener('input', (e)=>{
+  setBackupIntervalDays(parseInt(e.target.value) || 7);
+  checkBackupReminder();
+});
+
 /* ---------- Podešavanja: rezervna kopija ---------- */
 const settingsSheet = document.getElementById('settingsSheet');
 const closeSettingsSheet = ()=>settingsSheet.classList.remove('open');
 document.getElementById('settingsBtn').onclick = ()=>{
   updateStorageInfo();
+  document.getElementById('backupIntervalInput').value = getBackupIntervalDays();
+  document.getElementById('lastBackupHint').textContent = lastBackupDisplay();
   settingsSheet.classList.add('open');
   pushBack(closeSettingsSheet);
 };
@@ -1952,6 +2004,9 @@ function exportBackup(){
   a.click();
   document.body.removeChild(a);
   setTimeout(()=>URL.revokeObjectURL(url), 2000);
+  markBackupDone();
+  const hintEl = document.getElementById('lastBackupHint');
+  if(hintEl) hintEl.textContent = lastBackupDisplay();
   toast('Rezervna kopija sačuvana.');
 }
 document.getElementById('settingsExport').onclick = exportBackup;
