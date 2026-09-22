@@ -417,15 +417,6 @@
   .exit-btn.leave{background:rgba(181,84,74,0.16);border:1px solid rgba(181,84,74,0.4);color:var(--danger);}
   .exit-btn .ic{font-size:32px;line-height:1;}
 
-  #dbgPanel{position:fixed;left:8px;right:8px;bottom:8px;max-height:40vh;background:rgba(10,10,11,0.95);border:1px solid var(--brass-soft);border-radius:10px;z-index:999;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#d8d4c8;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 6px 20px rgba(0,0,0,0.5);}
-  #dbgPanel.collapsed #dbgStatus, #dbgPanel.collapsed #dbgLog{display:none;}
-  #dbgHead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line);cursor:pointer;flex:none;}
-  #dbgHead b{color:var(--brass);font-size:11px;}
-  #dbgHead span{color:var(--ink-faint);font-size:9.5px;}
-  #dbgStatus{padding:6px 10px;border-bottom:1px solid var(--line-soft);color:var(--ink-dim);flex:none;word-break:break-all;}
-  #dbgLog{overflow-y:auto;padding:6px 10px;flex:1;word-break:break-all;}
-  #dbgLog div{padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
-
   @media (prefers-reduced-motion: reduce){*{transition:none !important;}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -433,13 +424,6 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
-<div id="dbgPanel" class="collapsed">
-  <div id="dbgHead" onclick="document.getElementById('dbgPanel').classList.toggle('collapsed')">
-    <b>DEBUG</b><span id="dbgBuildLabel"></span><span>(tapni)</span>
-  </div>
-  <div id="dbgStatus">…</div>
-  <div id="dbgLog"></div>
-</div>
 <div class="wrap">
   <div id="stickyTop">
   <div id="backupReminderRow" style="display:none;">
@@ -640,48 +624,24 @@ let pendingBulkFolder = null;
 let renamingAlbum = null;
 let albumContextTarget = null;
 
-/* ---------- DEBUG PANEL (privremeno — da vidimo tačan korak, uklanja se kad završimo) ---------- */
-const DBG_BUILD = 'debug-exit-1 (2026-09-22 16:40)';
-let dbgLines = [];
-function dbgRender(){
-  const st = document.getElementById('dbgStatus');
-  const lg = document.getElementById('dbgLog');
-  if(!st || !lg) return;
-  st.textContent = 'history.length='+history.length+' | backStack='+backStack.length+' | trapArmed='+exitTrapArmed+' | confirmed='+exitConfirmed;
-  lg.innerHTML = dbgLines.slice(-40).map(l=>'<div>'+l+'</div>').join('');
-  lg.scrollTop = lg.scrollHeight;
-}
-function dbgLog(msg){
-  const t = new Date().toLocaleTimeString('sr-RS', {hour12:false});
-  dbgLines.push(t+' — '+msg);
-  if(dbgLines.length>200) dbgLines = dbgLines.slice(-200);
-  dbgRender();
-}
-dbgLog('SKRIPTA UCITANA, build='+DBG_BUILD+', history.length='+history.length+', state='+JSON.stringify(history.state));
-try{ document.getElementById('dbgBuildLabel').textContent = DBG_BUILD; }catch(e){}
-
 /* ---------- Back-button (history) support ---------- */
 let backStack = [];
 let pendingAfterClose = null;
 function pushBack(closer){
   history.pushState({app:true, depth: backStack.length+1}, '');
   backStack.push(closer);
-  dbgLog('pushBack() -> history.pushState, history.length='+history.length+', backStack.length='+backStack.length);
 }
 function requestClose(){
-  dbgLog('requestClose() poziv, backStack.length='+backStack.length);
   if(backStack.length > 0){ history.back(); }
 }
 function requestCloseThen(fn){
   pendingAfterClose = fn;
   requestClose();
 }
-window.addEventListener('popstate', (ev)=>{
-  dbgLog('POPSTATE primljen. state='+JSON.stringify(ev.state)+', history.length='+history.length+', backStack.length(pre)='+backStack.length+', exitConfirmed='+exitConfirmed);
+window.addEventListener('popstate', ()=>{
   if(backStack.length > 0){
     const fn = backStack.pop();
     fn();
-    dbgLog('  -> zatvoren sheet iz backStack-a, backStack.length(post)='+backStack.length);
     if(pendingAfterClose){
       const next = pendingAfterClose;
       pendingAfterClose = null;
@@ -689,9 +649,8 @@ window.addEventListener('popstate', (ev)=>{
     }
     return;
   }
-  if(exitConfirmed){ dbgLog('  -> exitConfirmed=true, ignorišem (pusti da izađe)'); return; }
+  if(exitConfirmed){ return; }
   exitTrapArmed = false;
-  dbgLog('  -> backStack praz, prikazujem exit modal');
   showExitConfirm();
 });
 
@@ -702,32 +661,25 @@ function armExitTrap(){
   if(!exitTrapArmed){
     try{ history.pushState({exitTrap:true}, '', location.href); }catch(e){}
     exitTrapArmed = true;
-    dbgLog('armExitTrap() -> NAORUZANO, history.length='+history.length);
-  } else {
-    dbgLog('armExitTrap() -> vec naoruzano, preskačem');
   }
 }
 document.addEventListener('pointerdown', function onceP(){
-  dbgLog('prvi pointerdown na strani -> armExitTrap()');
   armExitTrap();
   document.removeEventListener('pointerdown', onceP);
 }, {once:true});
 document.addEventListener('keydown', function onceK(){
-  dbgLog('prvi keydown na strani -> armExitTrap()');
   armExitTrap();
   document.removeEventListener('keydown', onceK);
 }, {once:true});
-function showExitConfirm(){ dbgLog('showExitConfirm() poziv'); document.getElementById('exitBackdrop').classList.add('open'); }
-function hideExitConfirm(){ dbgLog('hideExitConfirm() poziv'); document.getElementById('exitBackdrop').classList.remove('open'); }
+function showExitConfirm(){ document.getElementById('exitBackdrop').classList.add('open'); }
+function hideExitConfirm(){ document.getElementById('exitBackdrop').classList.remove('open'); }
 document.getElementById('exitLeaveBtn').addEventListener('click', () => {
-  dbgLog('KLIK: Izađi');
   hideExitConfirm();
   exitConfirmed = true;
   history.back();
   setTimeout(() => { try{ window.close(); }catch(e){} }, 50);
 });
 document.getElementById('exitStayBtn').addEventListener('click', () => {
-  dbgLog('KLIK: Ostani');
   hideExitConfirm();
   armExitTrap();
 });
