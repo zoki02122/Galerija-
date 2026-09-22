@@ -481,6 +481,10 @@
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.6" y1="10.6" x2="15.4" y2="6.4"></line><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"></line></svg>
     Podeli
   </button>
+  <button id="btnSaveDevice">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><polyline points="7 10 12 15 17 10"></polyline><path d="M5 19h14"></path></svg>
+    Preuzmi
+  </button>
   <button id="btnAlbum">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 012-2h4l2 2.5h8a2 2 0 012 2V17a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
     Dodaj u album
@@ -1536,8 +1540,8 @@ async function shareSelected(){
     const files = await Promise.all(chosen.map(async (it, idx)=>{
       const res = await fetch(it.dataUrl);
       const blob = await res.blob();
-      const ext = (blob.type.split('/')[1] || 'jpg').replace('jpeg','jpg');
-      return new File([blob], (it.name||'slika')+'.'+ext, {type: blob.type});
+      const ext = it.ext ? it.ext.toLowerCase() : (blob.type.split('/')[1] || 'jpg').replace('jpeg','jpg');
+      return new File([blob], (it.name||'fajl')+'.'+ext, {type: blob.type});
     }));
     if(navigator.canShare && navigator.canShare({files})){
       await navigator.share({files});
@@ -1549,6 +1553,40 @@ async function shareSelected(){
   }
 }
 document.getElementById('btnShare').onclick = shareSelected;
+
+function extFromDataUrl(dataUrl){
+  const m = /^data:image\/([a-zA-Z0-9.+-]+);/.exec(dataUrl || '');
+  if(!m) return 'jpg';
+  const sub = m[1].toLowerCase();
+  return sub === 'jpeg' ? 'jpg' : sub;
+}
+
+async function saveSelectedToDevice(){
+  const ids = Array.from(selectedIds);
+  const chosen = items.filter(i=>ids.includes(i.id));
+  const images = chosen.filter(i=>i.type === 'image');
+  if(images.length === 0){
+    toast('"Preuzmi" radi samo za slike — za dokumente koristi "Podeli".');
+    return;
+  }
+  for(let idx=0; idx<images.length; idx++){
+    const it = images[idx];
+    const ext = extFromDataUrl(it.dataUrl);
+    const a = document.createElement('a');
+    a.href = it.dataUrl;
+    a.download = (it.name || 'slika') + '.' + ext;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    if(idx < images.length - 1) await new Promise(r=>setTimeout(r, 400));
+  }
+  const skipped = chosen.length - images.length;
+  toast(
+    (images.length === 1 ? 'Slika sačuvana na telefon.' : images.length + ' slika sačuvano na telefon.') +
+    (skipped > 0 ? ' ('+skipped+' dokument(a) preskočeno.)' : '')
+  );
+}
+document.getElementById('btnSaveDevice').onclick = saveSelectedToDevice;
 
 document.getElementById('btnShortcut').onclick = ()=>{
   const id = Array.from(selectedIds)[0];
