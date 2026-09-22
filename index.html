@@ -1560,31 +1560,26 @@ function extFromDataUrl(dataUrl){
   const sub = m[1].toLowerCase();
   return sub === 'jpeg' ? 'jpg' : sub;
 }
+function getItemExt(item){
+  return item.ext ? item.ext.toLowerCase() : extFromDataUrl(item.dataUrl);
+}
 
 async function saveSelectedToDevice(){
   const ids = Array.from(selectedIds);
   const chosen = items.filter(i=>ids.includes(i.id));
-  const images = chosen.filter(i=>i.type === 'image');
-  if(images.length === 0){
-    toast('"Preuzmi" radi samo za slike — za dokumente koristi "Podeli".');
-    return;
-  }
-  for(let idx=0; idx<images.length; idx++){
-    const it = images[idx];
-    const ext = extFromDataUrl(it.dataUrl);
+  if(chosen.length === 0) return;
+  for(let idx=0; idx<chosen.length; idx++){
+    const it = chosen[idx];
+    const ext = getItemExt(it);
     const a = document.createElement('a');
     a.href = it.dataUrl;
-    a.download = (it.name || 'slika') + '.' + ext;
+    a.download = (it.name || (it.type==='image' ? 'slika' : 'fajl')) + '.' + ext;
     document.body.appendChild(a);
     a.click();
     a.remove();
-    if(idx < images.length - 1) await new Promise(r=>setTimeout(r, 400));
+    if(idx < chosen.length - 1) await new Promise(r=>setTimeout(r, 400));
   }
-  const skipped = chosen.length - images.length;
-  toast(
-    (images.length === 1 ? 'Slika sačuvana na telefon.' : images.length + ' slika sačuvano na telefon.') +
-    (skipped > 0 ? ' ('+skipped+' dokument(a) preskočeno.)' : '')
-  );
+  toast(chosen.length === 1 ? 'Sačuvano na telefon.' : chosen.length + ' stavke sačuvano na telefon.');
 }
 document.getElementById('btnSaveDevice').onclick = saveSelectedToDevice;
 
