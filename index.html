@@ -406,6 +406,17 @@
     margin-top:8px;
   }
 
+  .exit-modal-backdrop{display:none;position:fixed;inset:0;background:rgba(6,6,7,0.85);z-index:90;align-items:center;justify-content:center;}
+  .exit-modal-backdrop.open{display:flex;}
+  .exit-modal{width:calc(100% - 48px);max-width:380px;background:var(--surface);border:1px solid var(--brass-soft);border-radius:16px;padding:26px 22px;text-align:center;}
+  .exit-modal h2{font-family:'Fraunces',serif;font-weight:600;font-size:21px;color:var(--ink);margin:0 0 8px;}
+  .exit-modal .sub{color:var(--ink-dim);font-size:14px;margin-bottom:20px;}
+  .exit-actions{display:flex;gap:10px;}
+  .exit-btn{flex:1;padding:13px 6px;border-radius:10px;font-size:14.5px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;border:none;}
+  .exit-btn.stay{background:var(--surface-2);border:1px solid var(--brass-soft);color:var(--brass);}
+  .exit-btn.leave{background:rgba(181,84,74,0.16);border:1px solid rgba(181,84,74,0.4);color:var(--danger);}
+  .exit-btn .ic{font-size:32px;line-height:1;}
+
   @media (prefers-reduced-motion: reduce){*{transition:none !important;}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -584,6 +595,18 @@
   </div>
 </div>
 
+<div class="exit-modal-backdrop" id="exitBackdrop">
+  <div class="exit-modal">
+    <div style="font-size:108px;line-height:1;margin-bottom:8px;">🚪</div>
+    <h2>Izlazak iz aplikacije</h2>
+    <div class="sub">Da li sigurno želiš da izađeš?</div>
+    <div class="exit-actions">
+      <button class="exit-btn stay" id="exitStayBtn"><span class="ic">↩️</span>Ostani</button>
+      <button class="exit-btn leave" id="exitLeaveBtn"><span class="ic">🚪</span>Izađi</button>
+    </div>
+  </div>
+</div>
+
 <script>
 let items = [];
 let categories = [];
@@ -624,7 +647,41 @@ window.addEventListener('popstate', ()=>{
       pendingAfterClose = null;
       next();
     }
+    return;
   }
+  if(exitConfirmed){ return; }
+  exitTrapArmed = false;
+  showExitConfirm();
+});
+
+/* ---------- Potvrda izlaska iz aplikacije ---------- */
+let exitTrapArmed = false;
+let exitConfirmed = false;
+function armExitTrap(){
+  if(!exitTrapArmed){
+    try{ history.pushState({exitTrap:true}, '', location.href); }catch(e){}
+    exitTrapArmed = true;
+  }
+}
+document.addEventListener('pointerdown', function onceP(){
+  armExitTrap();
+  document.removeEventListener('pointerdown', onceP);
+}, {once:true});
+document.addEventListener('keydown', function onceK(){
+  armExitTrap();
+  document.removeEventListener('keydown', onceK);
+}, {once:true});
+function showExitConfirm(){ document.getElementById('exitBackdrop').classList.add('open'); }
+function hideExitConfirm(){ document.getElementById('exitBackdrop').classList.remove('open'); }
+document.getElementById('exitLeaveBtn').addEventListener('click', () => {
+  hideExitConfirm();
+  exitConfirmed = true;
+  history.back();
+  setTimeout(() => { try{ window.close(); }catch(e){} }, 50);
+});
+document.getElementById('exitStayBtn').addEventListener('click', () => {
+  hideExitConfirm();
+  armExitTrap();
 });
 
 const contentArea = document.getElementById('contentArea');
