@@ -193,6 +193,9 @@
   .album-summary .count-part{font-size:15.5px;color:var(--ink-dim);margin-left:2px;}
   .grid.folders-grid{grid-template-columns:repeat(3,1fr);gap:10px 8px;}
   .grid.folders-grid.folders-list{display:flex;flex-direction:column;gap:8px;}
+  /* Razmak izmedju grupe pinovanih i grupe ostalih albuma = isti kao izmedju plocica */
+  .grid.folders-grid + .grid.folders-grid{margin-top:10px;}
+  .grid.folders-grid.folders-list + .grid.folders-grid.folders-list{margin-top:8px;}
   .grid.photos-grid{grid-template-columns:repeat(3,1fr);gap:10px 8px;}
   .photos-grid .meta .name{font-size:15.5px;}
   .photos-grid .meta .index{font-size:10px;}
@@ -593,7 +596,7 @@
       <span id="lastBackupHint" style="display:block;margin-top:8px;font-size:11.5px;color:var(--ink-dim);"></span>
     </div>
     <div class="sheet-row" id="settingsWipe" style="color:var(--danger);"><span>Obriši sve podatke</span></div>
-    <p style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-faint);margin:18px 0 0;text-align:center;">build 2026-09-23b-TEST</p>
+    <p style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-faint);margin:18px 0 0;text-align:center;">build 2026-09-23c-TEST</p>
     <input type="file" id="importInput" accept="application/json" style="display:none">
   </div>
 </div>
