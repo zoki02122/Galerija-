@@ -2,7 +2,7 @@
 <html lang="sr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 <title>Arhiva</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='14' fill='%230d0e10'/%3E%3Cpath d='M50 22 L74 50 L50 78 L26 50 Z' fill='none' stroke='%23c9a355' stroke-width='5'/%3E%3C/svg%3E">
 <!-- manifest namerno uklonjen: Chrome je povremeno sam preuzimao pojedinačne prečice kao deo instalirane aplikacije -->
@@ -27,6 +27,7 @@
     --danger:#b5544a;
   }
   *{box-sizing:border-box;}
+  html,body{overscroll-behavior-y:contain;}
   html{-webkit-tap-highlight-color:transparent;}
   body{
     margin:0;
@@ -556,7 +557,7 @@
 <div class="sheet-bg" id="newFolderSheet">
   <div class="sheet">
     <div class="sheet-head"><button class="back-btn" id="newFolderBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h3 id="newFolderTitle">Novi album</h3></div>
-    <input id="newFolderInput" type="text" class="sheet-input" placeholder="Naziv albuma">
+    <input id="newFolderInput" type="text" class="sheet-input" placeholder="Naziv albuma" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     <button id="newFolderCreate" class="sheet-cta">Napravi album</button>
   </div>
 </div>
@@ -590,7 +591,7 @@
       <span id="lastBackupHint" style="display:block;margin-top:8px;font-size:11.5px;color:var(--ink-dim);"></span>
     </div>
     <div class="sheet-row" id="settingsWipe" style="color:var(--danger);"><span>Obriši sve podatke</span></div>
-    <p style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-faint);margin:18px 0 0;text-align:center;">build 2026-09-11b</p>
+    <p style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-faint);margin:18px 0 0;text-align:center;">build 2026-09-23a</p>
     <input type="file" id="importInput" accept="application/json" style="display:none">
   </div>
 </div>
@@ -874,6 +875,18 @@ async function loadAll(){
     const loaded = await idbGetAll();
     loaded.sort((a,b)=>a.ts-b.ts);
     items = loaded;
+    // Oporavak: vrati svaki album koji postoji na slikama a fali u spisku
+    let recovered = 0;
+    items.forEach(it=>{
+      if(it.category && !categories.some(c=>c.name===it.category)){
+        categories.push({name:it.category, pinned:false, cover:null});
+        recovered++;
+      }
+    });
+    if(recovered > 0){
+      saveCategories();
+      toast(recovered === 1 ? 'Vraćen 1 album.' : 'Vraćeno albuma: '+recovered+'.');
+    }
   }catch(e){
     console.error(e);
     toast('Greška pri učitavanju.');
@@ -882,6 +895,7 @@ async function loadAll(){
   render();
   checkBackupReminder();
 }
+function saveCategories(){ localStorage.setItem(LS_PREFIX+'categories', JSON.stringify(categories)); }
 function maybeAutoCover(folderName, item){
   if(!folderName || !item || item.type !== 'image') return;
   const cat = categories.find(c=>c.name===folderName);
