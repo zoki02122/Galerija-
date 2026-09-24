@@ -59,9 +59,9 @@
   }
   .sub{color:var(--ink-dim);font-size:15px;margin:2px 0 0 25px;font-style:italic;font-family:'Fraunces',serif;}
 
-  .crumb{display:flex;align-items:center;gap:8px;min-width:0;flex:1;}
-  .crumb .here{font-family:'Fraunces',serif;font-style:italic;color:var(--ink);font-size:20.5px;line-height:1.1;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+  .crumb{display:flex;align-items:center;gap:12px;min-width:0;flex:1;cursor:pointer;}
+  .crumb .here{font-family:'Fraunces',serif;font-style:italic;color:var(--ink);font-size:23px;line-height:1.2;
+    white-space:normal;overflow-wrap:anywhere;min-width:0;}
   .crumb .crumb-count{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.5px;color:var(--ink-dim);white-space:nowrap;flex:none;}
   .header-actions{display:flex;align-items:center;gap:10px;}
 
@@ -217,14 +217,14 @@
   .folder-tile-row{
     display:flex;align-items:center;gap:12px;box-sizing:border-box;width:100%;
     background:var(--surface);border:1px solid var(--line);
-    padding:12px 14px;cursor:pointer;position:relative;transition:border-color .2s;
+    padding:31px 14px;cursor:pointer;position:relative;transition:border-color .2s;
     touch-action:pan-y;
   }
   .folder-tile-row:active{border-color:var(--brass-soft);}
   .folder-tile-row .ftile-cover{
     /* Kvadrat preko cele unutrasnje visine plocice (44 + 2x12 razmaka = 68px);
        negativne margine ponistavaju padding, pa visina plocice ostaje ista */
-    width:68px;height:68px;margin:-12px 0 -12px -14px;flex-shrink:0;border-radius:0;overflow:hidden;
+    width:106px;height:106px;margin:-31px 0 -31px -14px;flex-shrink:0;border-radius:0;overflow:hidden;
     background:var(--surface-2);display:flex;align-items:center;justify-content:center;position:relative;
   }
   .folder-tile-row .ftile-cover img{width:100%;height:100%;object-fit:cover;}
@@ -238,7 +238,8 @@
     font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-faint);margin-top:2px;
   }
 
-  .inbox-row{display:flex;align-items:center;gap:14px;margin-bottom:10px;}
+  .inbox-row{display:flex;flex-direction:column;align-items:stretch;gap:10px;margin-bottom:10px;}
+  .inbox-row .folder-tile-wide{width:100%;}
   .folder-tile-wide{
     width:50%;flex:none;display:flex;align-items:center;gap:10px;box-sizing:border-box;
     background:var(--surface);border:1px solid var(--line);
@@ -443,6 +444,7 @@
         <h1>Arhiva</h1>
       </div>
       <div class="header-actions">
+        <button class="icon-btn" id="viewToggleBtn" type="button" style="display:none;"></button>
         <button class="icon-btn" id="searchBtn" title="Pretraga">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>
         </button>
@@ -596,7 +598,7 @@
       <span id="lastBackupHint" style="display:block;margin-top:8px;font-size:11.5px;color:var(--ink-dim);"></span>
     </div>
     <div class="sheet-row" id="settingsWipe" style="color:var(--danger);"><span>Obriši sve podatke</span></div>
-    <p style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-faint);margin:18px 0 0;text-align:center;">build 2026-09-23c</p>
+    <p style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-faint);margin:18px 0 0;text-align:center;">build 2026-09-24a</p>
     <input type="file" id="importInput" accept="application/json" style="display:none">
   </div>
 </div>
@@ -802,6 +804,9 @@ async function backfillContent(){
 
 const LS_PREFIX = 'galerija:';
 try{ albumViewMode = localStorage.getItem(LS_PREFIX+'albumViewMode') || 'grid'; }catch(e){}
+/* Sortiranje albuma na pocetnom ekranu: '' = rucni redosled, 'alpha' = abeceda, 'recent' = novije */
+let albumSort = '';
+try{ albumSort = localStorage.getItem(LS_PREFIX+'albumSort') || ''; }catch(e){}
 
 /* ---------- IndexedDB sloj za stavke (slike/dokumenti) ---------- */
 const IDB_NAME = 'galerijaDB';
@@ -931,6 +936,7 @@ function render(){
   document.getElementById('settingsBtn').style.display = selectionMode ? 'none' : 'flex';
   document.getElementById('addBtn').style.display = selectionMode ? 'none' : 'flex';
   document.getElementById('searchBtn').style.display = selectionMode ? 'none' : 'flex';
+  document.getElementById('viewToggleBtn').style.display = 'none';
   if(selectionMode){
     selCount.textContent = selectedIds.size + (selectedIds.size===1 ? ' odabrano' : ' odabrano');
     document.getElementById('btnShortcut').hidden = selectedIds.size !== 1;
@@ -945,9 +951,14 @@ function render(){
     crumbCount.textContent = totalHere + (totalHere===1 ? ' stavka' : ' stavki');
     contentArea.innerHTML = '';
 
+    /* Red 1: nazad + ceo naziv albuma (ceo red je dugme za izlaz). Red 2: broj stavki + sortiranje */
+    const albumHead = document.createElement('div');
+    albumHead.style.cssText = 'display:flex;flex-direction:column;gap:10px;margin-bottom:16px;';
+    albumHead.appendChild(crumb);
     const sortRow = document.createElement('div');
-    sortRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;';
-    sortRow.appendChild(crumb);
+    sortRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:10px;';
+    sortRow.appendChild(crumbCount);
+    albumHead.appendChild(sortRow);
     const sortBtns = document.createElement('div');
     sortBtns.style.cssText = 'display:flex;gap:6px;flex:none;';
     [['date','Datum'],['alpha','Abeceda']].forEach(([mode,label])=>{
@@ -959,7 +970,7 @@ function render(){
       sortBtns.appendChild(btn);
     });
     sortRow.appendChild(sortBtns);
-    contentArea.appendChild(sortRow);
+    contentArea.appendChild(albumHead);
 
     if(filtered.length === 0){
       const msg = q ? 'Nema rezultata za "'+escapeHtml(searchEl.value)+'".' : 'Ovaj album je prazan. Dodaj nešto dugmetom iznad.';
@@ -1058,13 +1069,43 @@ function render(){
 
   const label = document.createElement('p');
   label.className = 'album-summary';
-  label.innerHTML = 'Svi albumi <span class="count-part">&middot; ' + items.length + ' stavki u arhivi</span>';
-  inboxRow.appendChild(label);
+  label.innerHTML = 'Svi albumi <span class="count-part">&middot; ' + items.length + ' stavki</span>';
+  const summaryRow = document.createElement('div');
+  summaryRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:10px;';
+  summaryRow.appendChild(label);
+  inboxRow.appendChild(summaryRow);
+
+  /* ABECEDA / NOVIJE: dodir ukljucuje, ponovni dodir iskljucuje (povratak na rucni redosled) */
+  const albumSortBtns = document.createElement('div');
+  albumSortBtns.style.cssText = 'display:flex;gap:6px;flex:none;';
+  [['alpha','Abeceda'],['recent','Datum']].forEach(([mode,lbl])=>{
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = lbl;
+    const active = albumSort === mode;
+    btn.style.cssText = 'font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;background:none;border:1px solid '+(active?'var(--brass)':'var(--line)')+';color:'+(active?'var(--brass)':'var(--ink-dim)')+';padding:7px 11px;cursor:pointer;';
+    btn.onclick = ()=>{
+      albumSort = albumSort === mode ? '' : mode;
+      try{ localStorage.setItem(LS_PREFIX+'albumSort', albumSort); }catch(e){}
+      render();
+    };
+    albumSortBtns.appendChild(btn);
+  });
+  summaryRow.appendChild(albumSortBtns);
 
   albumHeaderZone.appendChild(inboxRow);
 
   const pinnedCats = categories.filter(c=>c.pinned);
   const otherCats = categories.filter(c=>!c.pinned);
+
+  /* Prikazni redosled; rucni redosled u categories ostaje netaknut */
+  const lastTsByCat = {};
+  items.forEach(i=>{ if(i.category && (lastTsByCat[i.category]||0) < i.ts) lastTsByCat[i.category] = i.ts; });
+  const displayOrder = (arr)=>{
+    if(albumSort === 'alpha') return arr.slice().sort((a,b)=>normalizeSr(a.name).localeCompare(normalizeSr(b.name)));
+    if(albumSort === 'recent') return arr.slice().sort((a,b)=>(lastTsByCat[b.name]||0)-(lastTsByCat[a.name]||0));
+    return arr;
+  };
 
   function commitGroupOrder(groupCats, container){
     const orderedNames = Array.from(container.children)
@@ -1101,7 +1142,7 @@ function render(){
     const handle = document.createElement('div');
     handle.className = 'drag-handle';
     handle.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.6"></circle><circle cx="16" cy="6" r="1.6"></circle><circle cx="8" cy="12" r="1.6"></circle><circle cx="16" cy="12" r="1.6"></circle><circle cx="8" cy="18" r="1.6"></circle><circle cx="16" cy="18" r="1.6"></circle></svg>';
-    tile.appendChild(handle);
+    if(!albumSort) tile.appendChild(handle);
 
     /* Dugi pritisak bilo gde na plocici (osim rucke) -> meni */
     let pressTimer = null;
@@ -1211,20 +1252,20 @@ function render(){
     return tile;
   };
 
-  const viewToggleBtn = ()=>{
-    const btn = document.createElement('button');
-    btn.className = 'view-toggle-btn';
+  const setupViewToggleBtn = ()=>{
+    const btn = document.getElementById('viewToggleBtn');
     btn.title = albumViewMode === 'grid' ? 'Prikaži kao listu' : 'Prikaži kao mrežu';
     btn.innerHTML = albumViewMode === 'grid'
-      ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>'
-      : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>';
+      ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>'
+      : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>';
     btn.onclick = ()=>{
       albumViewMode = albumViewMode === 'grid' ? 'list' : 'grid';
       try{ localStorage.setItem(LS_PREFIX+'albumViewMode', albumViewMode); }catch(e){}
       render();
     };
-    return btn;
+    btn.style.display = selectionMode ? 'none' : 'flex';
   };
+  setupViewToggleBtn();
 
   const gridClass = 'grid folders-grid' + (albumViewMode === 'list' ? ' folders-list' : '');
 
@@ -1238,22 +1279,13 @@ function render(){
     contentArea.appendChild(pinLabelRow);
     const pinGrid = document.createElement('div');
     pinGrid.className = gridClass;
-    pinnedCats.forEach(cat=>pinGrid.appendChild(buildFolderTile(cat, pinnedCats)));
+    displayOrder(pinnedCats).forEach(cat=>pinGrid.appendChild(buildFolderTile(cat, pinnedCats)));
     contentArea.appendChild(pinGrid);
   }
 
-  const albumsLabelRow = document.createElement('div');
-  albumsLabelRow.className = 'album-summary-row' + (pinnedCats.length === 0 ? ' section-label-top' : '');
-  const albumsLabel = document.createElement('p');
-  albumsLabel.className = 'album-summary';
-  albumsLabel.textContent = 'Albumi';
-  albumsLabelRow.appendChild(albumsLabel);
-  albumsLabelRow.appendChild(viewToggleBtn());
-  albumHeaderZone.appendChild(albumsLabelRow);
-
   const fgrid = document.createElement('div');
   fgrid.className = gridClass;
-  otherCats.forEach(cat=>fgrid.appendChild(buildFolderTile(cat, otherCats)));
+  displayOrder(otherCats).forEach(cat=>fgrid.appendChild(buildFolderTile(cat, otherCats)));
   contentArea.appendChild(fgrid);
 }
 
@@ -1526,7 +1558,7 @@ const closeModal = ()=>{ modalBg.classList.remove('open'); clearDeepLink(); };
 document.getElementById('modalClose').onclick = ()=>requestClose();
 modalBg.onclick = (e)=>{ if(e.target === modalBg){ requestClose(); } };
 
-crumbBack.onclick = ()=>requestClose();
+crumb.onclick = ()=>requestClose();
 
 function openMoveSheet(){
   sheetTitle.textContent = 'Dodaj u album';
