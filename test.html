@@ -217,14 +217,14 @@
   .folder-tile-row{
     display:flex;align-items:center;gap:12px;box-sizing:border-box;width:100%;
     background:var(--surface);border:1px solid var(--line);
-    padding:22px 14px;cursor:pointer;position:relative;transition:border-color .2s;
+    padding:31px 14px;cursor:pointer;position:relative;transition:border-color .2s;
     touch-action:pan-y;
   }
   .folder-tile-row:active{border-color:var(--brass-soft);}
   .folder-tile-row .ftile-cover{
     /* Kvadrat preko cele unutrasnje visine plocice (44 + 2x12 razmaka = 68px);
        negativne margine ponistavaju padding, pa visina plocice ostaje ista */
-    width:88px;height:88px;margin:-22px 0 -22px -14px;flex-shrink:0;border-radius:0;overflow:hidden;
+    width:106px;height:106px;margin:-31px 0 -31px -14px;flex-shrink:0;border-radius:0;overflow:hidden;
     background:var(--surface-2);display:flex;align-items:center;justify-content:center;position:relative;
   }
   .folder-tile-row .ftile-cover img{width:100%;height:100%;object-fit:cover;}
@@ -596,7 +596,7 @@
       <span id="lastBackupHint" style="display:block;margin-top:8px;font-size:11.5px;color:var(--ink-dim);"></span>
     </div>
     <div class="sheet-row" id="settingsWipe" style="color:var(--danger);"><span>Obriši sve podatke</span></div>
-    <p style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-faint);margin:18px 0 0;text-align:center;">build 2026-09-24a-TEST</p>
+    <p style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-faint);margin:18px 0 0;text-align:center;">build 2026-09-24b-TEST</p>
     <input type="file" id="importInput" accept="application/json" style="display:none">
   </div>
 </div>
