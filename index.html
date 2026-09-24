@@ -239,7 +239,13 @@
   }
 
   .inbox-row{display:flex;flex-direction:column;align-items:stretch;gap:10px;margin-bottom:10px;}
-  .inbox-row .folder-tile-wide{width:100%;}
+  .inbox-row .folder-tile-wide{width:100%;padding-right:70px;}
+  /* Veliko dugme za dodavanje (kvadrat) */
+  .add-sq{display:flex;align-items:center;justify-content:center;background:var(--surface-2);color:var(--brass);
+    border:none;padding:0;cursor:pointer;transition:background .2s;}
+  .add-sq:active{background:var(--brass-glow);}
+  .folder-tile-wide .add-sq{position:absolute;top:0;right:0;bottom:0;border-left:1px solid var(--line);}
+  .add-sq.album-add{width:48px;height:48px;flex:none;border:1px solid var(--line);}
   .folder-tile-wide{
     width:50%;flex:none;display:flex;align-items:center;gap:10px;box-sizing:border-box;
     background:var(--surface);border:1px solid var(--line);
@@ -448,9 +454,6 @@
         <button class="icon-btn" id="searchBtn" title="Pretraga">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>
         </button>
-        <button class="icon-btn" id="addBtn" type="button" title="Dodaj">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-        </button>
         <button class="icon-btn" id="settingsBtn" title="Podešavanja">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"></path></svg>
         </button>
@@ -598,7 +601,7 @@
       <span id="lastBackupHint" style="display:block;margin-top:8px;font-size:11.5px;color:var(--ink-dim);"></span>
     </div>
     <div class="sheet-row" id="settingsWipe" style="color:var(--danger);"><span>Obriši sve podatke</span></div>
-    <p style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-faint);margin:18px 0 0;text-align:center;">build 2026-09-24a</p>
+    <p style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-faint);margin:18px 0 0;text-align:center;">build 2026-09-24b</p>
     <input type="file" id="importInput" accept="application/json" style="display:none">
   </div>
 </div>
@@ -934,7 +937,6 @@ function render(){
   searchbarWrap.style.display = (selectionMode || !searchOpen) ? 'none' : 'flex';
   toolbarWrap.style.display = 'none';
   document.getElementById('settingsBtn').style.display = selectionMode ? 'none' : 'flex';
-  document.getElementById('addBtn').style.display = selectionMode ? 'none' : 'flex';
   document.getElementById('searchBtn').style.display = selectionMode ? 'none' : 'flex';
   document.getElementById('viewToggleBtn').style.display = 'none';
   if(selectionMode){
@@ -954,7 +956,19 @@ function render(){
     /* Red 1: nazad + ceo naziv albuma (ceo red je dugme za izlaz). Red 2: broj stavki + sortiranje */
     const albumHead = document.createElement('div');
     albumHead.style.cssText = 'display:flex;flex-direction:column;gap:10px;margin-bottom:16px;';
-    albumHead.appendChild(crumb);
+    const nameRow = document.createElement('div');
+    nameRow.style.cssText = 'display:flex;align-items:center;gap:10px;';
+    nameRow.appendChild(crumb);
+    if(!selectionMode){
+      const albumAdd = document.createElement('button');
+      albumAdd.type = 'button';
+      albumAdd.className = 'add-sq album-add';
+      albumAdd.title = 'Dodaj u ovaj album';
+      albumAdd.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
+      albumAdd.onclick = ()=>openAddSheet();
+      nameRow.appendChild(albumAdd);
+    }
+    albumHead.appendChild(nameRow);
     const sortRow = document.createElement('div');
     sortRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:10px;';
     sortRow.appendChild(crumbCount);
@@ -1065,6 +1079,13 @@ function render(){
   inboxTile.className = 'folder-tile-wide';
   inboxTile.innerHTML = '<div class="fw-icon">'+folderIconSvg()+'</div><div class="fw-text"><span class="fw-name">Sve slike</span><span class="fw-count">'+inboxCount+' '+(inboxCount===1?'stavka':'stavki')+'</span></div>';
   inboxTile.onclick = ()=>{ currentFolder = INBOX; searchEl.value=''; pushBack(closeAlbumView); render(); };
+  const inboxAdd = document.createElement('button');
+  inboxAdd.type = 'button';
+  inboxAdd.className = 'add-sq';
+  inboxAdd.title = 'Dodaj';
+  inboxAdd.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
+  inboxAdd.onclick = (e)=>{ e.stopPropagation(); openAddSheet(); };
+  inboxTile.appendChild(inboxAdd);
   inboxRow.appendChild(inboxTile);
 
   const label = document.createElement('p');
@@ -1094,6 +1115,8 @@ function render(){
   summaryRow.appendChild(albumSortBtns);
 
   albumHeaderZone.appendChild(inboxRow);
+  /* Kvadrat: sirina = unutrasnja visina plocice */
+  inboxAdd.style.width = inboxTile.clientHeight + 'px';
 
   const pinnedCats = categories.filter(c=>c.pinned);
   const otherCats = categories.filter(c=>!c.pinned);
@@ -1850,10 +1873,10 @@ docInput.addEventListener('change', async (e)=>{
 
 const addSheet = document.getElementById('addSheet');
 const closeAddSheet = ()=>addSheet.classList.remove('open');
-document.getElementById('addBtn').onclick = ()=>{
+function openAddSheet(){
   addSheet.classList.add('open');
   pushBack(closeAddSheet);
-};
+}
 document.getElementById('addSheetBack').onclick = ()=>requestClose();
 addSheet.onclick = (e)=>{ if(e.target === addSheet) requestClose(); };
 document.getElementById('addFromGallery').onclick = ()=>{ requestClose(); fileInput.click(); };
