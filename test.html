@@ -598,7 +598,7 @@
       <span id="lastBackupHint" style="display:block;margin-top:8px;font-size:11.5px;color:var(--ink-dim);"></span>
     </div>
     <div class="sheet-row" id="settingsWipe" style="color:var(--danger);"><span>Obriši sve podatke</span></div>
-    <p style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-faint);margin:18px 0 0;text-align:center;">build 2026-09-24c-TEST</p>
+    <p style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-faint);margin:18px 0 0;text-align:center;">build 2026-09-24d-TEST</p>
     <input type="file" id="importInput" accept="application/json" style="display:none">
   </div>
 </div>
@@ -804,6 +804,9 @@ async function backfillContent(){
 
 const LS_PREFIX = 'galerija:';
 try{ albumViewMode = localStorage.getItem(LS_PREFIX+'albumViewMode') || 'grid'; }catch(e){}
+/* Sortiranje albuma na pocetnom ekranu: '' = rucni redosled, 'alpha' = abeceda, 'recent' = novije */
+let albumSort = '';
+try{ albumSort = localStorage.getItem(LS_PREFIX+'albumSort') || ''; }catch(e){}
 
 /* ---------- IndexedDB sloj za stavke (slike/dokumenti) ---------- */
 const IDB_NAME = 'galerijaDB';
@@ -1064,10 +1067,37 @@ function render(){
   label.innerHTML = 'Svi albumi <span class="count-part">&middot; ' + items.length + ' stavki u arhivi</span>';
   inboxRow.appendChild(label);
 
+  /* ABECEDA / NOVIJE: dodir ukljucuje, ponovni dodir iskljucuje (povratak na rucni redosled) */
+  const albumSortBtns = document.createElement('div');
+  albumSortBtns.style.cssText = 'display:flex;gap:6px;';
+  [['alpha','Abeceda'],['recent','Novije']].forEach(([mode,lbl])=>{
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = lbl;
+    const active = albumSort === mode;
+    btn.style.cssText = 'font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;background:none;border:1px solid '+(active?'var(--brass)':'var(--line)')+';color:'+(active?'var(--brass)':'var(--ink-dim)')+';padding:7px 11px;cursor:pointer;';
+    btn.onclick = ()=>{
+      albumSort = albumSort === mode ? '' : mode;
+      try{ localStorage.setItem(LS_PREFIX+'albumSort', albumSort); }catch(e){}
+      render();
+    };
+    albumSortBtns.appendChild(btn);
+  });
+  inboxRow.appendChild(albumSortBtns);
+
   albumHeaderZone.appendChild(inboxRow);
 
   const pinnedCats = categories.filter(c=>c.pinned);
   const otherCats = categories.filter(c=>!c.pinned);
+
+  /* Prikazni redosled; rucni redosled u categories ostaje netaknut */
+  const lastTsByCat = {};
+  items.forEach(i=>{ if(i.category && (lastTsByCat[i.category]||0) < i.ts) lastTsByCat[i.category] = i.ts; });
+  const displayOrder = (arr)=>{
+    if(albumSort === 'alpha') return arr.slice().sort((a,b)=>normalizeSr(a.name).localeCompare(normalizeSr(b.name)));
+    if(albumSort === 'recent') return arr.slice().sort((a,b)=>(lastTsByCat[b.name]||0)-(lastTsByCat[a.name]||0));
+    return arr;
+  };
 
   function commitGroupOrder(groupCats, container){
     const orderedNames = Array.from(container.children)
@@ -1104,7 +1134,7 @@ function render(){
     const handle = document.createElement('div');
     handle.className = 'drag-handle';
     handle.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.6"></circle><circle cx="16" cy="6" r="1.6"></circle><circle cx="8" cy="12" r="1.6"></circle><circle cx="16" cy="12" r="1.6"></circle><circle cx="8" cy="18" r="1.6"></circle><circle cx="16" cy="18" r="1.6"></circle></svg>';
-    tile.appendChild(handle);
+    if(!albumSort) tile.appendChild(handle);
 
     /* Dugi pritisak bilo gde na plocici (osim rucke) -> meni */
     let pressTimer = null;
@@ -1241,13 +1271,13 @@ function render(){
     contentArea.appendChild(pinLabelRow);
     const pinGrid = document.createElement('div');
     pinGrid.className = gridClass;
-    pinnedCats.forEach(cat=>pinGrid.appendChild(buildFolderTile(cat, pinnedCats)));
+    displayOrder(pinnedCats).forEach(cat=>pinGrid.appendChild(buildFolderTile(cat, pinnedCats)));
     contentArea.appendChild(pinGrid);
   }
 
   const fgrid = document.createElement('div');
   fgrid.className = gridClass;
-  otherCats.forEach(cat=>fgrid.appendChild(buildFolderTile(cat, otherCats)));
+  displayOrder(otherCats).forEach(cat=>fgrid.appendChild(buildFolderTile(cat, otherCats)));
   contentArea.appendChild(fgrid);
 }
 
