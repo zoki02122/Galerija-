@@ -100,6 +100,9 @@
 
   header{margin-bottom:10px;}
   body.in-album .mark-row{display:none;}
+  /* tanka linija ispod zakucanog zaglavlja albuma, kad slike krenu ispod njega (sve teme) */
+  #stickyTop{transition:box-shadow .2s ease;}
+  body.in-album.scrolled #stickyTop{box-shadow:0 1px 0 var(--line);}
   #backupReminderRow{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--danger);color:var(--on-danger);font-size:12px;font-weight:600;padding:9px 11px;border-radius:11px;margin-bottom:10px;}
   #backupReminderRow button{flex:none;background:var(--on-danger-soft);color:var(--on-danger);border:1px solid var(--on-danger-line);padding:6px 11px;border-radius:8px;font-weight:700;font-size:11.5px;font-family:inherit;cursor:pointer;}
   #stickyTop{
@@ -1251,6 +1254,7 @@ function render(){
   currentGalleryItems = [];
   albumHeaderZone.innerHTML = '';
   document.body.classList.toggle('in-album', !!currentFolder);
+  document.body.classList.toggle('scrolled', window.scrollY > 4);
   syncFullscreen();
   if(!currentFolder || selectionMode){ crumb.remove(); }
   if(currentFolder){ crumbName.textContent = currentFolder === INBOX ? 'Sve slike' : currentFolder; }
@@ -1315,7 +1319,9 @@ function render(){
       sortBtns.appendChild(btn);
     });
     sortRow.appendChild(sortBtns);
-    contentArea.appendChild(albumHead);
+    // zaglavlje albuma ide u zakucani deo (#stickyTop) — skroluju se samo slike
+    albumHead.style.marginBottom = '0';
+    albumHeaderZone.appendChild(albumHead);
 
     if(filtered.length === 0){
       const msg = q ? 'Nema rezultata za "'+escapeHtml(searchEl.value)+'".' : 'Ovaj album je prazan. Dodaj nešto dugmetom iznad.';
@@ -1873,6 +1879,9 @@ function openModal(item){
   pushBack(closeModal);
   enterModalFullscreen();
 }
+window.addEventListener('scroll', ()=>{
+  document.body.classList.toggle('scrolled', window.scrollY > 4);
+}, {passive:true});
 /* ---------- Ceo ekran (Fullscreen API) ----------
    album i slika -> jedan isti potpuni ceo ekran (navigationUI:'hide'), da bi se Chrome-ova
    poruka o celom ekranu pojavila samo jednom (pri ulasku u album), a ne pri svakoj slici
