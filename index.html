@@ -1858,7 +1858,28 @@ function openModal(item){
   modalBg.classList.remove('ui-hidden');
   modalBg.classList.add('open');
   pushBack(closeModal);
+  enterModalFullscreen();
 }
+/* ---------- Pravi ceo ekran pri pregledu slike (Fullscreen API) ---------- */
+function enterModalFullscreen(){
+  const el = document.documentElement;
+  if(!el.requestFullscreen || document.fullscreenElement) return;
+  // zahteva dodir korisnika; ako ga browser odbije, slika ostaje u obicnom prikazu
+  el.requestFullscreen({navigationUI:'hide'}).catch(()=>{});
+}
+function exitModalFullscreen(){
+  if(document.fullscreenElement && document.exitFullscreen){
+    document.exitFullscreen().catch(()=>{});
+  }
+}
+document.addEventListener('fullscreenchange', ()=>{
+  // korisnik je izasao iz celog ekrana (dugme/gest "nazad") dok je slika otvorena:
+  // zatvori i sliku, kao u galeriji telefona
+  if(!document.fullscreenElement && modalBg.classList.contains('open')
+     && backStack.length > 0 && backStack[backStack.length-1] === closeModal){
+    requestClose();
+  }
+});
 let modalItemId = null;
 function showModalItem(item){
   modalItemId = item.id;
@@ -1896,7 +1917,7 @@ modalFrame.addEventListener('touchend', (e)=>{
   }
 });
 
-const closeModal = ()=>{ modalBg.classList.remove('open'); clearDeepLink(); };
+const closeModal = ()=>{ modalBg.classList.remove('open'); clearDeepLink(); exitModalFullscreen(); };
 document.getElementById('modalClose').onclick = ()=>requestClose();
 modalBg.onclick = (e)=>{ if(e.target === modalBg){ requestClose(); } };
 
