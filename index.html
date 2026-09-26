@@ -1896,9 +1896,10 @@ let fsMode = null;          // 'show' | 'hide' | null — rezim koji smo mi zatr
 let fsOwnExitPending = false; // nas izlazak (promena rezima) — da ne bi bio shvacen kao "nazad"
 let fsBusy = false;
 function fsWant(){
-  if(modalBg.classList.contains('open')) return 'hide';
-  // instalirana aplikacija vec nema Chrome traku — album bez celog ekrana (i bez Chrome poruke)
-  if(currentFolder && !RUNS_INSTALLED) return 'hide';
+  // instalirana aplikacija nikad ne ukljucuje ceo ekran preko browsera:
+  // vec je bez Chrome trake, a tako nema ni Chrome poruke (ni u albumu ni na slici)
+  if(RUNS_INSTALLED) return null;
+  if(modalBg.classList.contains('open') || currentFolder) return 'hide';
   return null;
 }
 async function fsOwnExit(){
