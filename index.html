@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 <title>Arhiva</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='14' fill='%230d0e10'/%3E%3Cpath d='M50 22 L74 50 L50 78 L26 50 Z' fill='none' stroke='%23c9a355' stroke-width='5'/%3E%3C/svg%3E">
-<!-- manifest namerno uklonjen: Chrome je povremeno sam preuzimao pojedinačne prečice kao deo instalirane aplikacije -->
+<!-- manifest vracen: precice pojedinacnih slika sada vode na poseban repozitorijum /arhiva-slika/,
+     van obuhvata instalirane Arhive, pa ih Chrome ne vezuje za aplikaciju -->
+<link rel="manifest" href="manifest.json">
 <meta name="theme-color" id="themeColor" content="#0d0e10">
 <script>
 /* tema se postavlja pre prvog iscrtavanja, da ne bi "bljesnula" klasična */
@@ -1887,11 +1889,16 @@ window.addEventListener('scroll', ()=>{
    poruka o celom ekranu pojavila samo jednom (pri ulasku u album), a ne pri svakoj slici
    pocetni ekran -> normalan prikaz
    Ulazak zahteva dodir korisnika; bez dodira browser odbija i prikaz ostaje normalan. */
+// da li je Arhiva otvorena kao instalirana aplikacija (bez Chrome trake);
+// pamti se na startu, jer ceo ekran (Fullscreen API) kasnije menja display-mode
+const RUNS_INSTALLED = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
 let fsMode = null;          // 'show' | 'hide' | null — rezim koji smo mi zatrazili
 let fsOwnExitPending = false; // nas izlazak (promena rezima) — da ne bi bio shvacen kao "nazad"
 let fsBusy = false;
 function fsWant(){
-  if(modalBg.classList.contains('open') || currentFolder) return 'hide';
+  if(modalBg.classList.contains('open')) return 'hide';
+  // instalirana aplikacija vec nema Chrome traku — album bez celog ekrana (i bez Chrome poruke)
+  if(currentFolder && !RUNS_INSTALLED) return 'hide';
   return null;
 }
 async function fsOwnExit(){
@@ -2165,11 +2172,21 @@ async function saveSelectedToDevice(){
 }
 document.getElementById('btnSaveDevice').onclick = saveSelectedToDevice;
 
+/* Precica: stranica za jednu sliku je u posebnom repozitorijumu (van instalirane Arhive).
+   U instaliranoj Arhivi otvara se u pravom Chrome-u (Android intent, zvanicna Chrome sintaksa),
+   da bi iz Chrome menija mogla da se napravi prečica. */
+const SHORTCUT_BASE = 'https://zoki02122.github.io/arhiva-slika/';
 document.getElementById('btnShortcut').onclick = ()=>{
   const id = Array.from(selectedIds)[0];
   const item = items.find(i=>i.id===id);
   if(!item) return;
-  location.href = 'photo.html?p=' + encodeURIComponent(item.id);
+  const url = SHORTCUT_BASE + '?p=' + encodeURIComponent(item.id);
+  if(RUNS_INSTALLED){
+    location.href = 'intent://zoki02122.github.io/arhiva-slika/?p=' + encodeURIComponent(item.id)
+      + '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(url) + ';end';
+  }else{
+    window.open(url, '_blank');
+  }
 };
 
 function clearDeepLink(){
@@ -2547,6 +2564,9 @@ document.getElementById('deepSearchToggle').onclick = ()=>{
 };
 
 loadAll().then(checkDeepLink);
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
 
 /* ---------- BACKUP REMINDER ---------- */
 function getBackupIntervalDays(){
