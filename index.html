@@ -99,6 +99,7 @@
   .wrap{max-width:900px;margin:0 auto;}
 
   header{margin-bottom:10px;}
+  body.in-album .mark-row{display:none;}
   #backupReminderRow{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--danger);color:var(--on-danger);font-size:12px;font-weight:600;padding:9px 11px;border-radius:11px;margin-bottom:10px;}
   #backupReminderRow button{flex:none;background:var(--on-danger-soft);color:var(--on-danger);border:1px solid var(--on-danger-line);padding:6px 11px;border-radius:8px;font-weight:700;font-size:11.5px;font-family:inherit;cursor:pointer;}
   #stickyTop{
@@ -1249,6 +1250,8 @@ const INBOX = '__inbox__';
 function render(){
   currentGalleryItems = [];
   albumHeaderZone.innerHTML = '';
+  document.body.classList.toggle('in-album', !!currentFolder);
+  syncFullscreen();
   if(!currentFolder || selectionMode){ crumb.remove(); }
   if(currentFolder){ crumbName.textContent = currentFolder === INBOX ? 'Sve slike' : currentFolder; }
   selHeader.classList.toggle('show', selectionMode);
@@ -1286,6 +1289,14 @@ function render(){
       albumAdd.title = 'Dodaj u ovaj album';
       albumAdd.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
       albumAdd.onclick = ()=>openAddSheet();
+      // lupa u redu albuma (red "Arhiva" je u albumu sakriven)
+      const albumSearch = document.createElement('button');
+      albumSearch.type = 'button';
+      albumSearch.className = 'icon-btn album-search';
+      albumSearch.title = 'Pretraga';
+      albumSearch.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>';
+      albumSearch.onclick = ()=>document.getElementById('searchBtn').onclick();
+      nameRow.appendChild(albumSearch);
       nameRow.appendChild(albumAdd);
     }
     albumHead.appendChild(nameRow);
@@ -1333,6 +1344,7 @@ function render(){
   contentArea.innerHTML = '';
 
   const closeAlbumViewTop = ()=>{ currentFolder = null; searchEl.value=''; render(); };
+  closeAlbumViewTop.isAlbumCloser = true;
 
   if(q){
     const matchedCats = categories.filter(c=>normalizeSr(c.name).includes(q));
@@ -1390,6 +1402,7 @@ function render(){
   }
 
   const closeAlbumView = ()=>{ currentFolder = null; searchEl.value=''; render(); };
+  closeAlbumView.isAlbumCloser = true;
 
   const inboxRow = document.createElement('div');
   inboxRow.className = 'inbox-row';
@@ -1860,25 +1873,66 @@ function openModal(item){
   pushBack(closeModal);
   enterModalFullscreen();
 }
-/* ---------- Pravi ceo ekran pri pregledu slike (Fullscreen API) ---------- */
-function enterModalFullscreen(){
+/* ---------- Ceo ekran (Fullscreen API) ----------
+   album i slika -> jedan isti potpuni ceo ekran (navigationUI:'hide'), da bi se Chrome-ova
+   poruka o celom ekranu pojavila samo jednom (pri ulasku u album), a ne pri svakoj slici
+   pocetni ekran -> normalan prikaz
+   Ulazak zahteva dodir korisnika; bez dodira browser odbija i prikaz ostaje normalan. */
+let fsMode = null;          // 'show' | 'hide' | null — rezim koji smo mi zatrazili
+let fsOwnExitPending = false; // nas izlazak (promena rezima) — da ne bi bio shvacen kao "nazad"
+let fsBusy = false;
+function fsWant(){
+  if(modalBg.classList.contains('open') || currentFolder) return 'hide';
+  return null;
+}
+async function fsOwnExit(){
+  fsOwnExitPending = true;
+  try{ await document.exitFullscreen(); }catch(e){}
+}
+async function syncFullscreen(){
   const el = document.documentElement;
-  if(!el.requestFullscreen || document.fullscreenElement) return;
-  // zahteva dodir korisnika; ako ga browser odbije, slika ostaje u obicnom prikazu
-  el.requestFullscreen({navigationUI:'hide'}).catch(()=>{});
-}
-function exitModalFullscreen(){
-  if(document.fullscreenElement && document.exitFullscreen){
-    document.exitFullscreen().catch(()=>{});
+  if(!el.requestFullscreen || !document.exitFullscreen || fsBusy) return;
+  const want = fsWant();
+  const cur = document.fullscreenElement;
+  if(!want){
+    if(cur){ fsBusy = true; await fsOwnExit(); fsBusy = false; }
+    fsMode = null;
+    return;
   }
+  if(cur && fsMode === want) return;
+  fsBusy = true;
+  try{
+    if(cur) await fsOwnExit();
+    if(fsWant() === want){
+      await el.requestFullscreen({navigationUI: want});
+      fsMode = want;
+      fsOwnExitPending = false;
+    }
+  }catch(e){ /* nema dodira korisnika — ostaje normalan prikaz */ }
+  fsBusy = false;
+  // ako se u medjuvremenu promenilo sta treba (npr. otvorena slika), a dodir je jos vazeci — uskladi
+  const now = document.fullscreenElement ? fsMode : null;
+  if(fsWant() !== now && navigator.userActivation && navigator.userActivation.isActive) syncFullscreen();
 }
+function enterModalFullscreen(){ syncFullscreen(); }
+function exitModalFullscreen(){ syncFullscreen(); }
+// posle gesta "nazad" browser izlazi iz celog ekrana; prvi sledeci dodir ga vraca
+document.addEventListener('click', ()=>{
+  if(fsWant() && !document.fullscreenElement) syncFullscreen();
+}, true);
 document.addEventListener('fullscreenchange', ()=>{
-  // korisnik je izasao iz celog ekrana (dugme/gest "nazad") dok je slika otvorena:
-  // zatvori i sliku, kao u galeriji telefona
-  if(!document.fullscreenElement && modalBg.classList.contains('open')
-     && backStack.length > 0 && backStack[backStack.length-1] === closeModal){
-    requestClose();
-  }
+  if(document.fullscreenElement) return;
+  // sacekaj da se zavrsi eventualna nasa promena rezima (izlazak pa ponovni ulazak)
+  setTimeout(()=>{
+    if(document.fullscreenElement || fsBusy) return;
+    if(fsOwnExitPending){ fsOwnExitPending = false; fsMode = null; return; }
+    fsMode = null;
+    // korisnik je izasao (gest "nazad"): ponasaj se kao "nazad"
+    const top = backStack.length > 0 ? backStack[backStack.length-1] : null;
+    if(!top) return;
+    if(modalBg.classList.contains('open') && top === closeModal){ requestClose(); }
+    else if(!modalBg.classList.contains('open') && top.isAlbumCloser){ requestClose(); }
+  }, 400);
 });
 let modalItemId = null;
 function showModalItem(item){
