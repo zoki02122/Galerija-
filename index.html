@@ -1931,17 +1931,18 @@ document.addEventListener('click', ()=>{
 }, true);
 document.addEventListener('fullscreenchange', ()=>{
   if(document.fullscreenElement) return;
-  // sacekaj da se zavrsi eventualna nasa promena rezima (izlazak pa ponovni ulazak)
-  setTimeout(()=>{
-    if(document.fullscreenElement || fsBusy) return;
-    if(fsOwnExitPending){ fsOwnExitPending = false; fsMode = null; return; }
-    fsMode = null;
-    // korisnik je izasao (gest "nazad"): ponasaj se kao "nazad"
-    const top = backStack.length > 0 ? backStack[backStack.length-1] : null;
-    if(!top) return;
-    if(modalBg.classList.contains('open') && top === closeModal){ requestClose(); }
-    else if(!modalBg.classList.contains('open') && top.isAlbumCloser){ requestClose(); }
-  }, 400);
+  // nas izlazak (npr. napustanje albuma) — nije korak unazad
+  if(fsBusy || fsOwnExitPending){ fsOwnExitPending = false; fsMode = null; return; }
+  fsMode = null;
+  // korisnik je izasao (korak unazad): zatvori odmah, u istom kadru, da bude jedan korak
+  const top = backStack.length > 0 ? backStack[backStack.length-1] : null;
+  if(!top) return;
+  if(modalBg.classList.contains('open') && top === closeModal){
+    modalBg.classList.remove('open');   // sakrij sliku odmah; history.back zatim uskladi istoriju
+    requestClose();
+  }else if(!modalBg.classList.contains('open') && top.isAlbumCloser){
+    requestClose();
+  }
 });
 let modalItemId = null;
 function showModalItem(item){
