@@ -479,6 +479,19 @@
   .sheet-row.selected .dot{opacity:1;}
   .sheet-row.new{color:var(--brass);font-style:var(--name-style);font-family:var(--font-name);}
   .sheet-row.sub{padding-left:28px;color:var(--ink-dim);}
+  #sheetList{max-height:62vh;overflow-y:auto;}
+  .sheet-row .row-name{flex:1;min-width:0;}
+  .sub-toggle{
+    flex:none;width:44px;height:44px;margin:-10px -2px -10px 10px;border-radius:50%;
+    border:1.5px solid var(--brass);background:transparent;color:var(--brass);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
+  }
+  .sub-toggle svg{transition:transform .18s ease;}
+  .sub-toggle.open{background:var(--brass);color:var(--surface);}
+  .sub-toggle.open svg{transform:rotate(90deg);}
+  .sub-group{display:none;}
+  .sub-group.open{display:block;}
+  .sub-group .sheet-row:last-child{border-bottom:1px solid var(--line-soft);}
   .subalbums{margin-bottom:26px;}
 
   .sheet-input{
@@ -2190,16 +2203,34 @@ function openMoveSheet(){
   sheetTitle.textContent = 'Dodaj u album';
   sheetList.innerHTML = '';
 
-  const addRow = (cat, isSub)=>{
+  /* Glavni albumi; podalbumi se otvaraju/zatvaraju strelicom. Otvoren je samo album u kome smo sada. */
+  const cur = currentFolder && currentFolder !== INBOX ? catById(currentFolder) : null;
+  const openParentId = cur ? (cur.parent || cur.id) : null;
+  const makeRow = (cat, isSub)=>{
     const row = document.createElement('div');
     row.className = 'sheet-row' + (isSub ? ' sub' : '');
-    row.innerHTML = '<span>'+escapeHtml(cat.name)+'</span>';
+    row.innerHTML = '<span class="row-name">'+escapeHtml(cat.name)+'</span>';
     row.onclick = ()=>{ requestCloseThen(()=>openMoveCopySheet(cat.id, cat.name)); };
-    sheetList.appendChild(row);
+    return row;
   };
   categories.filter(c=>!c.parent).forEach(cat=>{
-    addRow(cat, false);
-    childrenOf(cat.id).forEach(sub=>addRow(sub, true));
+    const row = makeRow(cat, false);
+    sheetList.appendChild(row);
+    const subs = childrenOf(cat.id);
+    if(subs.length === 0) return;
+    const group = document.createElement('div');
+    group.className = 'sub-group';
+    subs.forEach(sub=>group.appendChild(makeRow(sub, true)));
+    sheetList.appendChild(group);
+    const tog = document.createElement('button');
+    tog.type = 'button';
+    tog.className = 'sub-toggle';
+    tog.setAttribute('aria-label', 'Podalbumi');
+    tog.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"></polyline></svg>';
+    const setOpen = (on)=>{ group.classList.toggle('open', on); tog.classList.toggle('open', on); };
+    tog.onclick = (e)=>{ e.stopPropagation(); setOpen(!group.classList.contains('open')); };
+    row.appendChild(tog);
+    setOpen(cat.id === openParentId);
   });
 
   const newRow = document.createElement('div');
@@ -2849,7 +2880,7 @@ function renderSettingsTiles(){
     settingsTile('💾', 'rezervna kopija', lastBackupDisplay(), "openSettingsSub('backup')")+
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
-    '<div class="settings-hint set-build">build 2026-09-24d</div>'+
+    '<div class="settings-hint set-build">verzija 52</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
