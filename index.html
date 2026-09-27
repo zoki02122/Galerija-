@@ -556,6 +556,23 @@
 .settings-row .chevron{ color:var(--ink-dim); font-size:13px; flex:none; }
 .settings-hint{ font-size:11px; color:var(--ink-dim); padding:8px 4px 0; line-height:1.5; }
 .set-build{ text-align:center; padding-top:18px; }
+/* Korpa */
+.trash-top{ display:flex; align-items:center; justify-content:space-between; margin-top:18px; }
+.trash-link{ border:none; background:none; padding:8px 4px; font-family:inherit; font-size:14px; font-weight:600; color:var(--brass); cursor:pointer; }
+.trash-link.danger{ color:var(--danger); }
+.trash-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px 8px; margin-top:8px; }
+.trash-cell{ cursor:pointer; min-width:0; }
+.trash-thumb{ position:relative; aspect-ratio:1/1; border-radius:10px; overflow:hidden; border:1px solid var(--line); background:var(--surface); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:var(--ink-dim); font-size:11px; font-weight:700; }
+.trash-thumb img{ width:100%; height:100%; object-fit:cover; display:block; opacity:.8; }
+.trash-check{ position:absolute; top:6px; right:6px; width:24px; height:24px; border-radius:50%; border:2px solid #fff; background:rgba(0,0,0,.28); box-sizing:border-box; display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; line-height:1; }
+.trash-cell.sel .trash-thumb{ outline:3px solid var(--brass); outline-offset:-3px; }
+.trash-cell.sel .trash-check{ background:var(--brass); border-color:var(--brass); }
+.trash-name{ font-size:12.5px; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:5px; }
+.trash-left{ font-size:11px; color:var(--ink-dim); }
+.trash-bar{ position:sticky; bottom:0; z-index:3; display:none; gap:10px; padding:12px 14px calc(12px + env(safe-area-inset-bottom)); background:var(--bg); border-top:1px solid var(--line); max-width:560px; margin:0 auto; box-sizing:border-box; }
+.trash-bar.show{ display:flex; }
+.trash-btn{ flex:1; height:48px; border-radius:12px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font-family:inherit; font-weight:700; font-size:15px; cursor:pointer; }
+.trash-btn.danger{ color:var(--danger); }
 /* izbor teme */
 .theme-opt{ display:flex; align-items:center; gap:14px; width:100%; padding:12px; margin:0 0 10px; background:var(--surface); border:1.5px solid var(--line); border-radius:16px; cursor:pointer; text-align:left; font-family:inherit; color:var(--ink); box-sizing:border-box; }
 .theme-opt.on{ border-color:var(--brass); box-shadow:0 0 0 3px color-mix(in srgb, var(--brass) 22%, transparent); }
@@ -963,6 +980,7 @@ html[data-theme="ponoc"]{
 
 <script>
 let items = [];
+let trash = [];   /* obrisane stavke (deletedAt) — van svih prikaza, brojeva i backupa */
 let categories = [];
 let currentFolder = null;
 let sortMode = 'date';
@@ -1067,10 +1085,12 @@ const toolbarWrap = document.getElementById('toolbarWrap');
 const moveCopySheet = document.getElementById('moveCopySheet');
 const moveCopyTitle = document.getElementById('moveCopyTitle');
 
+let _toastTimer = null;   /* jedan tajmer: nova poruka ponistava sklanjanje prethodne */
 function toast(msg){
   toastEl.innerHTML = '<span class="toast-msg">'+escapeHtml(msg)+'</span>';
   toastEl.classList.add('show');
-  setTimeout(()=>toastEl.classList.remove('show'), 2200);
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(()=>{ _toastTimer = null; toastEl.classList.remove('show'); }, 2200);
 }
 function pad(n){ return String(n).padStart(3,'0'); }
 function escapeHtml(s){
@@ -1249,7 +1269,15 @@ async function loadAll(){
     await migrateLegacyLocalStorageItems();
     const loaded = await idbGetAll();
     loaded.sort((a,b)=>a.ts-b.ts);
-    items = loaded;
+    trash = loaded.filter(i=>i.deletedAt);
+    items = loaded.filter(i=>!i.deletedAt);
+    /* Korpa: sto je starije od zadatog broja dana trajno se brise */
+    const limit = Date.now() - getTrashDays() * 86400000;
+    const expired = trash.filter(i=>i.deletedAt < limit);
+    if(expired.length){
+      trash = trash.filter(i=>i.deletedAt >= limit);
+      for(const it of expired){ try{ await idbDelete(it.id); }catch(err){ console.error(err); } }
+    }
     // Slike: category = ID albuma. Staro ime se prevodi u ID; nepoznat album se vraca u spisak.
     let recovered = 0;
     for(const it of items){
@@ -2177,7 +2205,7 @@ function deleteModalItem(id){
   const item = items.find(i=>i.id===id);
   if(!item) return;
   const oldIndex = currentGalleryIndex;
-  items = items.filter(i=>i.id!==id);
+  moveToTrash([item]);
   render();
   if(oldIndex >= 0 && currentGalleryItems.length > 0){
     currentGalleryIndex = Math.min(oldIndex, currentGalleryItems.length - 1);
@@ -2186,16 +2214,16 @@ function deleteModalItem(id){
     requestClose();
   }
   toastUndo(
-    'Slika obrisana.',
+    'Premešteno u korpu.',
     ()=>{
-      items.push(item);
+      restoreFromTrash([item]);
       render();
       if(modalBg.classList.contains('open')){
         const idx = currentGalleryItems.findIndex(i=>i.id===item.id);
         if(idx >= 0){ currentGalleryIndex = idx; showModalItem(item); }
       }
     },
-    ()=>{ idbDelete(id).catch(e=>console.error(e)); }
+    ()=>{}
   );
 }
 
@@ -2289,14 +2317,36 @@ function deleteSelected(){
   if(selectedIds.size === 0) return;
   const ids = Array.from(selectedIds);
   const removedItems = items.filter(i=>selectedIds.has(i.id));
-  items = items.filter(i=>!selectedIds.has(i.id));
+  moveToTrash(removedItems);
   exitSelection();
   render();
   toastUndo(
-    ids.length===1 ? 'Obrisano.' : 'Obrisano '+ids.length+' stavki.',
-    ()=>{ items.push(...removedItems); render(); },
-    ()=>{ ids.forEach(id=>{ idbDelete(id).catch(e=>console.error(e)); }); }
+    ids.length===1 ? 'Premešteno u korpu.' : 'U korpu premešteno: '+ids.length+'.',
+    ()=>{ restoreFromTrash(removedItems); render(); },
+    ()=>{}
   );
+}
+/* ---------- Korpa ---------- */
+/* Upisuje se odmah: ako se aplikacija zatvori, stavka ostaje u korpi (ne nestaje, ne vraca se sama). */
+function moveToTrash(list){
+  const now = Date.now();
+  const ids = new Set(list.map(i=>i.id));
+  items = items.filter(i=>!ids.has(i.id));
+  list.forEach(it=>{
+    it.deletedAt = now;
+    if(!trash.includes(it)) trash.push(it);
+    idbPut(it).catch(e=>console.error(e));
+  });
+}
+function restoreFromTrash(list){
+  const ids = new Set(list.map(i=>i.id));
+  trash = trash.filter(i=>!ids.has(i.id));
+  list.forEach(it=>{
+    delete it.deletedAt;
+    if(it.category && !catById(it.category)) it.category = null;   /* album vise ne postoji -> Sve slike */
+    if(!items.includes(it)) items.push(it);
+    idbPut(it).catch(e=>console.error(e));
+  });
 }
 document.getElementById('btnDelete').onclick = deleteSelected;
 document.getElementById('btnAlbum').onclick = openMoveSheet;
@@ -2474,6 +2524,7 @@ newFolderInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') createFo
 newFolderSheet.onclick = (e)=>{ if(e.target === newFolderSheet){ requestClose(); } };
 
 function toastPersist(msg){
+  clearTimeout(_toastTimer); _toastTimer = null;
   toastEl.innerHTML = '<span class="toast-msg">'+escapeHtml(msg)+'</span>';
   toastEl.classList.add('show');
 }
@@ -2484,6 +2535,7 @@ let _undoTimer = null;
 let _undoFinalize = null;
 function toastUndo(msg, undoFn, finalizeFn){
   if(_undoTimer){ clearTimeout(_undoTimer); _undoTimer = null; }
+  clearTimeout(_toastTimer); _toastTimer = null;
   if(_undoFinalize){ const prev = _undoFinalize; _undoFinalize = null; prev(); }
   toastEl.innerHTML = '<span class="toast-msg">'+escapeHtml(msg)+'</span><span class="toast-undo" id="toastUndoBtn">Opozovi</span>';
   toastEl.classList.add('show');
@@ -2815,6 +2867,95 @@ function checkBackupReminder(){
   else { row.style.display = 'none'; }
 }
 document.getElementById('backupReminderBtn').addEventListener('click', exportBackup);
+function getTrashDays(){
+  const v = parseInt(localStorage.getItem(LS_PREFIX+'trashDays'));
+  return (v && v > 0) ? v : 30;
+}
+function saveTrashDays(v){
+  const n = parseInt(v);
+  if(n && n > 0) localStorage.setItem(LS_PREFIX+'trashDays', String(n));
+  renderTrashList();
+}
+function trashDaysLeft(it){
+  return Math.max(0, Math.ceil((it.deletedAt + getTrashDays()*86400000 - Date.now()) / 86400000));
+}
+function trashTileSub(){
+  const n = trash.length;
+  return (n === 0 ? 'prazna' : n + (n===1 ? ' stavka' : ' stavki')) + ' \u00B7 čuva ' + getTrashDays() + ' dana';
+}
+let trashSel = new Set();
+function renderTrashList(){
+  const list = document.getElementById('trashList');
+  const bar = document.getElementById('trashBar');
+  if(!list || !bar) return;
+  trashSel = new Set(Array.from(trashSel).filter(id=>trash.some(t=>t.id===id)));
+  list.innerHTML = '';
+  if(trash.length === 0){
+    list.innerHTML = '<div class="settings-hint" style="padding-top:18px;">korpa je prazna.</div>';
+    bar.classList.remove('show');
+    return;
+  }
+  const top = document.createElement('div');
+  top.className = 'trash-top';
+  const allSel = trashSel.size === trash.length;
+  top.innerHTML = '<button type="button" class="trash-link" id="trashSelAll">'+(allSel ? 'poništi izbor' : 'izaberi sve')+'</button>'+
+    '<button type="button" class="trash-link danger" id="trashEmpty">isprazni korpu</button>';
+  list.appendChild(top);
+  const grid = document.createElement('div');
+  grid.className = 'trash-grid';
+  trash.slice().sort((a,b)=>b.deletedAt-a.deletedAt).forEach(it=>{
+    const cell = document.createElement('div');
+    cell.className = 'trash-cell' + (trashSel.has(it.id) ? ' sel' : '');
+    const left = trashDaysLeft(it);
+    const inner = it.type === 'image'
+      ? '<img src="'+it.dataUrl+'" alt="">'
+      : pdfIconSvg() + '<span>' + escapeHtml(it.type === 'pdf' ? 'PDF' : (it.ext || 'DOK')) + '</span>';
+    cell.innerHTML = '<div class="trash-thumb">'+inner+'<span class="trash-check">'+(trashSel.has(it.id)?'\u2713':'')+'</span></div>'+
+      '<div class="trash-name">'+escapeHtml(it.name)+'</div>'+
+      '<div class="trash-left">'+(left === 0 ? 'briše se danas' : 'još '+left+(left===1?' dan':' dana'))+'</div>';
+    cell.onclick = ()=>{
+      if(trashSel.has(it.id)) trashSel.delete(it.id); else trashSel.add(it.id);
+      renderTrashList();
+    };
+    grid.appendChild(cell);
+  });
+  list.appendChild(grid);
+  document.getElementById('trashSelAll').onclick = ()=>{
+    trashSel = allSel ? new Set() : new Set(trash.map(t=>t.id));
+    renderTrashList();
+  };
+  document.getElementById('trashEmpty').onclick = ()=>{
+    if(!confirm('Trajno obrisati sve iz korpe ('+trash.length+')? Nema vraćanja.')) return;
+    purgeTrash(trash.slice());
+  };
+  const n = trashSel.size;
+  bar.classList.toggle('show', n > 0);
+  document.getElementById('trashRestoreBtn').textContent = 'Vrati (' + n + ')';
+  document.getElementById('trashPurgeBtn').textContent = 'Obriši trajno (' + n + ')';
+}
+function trashRestoreSelected(){
+  const list = trash.filter(t=>trashSel.has(t.id));
+  if(!list.length) return;
+  restoreFromTrash(list);
+  trashSel = new Set();
+  render();
+  renderTrashList();
+  toast(list.length === 1 ? 'Vraćeno.' : 'Vraćeno: ' + list.length + '.');
+}
+function trashPurgeSelected(){
+  const list = trash.filter(t=>trashSel.has(t.id));
+  if(!list.length) return;
+  if(!confirm('Trajno obrisati izabrano ('+list.length+')? Nema vraćanja.')) return;
+  purgeTrash(list);
+}
+function purgeTrash(list){
+  const ids = new Set(list.map(i=>i.id));
+  trash = trash.filter(t=>!ids.has(t.id));
+  list.forEach(it=>{ idbDelete(it.id).catch(e=>console.error(e)); });
+  trashSel = new Set();
+  renderTrashList();
+  toast(list.length === 1 ? 'Trajno obrisano.' : 'Trajno obrisano: ' + list.length + '.');
+}
 function saveBackupInterval(v){
   setBackupIntervalDays(parseInt(v) || 7);
   checkBackupReminder();
@@ -2878,9 +3019,10 @@ function renderSettingsTiles(){
     '<div class="set-body">'+
     settingsTile('🎨', 'tema', themeName(getTheme()), "openSettingsSub('theme')")+
     settingsTile('💾', 'rezervna kopija', lastBackupDisplay(), "openSettingsSub('backup')")+
+    settingsTile('♻️', 'korpa', trashTileSub(), "openSettingsSub('trash')")+
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 52</div>'+
+    '<div class="settings-hint set-build">verzija 53</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -2911,8 +3053,19 @@ function openSettingsSub(which){
       '</div>'+
       '<div class="settings-hint">kad prođe ovoliko dana od poslednje rezervne kopije, gore će se pojaviti podsetnik.</div>'+
       '<div class="settings-hint" id="lastBackupHint">'+lastBackupDisplay()+'</div>';
+  }else if(which === 'trash'){
+    title = 'korpa';
+    trashSel = new Set();
+    body =
+      '<div class="settings-card">'+
+      '<div class="settings-field"><label for="trashDaysInput">čuvaj obrisano (dana)</label><input type="number" inputmode="numeric" min="1" id="trashDaysInput" value="'+getTrashDays()+'" oninput="saveTrashDays(this.value)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>'+
+      '</div>'+
+      '<div class="settings-hint">obrisane slike i dokumenti čekaju ovde. kad prođe ovoliko dana, trajno se brišu pri otvaranju aplikacije. korpa se ne čuva u rezervnoj kopiji.</div>'+
+      '<div id="trashList"></div>';
   }else{ return; }
-  settingsPanel.innerHTML = settingsHeader(title)+'<div class="set-body">'+body+'</div>';
+  settingsPanel.innerHTML = settingsHeader(title)+'<div class="set-body">'+body+'</div>'+
+    (which === 'trash' ? '<div class="trash-bar" id="trashBar"><button type="button" class="trash-btn" id="trashRestoreBtn" onclick="trashRestoreSelected()">Vrati</button><button type="button" class="trash-btn danger" id="trashPurgeBtn" onclick="trashPurgeSelected()">Obriši trajno</button></div>' : '');
+  if(which === 'trash') renderTrashList();
   settingsScreen.scrollTop = 0;
   if(!settingsSubOpen){
     settingsSubOpen = true;
@@ -2926,18 +3079,19 @@ document.getElementById('settingsBtn').onclick = openSettings;
 
 function updateStorageInfo(){
   let bytes = 0;
-  items.forEach(it=>{ bytes += (it.dataUrl ? it.dataUrl.length : 0); });
+  items.concat(trash).forEach(it=>{ bytes += (it.dataUrl ? it.dataUrl.length : 0); });
   const mb = bytes / 1024 / 1024;
   const infoEl = document.getElementById('storageInfo');
   if(!infoEl) return;
-  infoEl.textContent = 'Iskorišćeno: ~' + mb.toFixed(1) + ' MB \u00B7 ' + items.length + ' stavki';
+  const trashPart = trash.length ? ' (u korpi ' + trash.length + ')' : '';
+  infoEl.textContent = 'Iskorišćeno: ~' + mb.toFixed(1) + ' MB \u00B7 ' + items.length + ' stavki' + trashPart;
   if(navigator.storage && navigator.storage.estimate){
     navigator.storage.estimate().then(est=>{
       if(est && est.quota){
         const usedMb = (est.usage || 0) / 1024 / 1024;
         const quotaMb = est.quota / 1024 / 1024;
         const freeMb = Math.max(0, quotaMb - usedMb);
-        infoEl.textContent = 'Iskorišćeno: ~' + mb.toFixed(1) + ' MB \u00B7 ' + items.length + ' stavki \u00B7 Slobodno još ~' + freeMb.toFixed(0) + ' MB';
+        infoEl.textContent = 'Iskorišćeno: ~' + mb.toFixed(1) + ' MB \u00B7 ' + items.length + ' stavki' + trashPart + ' \u00B7 Slobodno još ~' + freeMb.toFixed(0) + ' MB';
       }
     }).catch(()=>{});
   }
@@ -2972,8 +3126,9 @@ async function wipeAllData(){
   if(!confirm('Ovo trajno briše SVE slike, dokumente i albume iz Arhive na ovom uređaju. Nema opoziva. Da li si siguran/na?')) return;
   if(!confirm('Poslednja potvrda — stvarno obrisati baš sve?')) return;
   try{
-    for(const it of items.slice()){ await idbDelete(it.id).catch(()=>{}); }
+    for(const it of items.concat(trash)){ await idbDelete(it.id).catch(()=>{}); }
     items = [];
+    trash = [];
     categories = [];
     saveCategories();
     currentFolder = null;
@@ -3053,6 +3208,7 @@ function checkDeepLink(){
   if(m){
     const id = decodeURIComponent(m[1]);
     const item = items.find(i=>i.id === id);
+    if(!item && trash.some(t=>t.id === id)){ toast('Ova slika je u korpi (Podešavanja \u2192 korpa).'); }
     if(item){
       document.title = item.name;
       if(item.type === 'pdf' || item.type === 'doc'){ openPdf(item); }
