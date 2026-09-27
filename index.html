@@ -448,14 +448,14 @@
     position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(8px);
     background:none;border:none;color:var(--ink);
     padding:0;font-size:14px;font-family:var(--font-ui);
-    opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;z-index:60;
-    display:flex;align-items:center;gap:10px;max-width:94vw;
+    opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;z-index:80; /* iznad Podesavanja (70), ispod potvrde izlaska (90) */
+    display:flex;align-items:center;gap:10px;width:max-content;max-width:94vw;box-sizing:border-box;
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;}
   .toast-msg{
     background:var(--surface);border:1px solid var(--line);color:var(--ink);
     padding:11px 16px;border-radius:8px;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    white-space:normal;overflow-wrap:anywhere;line-height:1.35;
     display:flex;align-items:center;flex:1;min-width:0;
   }
   .toast-undo{
@@ -3022,7 +3022,7 @@ function renderSettingsTiles(){
     settingsTile('♻️', 'korpa', trashTileSub(), "openSettingsSub('trash')")+
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 54</div>'+
+    '<div class="settings-hint set-build">verzija 55</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
