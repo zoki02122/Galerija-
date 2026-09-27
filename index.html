@@ -478,6 +478,8 @@
   .sheet-row .dot{width:7px;height:7px;border-radius:50%;background:var(--brass);opacity:0;}
   .sheet-row.selected .dot{opacity:1;}
   .sheet-row.new{color:var(--brass);font-style:var(--name-style);font-family:var(--font-name);}
+  .sheet-row.sub{padding-left:28px;color:var(--ink-dim);}
+  .subalbums{margin-bottom:26px;}
 
   .sheet-input{
     width:100%;background:var(--surface-2);border:1px solid var(--line);
@@ -888,6 +890,7 @@ html[data-theme="ponoc"]{
     <div class="sheet-row" id="addFromGallery"><span>Iz galerije</span></div>
     <div class="sheet-row" id="addFromCamera"><span>Slikaj</span></div>
     <div class="sheet-row" id="addFromDocs"><span>Dokument</span></div>
+    <div class="sheet-row new" id="addNewSub" style="display:none;"><span>Novi podalbum</span></div>
   </div>
 </div>
 
@@ -905,6 +908,8 @@ html[data-theme="ponoc"]{
     <div class="sheet-row" id="acPin"><span>Zakači na vrh</span></div>
     <div class="sheet-row" id="acRename"><span>Preimenuj album</span></div>
     <div class="sheet-row" id="acCover"><span>Promeni naslovnu sliku</span></div>
+    <div class="sheet-row" id="acMove"><span>Premesti u album</span></div>
+    <div class="sheet-row" id="acUnnest"><span>Vrati na početni ekran</span></div>
     <div class="sheet-row" id="acDelete" style="color:var(--danger);"><span>Izbriši album</span></div>
   </div>
 </div>
@@ -959,6 +964,7 @@ let deepSearchMode = false;
 let pendingBulkFolder = null;
 let renamingAlbum = null;
 let albumContextTarget = null;
+let newFolderParent = null;
 
 /* ---------- Back-button (history) support ---------- */
 let backStack = [];
@@ -1209,20 +1215,43 @@ async function loadAll(){
     const rawCats = localStorage.getItem(LS_PREFIX+'categories');
     let parsed = rawCats ? JSON.parse(rawCats) : [];
     categories = parsed.map(c => typeof c === 'string' ? {name:c, pinned:false, cover:null} : c);
+    /* Albumi dobijaju interni ID (ime je samo natpis). Prvo se sacuva spisak sa ID-jevima,
+       pa tek onda slike — ako se prekine na pola, ponovno otvaranje zavrsava posao. */
+    let catsChanged = false;
+    /* Ako je stara (kesirana) verzija radila bez interneta, napravila je lazne albume
+       nazvane po ID-ju — takve uklanjamo, slike su i dalje u pravom albumu. */
+    const cleaned = categories.filter(c=>!(!c.id && categories.some(o=>o.id && o.id===c.name)));
+    if(cleaned.length !== categories.length){ categories = cleaned; catsChanged = true; }
+    categories.forEach(c=>{
+      if(!c.id){ c.id = newCatId(); catsChanged = true; }
+      if(c.parent === undefined){ c.parent = null; catsChanged = true; }
+    });
+    /* Roditelj mora postojati i biti na prvom nivou; inace album ide na pocetni ekran */
+    categories.forEach(c=>{
+      if(!c.parent) return;
+      const par = categories.find(o=>o.id===c.parent);
+      if(!par || par.parent || par === c){ c.parent = null; catsChanged = true; }
+    });
+    if(catsChanged) saveCategories();
     await migrateLegacyLocalStorageItems();
     const loaded = await idbGetAll();
     loaded.sort((a,b)=>a.ts-b.ts);
     items = loaded;
-    // Oporavak: vrati svaki album koji postoji na slikama a fali u spisku
+    // Slike: category = ID albuma. Staro ime se prevodi u ID; nepoznat album se vraca u spisak.
     let recovered = 0;
-    items.forEach(it=>{
-      if(it.category && !categories.some(c=>c.name===it.category)){
-        categories.push({name:it.category, pinned:false, cover:null});
+    for(const it of items){
+      if(!it.category || categories.some(c=>c.id===it.category)) continue;
+      let cat = categories.find(c=>!c.parent && c.name===it.category);
+      if(!cat){
+        cat = {id:newCatId(), name: /^alb_/.test(it.category) ? 'Vraćeni album' : it.category, pinned:false, cover:null, parent:null};
+        categories.push(cat);
+        saveCategories();
         recovered++;
       }
-    });
+      it.category = cat.id;
+      try{ await idbPut(it); }catch(err){ console.error(err); }
+    }
     if(recovered > 0){
-      saveCategories();
       toast(recovered === 1 ? 'Vraćen 1 album.' : 'Vraćeno albuma: '+recovered+'.');
     }
   }catch(e){
@@ -1234,9 +1263,12 @@ async function loadAll(){
   checkBackupReminder();
 }
 function saveCategories(){ localStorage.setItem(LS_PREFIX+'categories', JSON.stringify(categories)); }
-function maybeAutoCover(folderName, item){
-  if(!folderName || !item || item.type !== 'image') return;
-  const cat = categories.find(c=>c.name===folderName);
+function newCatId(){ return 'alb_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+function catById(id){ return categories.find(c=>c.id===id) || null; }
+function catLabel(id){ const c = catById(id); return c ? c.name : ''; }
+function maybeAutoCover(catId, item){
+  if(!catId || !item || item.type !== 'image') return;
+  const cat = catById(catId);
   if(cat && !cat.cover){ cat.cover = item.id; saveCategories(); }
 }
 
@@ -1252,14 +1284,223 @@ function openPdf(item){
 
 const INBOX = '__inbox__';
 
+/* ---------- Albumi i podalbumi (jedan nivo) ---------- */
+function childrenOf(id){ return categories.filter(c=>c.parent===id); }
+function albumIdSet(id){ return new Set([id].concat(childrenOf(id).map(c=>c.id))); }
+function countDeep(id){ const ids = albumIdSet(id); return items.filter(i=>ids.has(i.category)).length; }
+function lastTsDeep(id){ const ids = albumIdSet(id); let m = 0; items.forEach(i=>{ if(ids.has(i.category) && i.ts > m) m = i.ts; }); return m; }
+/* Naslovna: izabrana slika; ako je nema, prva slika iz podalbuma */
+function coverItemFor(cat){
+  const own = cat.cover ? items.find(i=>i.id===cat.cover) : null;
+  if(own) return own;
+  for(const ch of childrenOf(cat.id)){
+    const c = ch.cover ? items.find(i=>i.id===ch.cover) : null;
+    if(c) return c;
+    const f = items.find(i=>i.category===ch.id && i.type==='image');
+    if(f) return f;
+  }
+  return null;
+}
+/* Stavke koje album prikazuje: bez pretrage samo svoje; pretraga obuhvata i podalbume */
+function albumItemsFor(folder, q){
+  let base;
+  if(folder === INBOX) base = items.filter(i=>!i.category);
+  else if(q){ const ids = albumIdSet(folder); base = items.filter(i=>ids.has(i.category)); }
+  else base = items.filter(i=>i.category===folder);
+  return q ? base.filter(i=>matchItemQuery(i, q)) : base;
+}
+function parentCloser(parentId){
+  const f = ()=>{ currentFolder = parentId; searchEl.value=''; render(); };
+  f.isAlbumCloser = true;
+  return f;
+}
+function openSubalbum(sub){
+  currentFolder = sub.id; searchEl.value=''; pushBack(parentCloser(sub.parent)); render();
+}
+
+/* Prikazni redosled; rucni redosled u categories ostaje netaknut */
+const displayOrder = (arr)=>{
+  if(albumSort === 'alpha') return arr.slice().sort((a,b)=>normalizeSr(a.name).localeCompare(normalizeSr(b.name)));
+  if(albumSort === 'recent'){
+    const ts = {}; arr.forEach(c=>{ ts[c.id] = lastTsDeep(c.id); });
+    return arr.slice().sort((a,b)=>ts[b.id]-ts[a.id]);
+  }
+  return arr;
+};
+
+function commitGroupOrder(groupCats, container){
+  const orderedIds = Array.from(container.children)
+    .map(el=>el.dataset && el.dataset.catId)
+    .filter(Boolean);
+  const newGroupCats = orderedIds.map(id=>groupCats.find(c=>c.id===id)).filter(Boolean);
+  if(newGroupCats.length !== groupCats.length) return;
+  let gi = 0;
+  categories = categories.map(c=> groupCats.includes(c) ? newGroupCats[gi++] : c);
+  saveCategories();
+}
+
+const buildFolderTile = (cat, groupCats, onOpen)=>{
+  const name = cat.name;
+  const count = countDeep(cat.id);
+  const tile = document.createElement('div');
+  tile.dataset.catId = cat.id;
+  const coverItem = coverItemFor(cat);
+  const isList = albumViewMode === 'list';
+  tile.className = isList ? 'folder-tile-row' : 'folder-tile';
+  const coverInner = coverItem ? '<img src="'+coverItem.dataUrl+'">' : folderIconSvg();
+  if(isList){
+    tile.innerHTML = '<div class="ftile-cover">'+coverInner+'</div><div class="fr-text"><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+count+' '+(count===1?'stavka':'stavki')+'</span></div>';
+  }else{
+    tile.innerHTML = '<div class="ftile-cover">'+coverInner+'</div><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+count+' '+(count===1?'stavka':'stavki')+'</span>';
+  }
+  if(cat.pinned){
+    const pin = document.createElement('div');
+    pin.className = 'pin-mark';
+    pin.textContent = 'P';
+    tile.querySelector('.ftile-cover').appendChild(pin);
+  }
+
+  const handle = document.createElement('div');
+  handle.className = 'drag-handle';
+  handle.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.6"></circle><circle cx="16" cy="6" r="1.6"></circle><circle cx="8" cy="12" r="1.6"></circle><circle cx="16" cy="12" r="1.6"></circle><circle cx="8" cy="18" r="1.6"></circle><circle cx="16" cy="18" r="1.6"></circle></svg>';
+  if(!albumSort) tile.appendChild(handle);
+
+  /* Dugi pritisak bilo gde na plocici (osim rucke) -> meni */
+  let pressTimer = null;
+  let menuArmed = false;
+  let mStartX = 0, mStartY = 0;
+  const cancelMenuTimer = ()=>{ if(pressTimer){ clearTimeout(pressTimer); pressTimer = null; } };
+  tile.addEventListener('pointerdown', (e)=>{
+    if(e.target.closest('.drag-handle')) return;
+    if(e.button !== undefined && e.button !== 0) return;
+    mStartX = e.clientX; mStartY = e.clientY;
+    menuArmed = false;
+    pressTimer = setTimeout(()=>{
+      menuArmed = true;
+      if(navigator.vibrate){ try{ navigator.vibrate(15); }catch(err){} }
+      openAlbumContext(cat.id);
+    }, 480);
+  });
+  tile.addEventListener('pointermove', (e)=>{
+    if(pressTimer){
+      const dx = e.clientX - mStartX, dy = e.clientY - mStartY;
+      if(Math.sqrt(dx*dx + dy*dy) > 12){ cancelMenuTimer(); }
+    }
+  });
+  tile.addEventListener('pointerup', ()=>{
+    cancelMenuTimer();
+    if(menuArmed){ tile.dataset.suppressClick = '1'; menuArmed = false; }
+  });
+  tile.addEventListener('pointercancel', ()=>{ cancelMenuTimer(); menuArmed = false; });
+
+  /* Prevlačenje samo preko rucke */
+  let dragging = false;
+  let startX = 0, startY = 0, startRect = null, placeholder = null;
+
+  const beginDrag = ()=>{
+    dragging = true;
+    tile.classList.add('tile-dragging');
+    startRect = tile.getBoundingClientRect();
+    tile.style.position = 'fixed';
+    tile.style.left = startRect.left + 'px';
+    tile.style.top = startRect.top + 'px';
+    tile.style.width = startRect.width + 'px';
+    tile.style.height = startRect.height + 'px';
+    tile.style.zIndex = '200';
+    tile.style.pointerEvents = 'none';
+    placeholder = document.createElement('div');
+    placeholder.className = tile.className.replace('tile-dragging','') + ' drag-placeholder';
+    placeholder.style.width = startRect.width + 'px';
+    placeholder.style.height = startRect.height + 'px';
+    tile.parentNode.insertBefore(placeholder, tile.nextSibling);
+    if(navigator.vibrate){ try{ navigator.vibrate(15); }catch(err){} }
+  };
+
+  handle.addEventListener('pointerdown', (e)=>{
+    if(e.button !== undefined && e.button !== 0) return;
+    e.stopPropagation();
+    startX = e.clientX; startY = e.clientY;
+    try{ handle.setPointerCapture(e.pointerId); }catch(err){}
+    beginDrag();
+  });
+  handle.addEventListener('pointermove', (e)=>{
+    if(!dragging) return;
+    e.stopPropagation();
+    if(e.cancelable) e.preventDefault();
+    const dx = e.clientX - startX, dy = e.clientY - startY;
+    tile.style.left = (startRect.left + dx) + 'px';
+    tile.style.top = (startRect.top + dy) + 'px';
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    const overTile = under && under.closest('.folder-tile, .folder-tile-row');
+    if(overTile && overTile !== tile && overTile !== placeholder && overTile.parentNode === placeholder.parentNode){
+      const overRect = overTile.getBoundingClientRect();
+      const isGrid = !isList;
+      const before = isGrid
+        ? (e.clientY < overRect.top + overRect.height/2) || (e.clientY < overRect.bottom && e.clientX < overRect.left + overRect.width/2)
+        : (e.clientY < overRect.top + overRect.height/2);
+      overTile.parentNode.insertBefore(placeholder, before ? overTile : overTile.nextSibling);
+    }
+  });
+  const endDrag = (e)=>{
+    if(!dragging) return;
+    e.stopPropagation();
+    try{ if(e && e.pointerId !== undefined) handle.releasePointerCapture(e.pointerId); }catch(err){}
+    dragging = false;
+    tile.classList.remove('tile-dragging');
+    tile.style.position = '';
+    tile.style.left = '';
+    tile.style.top = '';
+    tile.style.width = '';
+    tile.style.height = '';
+    tile.style.zIndex = '';
+    tile.style.pointerEvents = '';
+    if(placeholder && placeholder.parentNode){
+      placeholder.parentNode.insertBefore(tile, placeholder);
+      const container = placeholder.parentNode;
+      placeholder.remove();
+      placeholder = null;
+      commitGroupOrder(groupCats, container);
+    }
+  };
+  handle.addEventListener('pointerup', endDrag);
+  handle.addEventListener('pointercancel', endDrag);
+  handle.onclick = (e)=>{ e.stopPropagation(); };
+
+  tile.onclick = (e)=>{
+    if(tile.dataset.suppressClick === '1'){ tile.dataset.suppressClick = ''; return; }
+    onOpen(cat);
+  };
+  return tile;
+};
+
+function appendAlbumGroups(container, cats, onOpen){
+  const gridClass = 'grid folders-grid' + (albumViewMode === 'list' ? ' folders-list' : '');
+  const pinnedCats = cats.filter(c=>c.pinned);
+  const otherCats = cats.filter(c=>!c.pinned);
+  if(pinnedCats.length > 0){
+    const pinGrid = document.createElement('div');
+    pinGrid.className = gridClass;
+    displayOrder(pinnedCats).forEach(cat=>pinGrid.appendChild(buildFolderTile(cat, pinnedCats, onOpen)));
+    container.appendChild(pinGrid);
+  }
+  if(otherCats.length > 0){
+    const fgrid = document.createElement('div');
+    fgrid.className = gridClass;
+    displayOrder(otherCats).forEach(cat=>fgrid.appendChild(buildFolderTile(cat, otherCats, onOpen)));
+    container.appendChild(fgrid);
+  }
+}
+
+
 function render(){
+  if(currentFolder && currentFolder !== INBOX && !catById(currentFolder)) currentFolder = null;
   currentGalleryItems = [];
   albumHeaderZone.innerHTML = '';
   document.body.classList.toggle('in-album', !!currentFolder);
   document.body.classList.toggle('scrolled', window.scrollY > 4);
   syncFullscreen();
   if(!currentFolder || selectionMode){ crumb.remove(); }
-  if(currentFolder){ crumbName.textContent = currentFolder === INBOX ? 'Sve slike' : currentFolder; }
+  if(currentFolder){ crumbName.textContent = currentFolder === INBOX ? 'Sve slike' : catLabel(currentFolder); }
   selHeader.classList.toggle('show', selectionMode);
   selBar.classList.toggle('show', selectionMode);
   document.body.style.paddingBottom = selectionMode ? '90px' : '70px';
@@ -1276,9 +1517,10 @@ function render(){
   const q = normalizeSr(searchEl.value.trim());
 
   if(currentFolder){
-    let filtered = currentFolder === INBOX ? items.filter(i=>!i.category) : items.filter(i=>i.category === currentFolder);
-    if(q) filtered = filtered.filter(i=>matchItemQuery(i, q));
-    const totalHere = currentFolder === INBOX ? items.filter(i=>!i.category).length : items.filter(i=>i.category===currentFolder).length;
+    const curCat = currentFolder === INBOX ? null : catById(currentFolder);
+    const subs = curCat && !curCat.parent ? childrenOf(curCat.id) : [];
+    const filtered = albumItemsFor(currentFolder, q);
+    const totalHere = currentFolder === INBOX ? items.filter(i=>!i.category).length : countDeep(currentFolder);
     crumbCount.textContent = totalHere + (totalHere===1 ? ' stavka' : ' stavki');
     contentArea.innerHTML = '';
 
@@ -1325,6 +1567,20 @@ function render(){
     albumHead.style.marginBottom = '0';
     albumHeaderZone.appendChild(albumHead);
 
+    /* Podalbumi na vrhu, ispod njih slike samog albuma */
+    const shownSubs = q ? subs.filter(c=>normalizeSr(c.name).includes(q)) : subs;
+    if(shownSubs.length > 0){
+      const subWrap = document.createElement('div');
+      subWrap.className = 'subalbums';
+      const subLabel = document.createElement('p');
+      subLabel.className = 'section-label';
+      subLabel.textContent = 'Podalbumi';
+      subWrap.appendChild(subLabel);
+      appendAlbumGroups(subWrap, shownSubs, cat=>openSubalbum(cat));
+      contentArea.appendChild(subWrap);
+    }
+
+    if(filtered.length === 0 && shownSubs.length > 0){ currentGalleryItems = []; return; }
     if(filtered.length === 0){
       const msg = q ? 'Nema rezultata za "'+escapeHtml(searchEl.value)+'".' : 'Ovaj album je prazan. Dodaj nešto dugmetom iznad.';
       const emptyDiv = document.createElement('div');
@@ -1381,17 +1637,21 @@ function render(){
         const fgrid = document.createElement('div');
         fgrid.className = 'grid folders-grid';
         matchedCats.forEach(cat=>{
-          const name = cat.name;
-          const count = items.filter(i=>i.category===name).length;
+          const parentCat = cat.parent ? catById(cat.parent) : null;
+          const name = parentCat ? parentCat.name + ' \u203A ' + cat.name : cat.name;
+          const count = cat.parent ? items.filter(i=>i.category===cat.id).length : countDeep(cat.id);
           const tile = document.createElement('div');
-          const coverItem = cat.cover ? items.find(i=>i.id===cat.cover) : null;
+          const coverItem = coverItemFor(cat);
           tile.className = 'folder-tile';
           if(coverItem){
             tile.innerHTML = '<div class="ftile-cover"><img src="'+coverItem.dataUrl+'"></div><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+count+' '+(count===1?'stavka':'stavki')+'</span>';
           }else{
             tile.innerHTML = '<div class="ftile-cover">'+folderIconSvg()+'</div><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+count+' '+(count===1?'stavka':'stavki')+'</span>';
           }
-          tile.onclick = ()=>{ currentFolder = name; searchEl.value=''; pushBack(closeAlbumViewTop); render(); };
+          tile.onclick = ()=>{
+            if(parentCat){ pushBack(closeAlbumViewTop); openSubalbum(cat); return; }
+            currentFolder = cat.id; searchEl.value=''; pushBack(closeAlbumViewTop); render();
+          };
           fgrid.appendChild(tile);
         });
         contentArea.appendChild(fgrid);
@@ -1459,162 +1719,6 @@ function render(){
   /* Kvadrat: sirina = unutrasnja visina plocice */
   inboxAdd.style.width = inboxTile.clientHeight + 'px';
 
-  const pinnedCats = categories.filter(c=>c.pinned);
-  const otherCats = categories.filter(c=>!c.pinned);
-
-  /* Prikazni redosled; rucni redosled u categories ostaje netaknut */
-  const lastTsByCat = {};
-  items.forEach(i=>{ if(i.category && (lastTsByCat[i.category]||0) < i.ts) lastTsByCat[i.category] = i.ts; });
-  const displayOrder = (arr)=>{
-    if(albumSort === 'alpha') return arr.slice().sort((a,b)=>normalizeSr(a.name).localeCompare(normalizeSr(b.name)));
-    if(albumSort === 'recent') return arr.slice().sort((a,b)=>(lastTsByCat[b.name]||0)-(lastTsByCat[a.name]||0));
-    return arr;
-  };
-
-  function commitGroupOrder(groupCats, container){
-    const orderedNames = Array.from(container.children)
-      .map(el=>el.dataset && el.dataset.catName)
-      .filter(Boolean);
-    const newGroupCats = orderedNames.map(n=>groupCats.find(c=>c.name===n)).filter(Boolean);
-    if(newGroupCats.length !== groupCats.length) return;
-    let gi = 0;
-    categories = categories.map(c=> groupCats.includes(c) ? newGroupCats[gi++] : c);
-    saveCategories();
-  }
-
-  const buildFolderTile = (cat, groupCats)=>{
-    const name = cat.name;
-    const count = items.filter(i=>i.category===name).length;
-    const tile = document.createElement('div');
-    tile.dataset.catName = name;
-    const coverItem = cat.cover ? items.find(i=>i.id===cat.cover) : null;
-    const isList = albumViewMode === 'list';
-    tile.className = isList ? 'folder-tile-row' : 'folder-tile';
-    const coverInner = coverItem ? '<img src="'+coverItem.dataUrl+'">' : folderIconSvg();
-    if(isList){
-      tile.innerHTML = '<div class="ftile-cover">'+coverInner+'</div><div class="fr-text"><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+count+' '+(count===1?'stavka':'stavki')+'</span></div>';
-    }else{
-      tile.innerHTML = '<div class="ftile-cover">'+coverInner+'</div><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+count+' '+(count===1?'stavka':'stavki')+'</span>';
-    }
-    if(cat.pinned){
-      const pin = document.createElement('div');
-      pin.className = 'pin-mark';
-      pin.textContent = 'P';
-      tile.querySelector('.ftile-cover').appendChild(pin);
-    }
-
-    const handle = document.createElement('div');
-    handle.className = 'drag-handle';
-    handle.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.6"></circle><circle cx="16" cy="6" r="1.6"></circle><circle cx="8" cy="12" r="1.6"></circle><circle cx="16" cy="12" r="1.6"></circle><circle cx="8" cy="18" r="1.6"></circle><circle cx="16" cy="18" r="1.6"></circle></svg>';
-    if(!albumSort) tile.appendChild(handle);
-
-    /* Dugi pritisak bilo gde na plocici (osim rucke) -> meni */
-    let pressTimer = null;
-    let menuArmed = false;
-    let mStartX = 0, mStartY = 0;
-    const cancelMenuTimer = ()=>{ if(pressTimer){ clearTimeout(pressTimer); pressTimer = null; } };
-    tile.addEventListener('pointerdown', (e)=>{
-      if(e.target.closest('.drag-handle')) return;
-      if(e.button !== undefined && e.button !== 0) return;
-      mStartX = e.clientX; mStartY = e.clientY;
-      menuArmed = false;
-      pressTimer = setTimeout(()=>{
-        menuArmed = true;
-        if(navigator.vibrate){ try{ navigator.vibrate(15); }catch(err){} }
-        openAlbumContext(name);
-      }, 480);
-    });
-    tile.addEventListener('pointermove', (e)=>{
-      if(pressTimer){
-        const dx = e.clientX - mStartX, dy = e.clientY - mStartY;
-        if(Math.sqrt(dx*dx + dy*dy) > 12){ cancelMenuTimer(); }
-      }
-    });
-    tile.addEventListener('pointerup', ()=>{
-      cancelMenuTimer();
-      if(menuArmed){ tile.dataset.suppressClick = '1'; menuArmed = false; }
-    });
-    tile.addEventListener('pointercancel', ()=>{ cancelMenuTimer(); menuArmed = false; });
-
-    /* Prevlačenje samo preko rucke */
-    let dragging = false;
-    let startX = 0, startY = 0, startRect = null, placeholder = null;
-
-    const beginDrag = ()=>{
-      dragging = true;
-      tile.classList.add('tile-dragging');
-      startRect = tile.getBoundingClientRect();
-      tile.style.position = 'fixed';
-      tile.style.left = startRect.left + 'px';
-      tile.style.top = startRect.top + 'px';
-      tile.style.width = startRect.width + 'px';
-      tile.style.height = startRect.height + 'px';
-      tile.style.zIndex = '200';
-      tile.style.pointerEvents = 'none';
-      placeholder = document.createElement('div');
-      placeholder.className = tile.className.replace('tile-dragging','') + ' drag-placeholder';
-      placeholder.style.width = startRect.width + 'px';
-      placeholder.style.height = startRect.height + 'px';
-      tile.parentNode.insertBefore(placeholder, tile.nextSibling);
-      if(navigator.vibrate){ try{ navigator.vibrate(15); }catch(err){} }
-    };
-
-    handle.addEventListener('pointerdown', (e)=>{
-      if(e.button !== undefined && e.button !== 0) return;
-      e.stopPropagation();
-      startX = e.clientX; startY = e.clientY;
-      try{ handle.setPointerCapture(e.pointerId); }catch(err){}
-      beginDrag();
-    });
-    handle.addEventListener('pointermove', (e)=>{
-      if(!dragging) return;
-      e.stopPropagation();
-      if(e.cancelable) e.preventDefault();
-      const dx = e.clientX - startX, dy = e.clientY - startY;
-      tile.style.left = (startRect.left + dx) + 'px';
-      tile.style.top = (startRect.top + dy) + 'px';
-      const under = document.elementFromPoint(e.clientX, e.clientY);
-      const overTile = under && under.closest('.folder-tile, .folder-tile-row');
-      if(overTile && overTile !== tile && overTile !== placeholder && overTile.parentNode === placeholder.parentNode){
-        const overRect = overTile.getBoundingClientRect();
-        const isGrid = !isList;
-        const before = isGrid
-          ? (e.clientY < overRect.top + overRect.height/2) || (e.clientY < overRect.bottom && e.clientX < overRect.left + overRect.width/2)
-          : (e.clientY < overRect.top + overRect.height/2);
-        overTile.parentNode.insertBefore(placeholder, before ? overTile : overTile.nextSibling);
-      }
-    });
-    const endDrag = (e)=>{
-      if(!dragging) return;
-      e.stopPropagation();
-      try{ if(e && e.pointerId !== undefined) handle.releasePointerCapture(e.pointerId); }catch(err){}
-      dragging = false;
-      tile.classList.remove('tile-dragging');
-      tile.style.position = '';
-      tile.style.left = '';
-      tile.style.top = '';
-      tile.style.width = '';
-      tile.style.height = '';
-      tile.style.zIndex = '';
-      tile.style.pointerEvents = '';
-      if(placeholder && placeholder.parentNode){
-        placeholder.parentNode.insertBefore(tile, placeholder);
-        const container = placeholder.parentNode;
-        placeholder.remove();
-        placeholder = null;
-        commitGroupOrder(groupCats, container);
-      }
-    };
-    handle.addEventListener('pointerup', endDrag);
-    handle.addEventListener('pointercancel', endDrag);
-    handle.onclick = (e)=>{ e.stopPropagation(); };
-
-    tile.onclick = (e)=>{
-      if(tile.dataset.suppressClick === '1'){ tile.dataset.suppressClick = ''; return; }
-      currentFolder = name; searchEl.value=''; pushBack(closeAlbumView); render();
-    };
-    return tile;
-  };
 
   const setupViewToggleBtn = ()=>{
     const btn = document.getElementById('viewToggleBtn');
@@ -1631,32 +1735,29 @@ function render(){
   };
   setupViewToggleBtn();
 
-  const gridClass = 'grid folders-grid' + (albumViewMode === 'list' ? ' folders-list' : '');
-
-  if(pinnedCats.length > 0){
-    const pinGrid = document.createElement('div');
-    pinGrid.className = gridClass;
-    displayOrder(pinnedCats).forEach(cat=>pinGrid.appendChild(buildFolderTile(cat, pinnedCats)));
-    contentArea.appendChild(pinGrid);
-  }
-
-  const fgrid = document.createElement('div');
-  fgrid.className = gridClass;
-  displayOrder(otherCats).forEach(cat=>fgrid.appendChild(buildFolderTile(cat, otherCats)));
-  contentArea.appendChild(fgrid);
+  /* Pocetni ekran: samo albumi prvog nivoa (podalbumi su unutar svog albuma) */
+  appendAlbumGroups(contentArea, categories.filter(c=>!c.parent), cat=>{
+    currentFolder = cat.id; searchEl.value=''; pushBack(closeAlbumView); render();
+  });
 }
 
-function openAlbumContext(name){
-  albumContextTarget = name;
-  const cat = categories.find(c=>c.name===name);
-  document.getElementById('albumContextTitle').textContent = name;
+function openAlbumContext(catId){
+  albumContextTarget = catId;
+  const cat = catById(catId);
+  document.getElementById('albumContextTitle').textContent = cat ? cat.name : '';
   document.getElementById('acPin').querySelector('span').textContent = cat && cat.pinned ? 'Otkači sa vrha' : 'Zakači na vrh';
+  const isSub = !!(cat && cat.parent);
+  document.getElementById('acRename').querySelector('span').textContent = isSub ? 'Preimenuj podalbum' : 'Preimenuj album';
+  document.getElementById('acDelete').querySelector('span').textContent = isSub ? 'Izbriši podalbum' : 'Izbriši album';
+  /* album sa podalbumima ne moze postati podalbum */
+  document.getElementById('acMove').style.display = cat && childrenOf(cat.id).length === 0 && moveTargetsFor(cat).length > 0 ? 'flex' : 'none';
+  document.getElementById('acUnnest').style.display = isSub ? 'flex' : 'none';
   document.getElementById('albumContextSheet').classList.add('open');
   pushBack(closeAlbumContext);
 }
 const closeAlbumContext = ()=>{ albumContextTarget = null; document.getElementById('albumContextSheet').classList.remove('open'); };
 document.getElementById('acPin').onclick = ()=>{
-  const cat = categories.find(c=>c.name===albumContextTarget);
+  const cat = catById(albumContextTarget);
   if(cat){ cat.pinned = !cat.pinned; saveCategories(); }
   render();
   requestClose();
@@ -1670,35 +1771,82 @@ document.getElementById('acCover').onclick = ()=>{
   requestCloseThen(()=>openCoverPicker(target));
 };
 document.getElementById('acDelete').onclick = ()=>{
-  const name = albumContextTarget;
+  const catId = albumContextTarget;
   requestClose();
-  const cat = categories.find(c=>c.name===name);
+  const cat = catById(catId);
   if(!cat) return;
-  const catIndex = categories.indexOf(cat);
-  const affectedItems = items.filter(it=>it.category===name);
-  affectedItems.forEach(it=>{ it.category = null; });
-  categories = categories.filter(c=>c.name!==name);
+  const name = cat.name;
+  const isSub = !!cat.parent;
+  /* album + njegovi podalbumi; pamti mesta u spisku i stari album svake slike (za Opozovi) */
+  const ids = albumIdSet(catId);
+  const removed = categories.map((c,idx)=>({c, idx})).filter(x=>ids.has(x.c.id));
+  const affected = items.filter(it=>ids.has(it.category)).map(it=>({it, was: it.category}));
+  affected.forEach(a=>{ a.it.category = null; idbPut(a.it).catch(e=>console.error(e)); });
+  categories = categories.filter(c=>!ids.has(c.id));
   saveCategories();
-  if(currentFolder === name) currentFolder = null;
+  if(ids.has(currentFolder)) currentFolder = null;
   render();
+  const subCount = removed.length - 1;
   toastUndo(
-    'Album "'+name+'" obrisan.',
+    (isSub ? 'Podalbum "' : 'Album "') + name + '" obrisan' + (subCount > 0 ? ' (i podalbuma: '+subCount+').' : '.'),
     ()=>{
-      categories.splice(catIndex, 0, cat);
-      affectedItems.forEach(it=>{ it.category = name; });
+      removed.forEach(x=>{ categories.splice(Math.min(x.idx, categories.length), 0, x.c); });
+      affected.forEach(a=>{ a.it.category = a.was; idbPut(a.it).catch(e=>console.error(e)); });
       saveCategories();
       render();
     },
-    ()=>{
-      affectedItems.forEach(it=>{ idbPut(it).catch(e=>console.error(e)); });
-    }
+    ()=>{}
   );
+};
+/* Premestanje albuma u drugi album / nazad na pocetni ekran */
+function moveTargetsFor(cat){
+  return categories.filter(c=>!c.parent && c.id !== cat.id && c.id !== cat.parent);
+}
+function moveAlbumTo(catId, parentId){
+  const cat = catById(catId);
+  if(!cat) return;
+  if(parentId && childrenOf(cat.id).length > 0){ toast('Album koji ima podalbume ne može postati podalbum.'); return; }
+  if(categories.some(c=>c.id !== cat.id && (c.parent||null) === (parentId||null) && c.name === cat.name)){
+    toast(parentId ? 'U tom albumu već postoji podalbum s tim imenom.' : 'Na početnom ekranu već postoji album s tim imenom. Prvo promeni ime.');
+    return;
+  }
+  cat.parent = parentId || null;
+  cat.pinned = false;
+  categories = categories.filter(c=>c !== cat);
+  categories.push(cat);
+  saveCategories();
+  render();
+  toast(parentId ? 'Premešteno u "'+catLabel(parentId)+'".' : 'Vraćeno na početni ekran.');
+}
+function openMoveAlbumSheet(catId){
+  const cat = catById(catId);
+  if(!cat) return;
+  sheetTitle.textContent = 'Premesti \u201C' + cat.name + '\u201D u album';
+  sheetList.innerHTML = '';
+  moveTargetsFor(cat).forEach(t=>{
+    const row = document.createElement('div');
+    row.className = 'sheet-row';
+    row.innerHTML = '<span>'+escapeHtml(t.name)+'</span>';
+    row.onclick = ()=>{ requestCloseThen(()=>moveAlbumTo(catId, t.id)); };
+    sheetList.appendChild(row);
+  });
+  sheetBg.classList.add('open');
+  pushBack(closeSheetBg);
+}
+document.getElementById('acMove').onclick = ()=>{
+  const target = albumContextTarget;
+  requestCloseThen(()=>openMoveAlbumSheet(target));
+};
+document.getElementById('acUnnest').onclick = ()=>{
+  const target = albumContextTarget;
+  requestCloseThen(()=>moveAlbumTo(target, null));
 };
 document.getElementById('acBack').onclick = ()=>requestClose();
 document.getElementById('albumContextSheet').onclick = (e)=>{ if(e.target===document.getElementById('albumContextSheet')) requestClose(); };
 
-function openCoverPicker(name){
-  const pool = items.filter(i=>i.category===name && i.type === 'image');
+function openCoverPicker(catId){
+  const poolIds = albumIdSet(catId);
+  const pool = items.filter(i=>poolIds.has(i.category) && i.type === 'image');
   const grid = document.getElementById('coverPickerGrid');
   grid.innerHTML = '';
   document.getElementById('coverPickerSheet').classList.add('open');
@@ -1714,7 +1862,7 @@ function openCoverPicker(name){
     t.style.border = '1px solid var(--line)';
     t.innerHTML = '<img src="'+it.dataUrl+'" style="width:100%;height:100%;object-fit:cover;display:block;">';
     t.onclick = ()=>{
-      const cat = categories.find(c=>c.name===name);
+      const cat = catById(catId);
       if(cat){ cat.cover = it.id; saveCategories(); }
       render();
       requestClose();
@@ -1840,11 +1988,7 @@ function exitSelection(){
 }
 selCancel.onclick = ()=>requestClose();
 selAll.onclick = ()=>{
-  const visible = currentFolder === INBOX
-    ? items.filter(i=>!i.category)
-    : items.filter(i=>i.category===currentFolder);
-  const q = normalizeSr(searchEl.value.trim());
-  const pool = q ? visible.filter(i=>matchItemQuery(i, q)) : visible;
+  const pool = albumItemsFor(currentFolder, normalizeSr(searchEl.value.trim()));
   if(selectedIds.size === pool.length && selectionMode){
     requestClose();
   }else{
@@ -2046,12 +2190,16 @@ function openMoveSheet(){
   sheetTitle.textContent = 'Dodaj u album';
   sheetList.innerHTML = '';
 
-  categories.forEach(cat=>{
+  const addRow = (cat, isSub)=>{
     const row = document.createElement('div');
-    row.className = 'sheet-row';
+    row.className = 'sheet-row' + (isSub ? ' sub' : '');
     row.innerHTML = '<span>'+escapeHtml(cat.name)+'</span>';
-    row.onclick = ()=>{ requestCloseThen(()=>openMoveCopySheet(cat.name, cat.name)); };
+    row.onclick = ()=>{ requestCloseThen(()=>openMoveCopySheet(cat.id, cat.name)); };
     sheetList.appendChild(row);
+  };
+  categories.filter(c=>!c.parent).forEach(cat=>{
+    addRow(cat, false);
+    childrenOf(cat.id).forEach(sub=>addRow(sub, true));
   });
 
   const newRow = document.createElement('div');
@@ -2077,33 +2225,33 @@ document.getElementById('btnCopy').onclick = ()=>{ copySelectedToFolder(pendingB
 document.getElementById('moveCopyBack').onclick = ()=>requestClose();
 moveCopySheet.onclick = (e)=>{ if(e.target === moveCopySheet) requestClose(); };
 
-function moveSelectedToFolder(folderName){
+function moveSelectedToFolder(catId){
   const ids = Array.from(selectedIds);
   ids.forEach(id=>{
     const item = items.find(i=>i.id===id);
     if(item){
-      item.category = folderName || null;
+      item.category = catId || null;
       idbPut(item).catch(e=>console.error(e));
-      maybeAutoCover(folderName, item);
+      maybeAutoCover(catId, item);
     }
   });
   exitSelection();
-  toast(folderName ? 'Premešteno u "'+folderName+'".' : 'Uklonjeno iz albuma.');
+  toast(catId ? 'Premešteno u "'+catLabel(catId)+'".' : 'Uklonjeno iz albuma.');
 }
-function copySelectedToFolder(folderName){
+function copySelectedToFolder(catId){
   const ids = Array.from(selectedIds);
   ids.forEach(id=>{
     const orig = items.find(i=>i.id===id);
     if(orig){
       const newId = 'i' + Date.now() + Math.random().toString(36).slice(2,8);
-      const clone = { id:newId, name:orig.name, dataUrl:orig.dataUrl, ts:Date.now(), category:folderName || null, type: orig.type, ext: orig.ext };
+      const clone = { id:newId, name:orig.name, dataUrl:orig.dataUrl, ts:Date.now(), category:catId || null, type: orig.type, ext: orig.ext };
       items.push(clone);
       idbPut(clone).catch(e=>console.error(e));
-      maybeAutoCover(folderName, clone);
+      maybeAutoCover(catId, clone);
     }
   });
   exitSelection();
-  toast('Kopirano u "'+folderName+'".');
+  toast('Kopirano u "'+catLabel(catId)+'".');
 }
 
 function deleteSelected(){
@@ -2202,6 +2350,7 @@ document.getElementById('sheetBgBack').onclick = ()=>requestClose();
 function openNewFolderSheet(assignToItemId){
   pendingAssignItemId = assignToItemId;
   renamingAlbum = null;
+  newFolderParent = null;
   document.getElementById('newFolderTitle').textContent = 'Novi album';
   document.getElementById('newFolderCreate').textContent = 'Napravi album';
   newFolderInput.value = '';
@@ -2209,38 +2358,45 @@ function openNewFolderSheet(assignToItemId){
   pushBack(closeNewFolderSheet);
   setTimeout(()=>newFolderInput.focus(), 50);
 }
-function openRenameSheet(oldName){
+function openNewSubalbumSheet(parentId){
+  if(!catById(parentId)) return;
   pendingAssignItemId = null;
-  renamingAlbum = oldName;
-  document.getElementById('newFolderTitle').textContent = 'Preimenuj album';
+  renamingAlbum = null;
+  newFolderParent = parentId;
+  document.getElementById('newFolderTitle').textContent = 'Novi podalbum';
+  document.getElementById('newFolderCreate').textContent = 'Napravi podalbum';
+  newFolderInput.value = '';
+  newFolderSheet.classList.add('open');
+  pushBack(closeNewFolderSheet);
+  setTimeout(()=>newFolderInput.focus(), 50);
+}
+function openRenameSheet(catId){
+  const cat = catById(catId);
+  if(!cat) return;
+  pendingAssignItemId = null;
+  renamingAlbum = catId;
+  newFolderParent = null;
+  document.getElementById('newFolderTitle').textContent = cat.parent ? 'Preimenuj podalbum' : 'Preimenuj album';
   document.getElementById('newFolderCreate').textContent = 'Sačuvaj';
-  newFolderInput.value = oldName;
+  newFolderInput.value = cat.name;
   newFolderSheet.classList.add('open');
   pushBack(closeNewFolderSheet);
   setTimeout(()=>{ newFolderInput.focus(); newFolderInput.select(); }, 50);
 }
-const closeNewFolderSheet = ()=>{ newFolderSheet.classList.remove('open'); pendingAssignItemId=null; renamingAlbum=null; };
+const closeNewFolderSheet = ()=>{ newFolderSheet.classList.remove('open'); pendingAssignItemId=null; renamingAlbum=null; newFolderParent=null; };
 function createFolder(){
   const name = newFolderInput.value.trim();
   if(!name){ newFolderInput.focus(); return; }
 
   if(renamingAlbum){
-    if(name !== renamingAlbum && categories.some(c=>c.name===name)){
+    const cat = catById(renamingAlbum);
+    if(cat && categories.some(c=>c.id!==cat.id && (c.parent||null)===(cat.parent||null) && c.name===name)){
       toast('Album s tim imenom već postoji.');
       return;
     }
-    const cat = categories.find(c=>c.name===renamingAlbum);
     if(cat){
-      const oldName = cat.name;
-      cat.name = name;
+      cat.name = name;   /* slike ukazuju na ID, pa se ne diraju */
       saveCategories();
-      items.forEach(it=>{
-        if(it.category === oldName){
-          it.category = name;
-          idbPut(it).catch(e=>console.error(e));
-        }
-      });
-      if(currentFolder === oldName) currentFolder = name;
     }
     render();
     toast('Album preimenovan.');
@@ -2248,16 +2404,34 @@ function createFolder(){
     return;
   }
 
-  if(!categories.some(c=>c.name===name)){
-    categories.push({name, pinned:false, cover:null});
+  if(newFolderParent){
+    const parentId = newFolderParent;
+    let sub = categories.find(c=>c.parent===parentId && c.name===name);
+    const existed = !!sub;
+    if(!sub){
+      sub = {id:newCatId(), name, pinned:false, cover:null, parent:parentId};
+      categories.push(sub);
+      saveCategories();
+    }
+    requestCloseThen(()=>{
+      openSubalbum(sub);
+      toast(existed ? 'Podalbum "'+name+'" već postoji.' : 'Podalbum "'+name+'" napravljen.');
+    });
+    return;
+  }
+
+  let newCat = categories.find(c=>!c.parent && c.name===name);
+  if(!newCat){
+    newCat = {id:newCatId(), name, pinned:false, cover:null, parent:null};
+    categories.push(newCat);
     saveCategories();
   }
   if(pendingAssignItemId === 'bulk'){
-    requestCloseThen(()=>openMoveCopySheet(name, name));
+    requestCloseThen(()=>openMoveCopySheet(newCat.id, name));
   }else if(pendingAssignItemId){
     requestClose();
   }else{
-    currentFolder = name;
+    currentFolder = newCat.id;
     render();
     toast('Album "'+name+'" napravljen.');
     requestClose();
@@ -2359,6 +2533,8 @@ docInput.addEventListener('change', async (e)=>{
 const addSheet = document.getElementById('addSheet');
 const closeAddSheet = ()=>addSheet.classList.remove('open');
 function openAddSheet(){
+  const cur = currentFolder && currentFolder !== INBOX ? catById(currentFolder) : null;
+  document.getElementById('addNewSub').style.display = cur && !cur.parent ? 'flex' : 'none';
   addSheet.classList.add('open');
   pushBack(closeAddSheet);
 }
@@ -2367,6 +2543,10 @@ addSheet.onclick = (e)=>{ if(e.target === addSheet) requestClose(); };
 document.getElementById('addFromGallery').onclick = ()=>{ requestClose(); fileInput.click(); };
 document.getElementById('addFromCamera').onclick = ()=>{ requestClose(); cameraInput.click(); };
 document.getElementById('addFromDocs').onclick = ()=>{ requestClose(); docInput.click(); };
+document.getElementById('addNewSub').onclick = ()=>{
+  const parentId = currentFolder;
+  requestCloseThen(()=>openNewSubalbumSheet(parentId));
+};
 function readFileAsDataUrl(file){
   return new Promise((resolve, reject)=>{
     const r = new FileReader();
@@ -2734,7 +2914,7 @@ function updateStorageInfo(){
 
 function exportBackup(){
   const data = {
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     categories: categories,
     items: items,
@@ -2785,12 +2965,27 @@ importInput.addEventListener('change', (e)=>{
       const data = JSON.parse(ev.target.result);
       if(!data || !Array.isArray(data.items)) throw new Error('bad format');
       if(data.settings && data.settings.theme) setTheme(data.settings.theme);
-      (data.categories || []).forEach(c=>{
-        const catObj = typeof c === 'string' ? {name:c} : c;
-        if(catObj && catObj.name && !categories.some(existing=>existing.name === catObj.name)){
-          categories.push({name: catObj.name, pinned: !!catObj.pinned, cover: null});
+      /* idMap: kljuc iz backupa (v1 = ime, v2 = ID) -> ID albuma ovde.
+         Isto ime na istom mestu se spaja sa postojecim albumom. */
+      const isV2 = data.version >= 2;
+      const srcCats = (data.categories || []).map(c=> typeof c === 'string' ? {name:c} : c).filter(c=>c && c.name);
+      const idMap = {};
+      const placeCat = (c, parentId)=>{
+        let cat = categories.find(x=>(x.parent||null)===parentId && x.name===c.name);
+        if(!cat){
+          cat = {id:newCatId(), name:c.name, pinned:!!c.pinned, cover:null, parent:parentId};
+          categories.push(cat);
         }
-      });
+        idMap[isV2 ? c.id : c.name] = cat.id;
+      };
+      srcCats.filter(c=>!isV2 || !c.parent).forEach(c=>placeCat(c, null));
+      if(isV2){
+        srcCats.filter(c=>c.parent).forEach(c=>{
+          const pid = idMap[c.parent];
+          const parentCat = pid ? catById(pid) : null;
+          placeCat(c, parentCat && !parentCat.parent ? pid : null);
+        });
+      }
       saveCategories();
       let added = 0;
       for(const it of data.items){
@@ -2801,7 +2996,7 @@ importInput.addEventListener('change', (e)=>{
           name: it.name || 'Stavka',
           dataUrl: it.dataUrl,
           ts: it.ts || Date.now(),
-          category: it.category && categories.some(c=>c.name===it.category) ? it.category : null,
+          category: (it.category && idMap[it.category]) || null,
           type: it.type === 'pdf' ? 'pdf' : (it.type === 'doc' ? 'doc' : 'image'),
           ext: it.ext
         };
