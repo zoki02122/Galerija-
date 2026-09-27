@@ -3022,7 +3022,7 @@ function renderSettingsTiles(){
     settingsTile('♻️', 'korpa', trashTileSub(), "openSettingsSub('trash')")+
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 53</div>'+
+    '<div class="settings-hint set-build">verzija 54</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -3048,6 +3048,13 @@ function openSettingsSub(which){
       '<button type="button" class="settings-row" onclick="triggerImportBackup()"><span class="row-icon">📂</span><span class="row-label">rezervna kopija - uvezi</span><span class="chevron">›</span></button>'+
       '</div>'+
       '<div class="settings-hint">rezervna kopija čuva sve slike, dokumente i albume odjednom - sačuvaj je povremeno (npr. u Google Drive) da ne izgubiš podatke.</div>'+
+      (backupDirSupported() ?
+        '<div class="settings-card" style="margin-top:14px;">'+
+        '<button type="button" class="settings-row" onclick="chooseBackupDir()"><span class="row-icon">📁</span><span class="row-label">fascikla za kopiju<span id="backupDirName" style="display:block;font-size:12px;font-weight:500;color:var(--ink-dim);margin-top:2px;"></span></span><span class="chevron">›</span></button>'+
+        '<button type="button" class="settings-row" id="backupDirForget" onclick="forgetBackupDir()"><span class="row-icon">↩️</span><span class="row-label">ne koristi fasciklu (preuzimanje)</span><span class="chevron">›</span></button>'+
+        '</div>'+
+        '<div class="settings-hint">kad je fascikla izabrana, izvoz ide pravo u nju (Chrome jednom pita „Dozvoli“). čuvaju se poslednje '+BACKUP_KEEP+' kopije, starije se same brišu.</div>'
+      : '')+
       '<div class="settings-card" style="margin-top:14px;">'+
       '<div class="settings-field"><label for="backupIntervalInput">podseti me na svakih (dana)</label><input type="number" inputmode="numeric" min="1" id="backupIntervalInput" value="'+getBackupIntervalDays()+'" oninput="saveBackupInterval(this.value)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>'+
       '</div>'+
@@ -3066,6 +3073,7 @@ function openSettingsSub(which){
   settingsPanel.innerHTML = settingsHeader(title)+'<div class="set-body">'+body+'</div>'+
     (which === 'trash' ? '<div class="trash-bar" id="trashBar"><button type="button" class="trash-btn" id="trashRestoreBtn" onclick="trashRestoreSelected()">Vrati</button><button type="button" class="trash-btn danger" id="trashPurgeBtn" onclick="trashPurgeSelected()">Obriši trajno</button></div>' : '');
   if(which === 'trash') renderTrashList();
+  if(which === 'backup') refreshBackupDirRow();
   settingsScreen.scrollTop = 0;
   if(!settingsSubOpen){
     settingsSubOpen = true;
@@ -3097,7 +3105,97 @@ function updateStorageInfo(){
   }
 }
 
-function exportBackup(){
+/* ---------- Fascikla za rezervnu kopiju ----------
+   Izabrana fascikla se pamti u posebnoj maloj bazi (NE u galerijaDB — njenu verziju
+   otvaraju i arhiva-slika i photo.html). Chrome na Androidu pamti fasciklu, ali dozvolu
+   trazi ponovo posle zatvaranja: zato upis ide na dodir, uz najvise jedno pitanje "Dozvoli". */
+const BACKUP_DIR_DB = 'arhivaBackupDir';
+const BACKUP_KEEP = 3;
+const BACKUP_NAME_RE = /^arhiva-backup-\d{4}-\d{2}-\d{2}\.json$/;
+let backupDirHandle = null;
+function backupDirSupported(){ return 'showDirectoryPicker' in window; }
+function backupDirDb(){
+  return new Promise((res, rej)=>{
+    const r = indexedDB.open(BACKUP_DIR_DB, 1);
+    r.onupgradeneeded = ()=>r.result.createObjectStore('h');
+    r.onsuccess = ()=>res(r.result);
+    r.onerror = ()=>rej(r.error);
+  });
+}
+async function backupDirSave(h){
+  const d = await backupDirDb();
+  await new Promise((res, rej)=>{
+    const t = d.transaction('h', 'readwrite');
+    if(h) t.objectStore('h').put(h, 'dir'); else t.objectStore('h').delete('dir');
+    t.oncomplete = res; t.onerror = ()=>rej(t.error);
+  });
+  d.close();
+}
+async function backupDirLoad(){
+  if(!backupDirSupported()) return;
+  try{
+    const d = await backupDirDb();
+    backupDirHandle = await new Promise((res, rej)=>{
+      const q = d.transaction('h').objectStore('h').get('dir');
+      q.onsuccess = ()=>res(q.result || null); q.onerror = ()=>rej(q.error);
+    });
+    d.close();
+  }catch(e){ console.error(e); backupDirHandle = null; }
+}
+backupDirLoad();
+async function chooseBackupDir(){
+  try{
+    const h = await window.showDirectoryPicker({ mode:'readwrite', id:'arhiva-backup' });
+    backupDirHandle = h;
+    await backupDirSave(h);
+    toast('Fascikla izabrana: ' + h.name);
+  }catch(e){
+    if(e && e.name !== 'AbortError'){ console.error(e); toast('Fascikla nije izabrana.'); }
+  }
+  refreshBackupDirRow();
+}
+async function forgetBackupDir(){
+  backupDirHandle = null;
+  try{ await backupDirSave(null); }catch(e){ console.error(e); }
+  toast('Rezervna kopija ide ponovo preko preuzimanja.');
+  refreshBackupDirRow();
+}
+function refreshBackupDirRow(){
+  const el = document.getElementById('backupDirName');
+  if(el) el.textContent = backupDirHandle ? backupDirHandle.name : 'nije izabrana (preuzimanje)';
+  const f = document.getElementById('backupDirForget');
+  if(f) f.style.display = backupDirHandle ? 'flex' : 'none';
+}
+/* Upis u fasciklu + brisanje starijih (samo nasi fajlovi, cuva se poslednjih BACKUP_KEEP). */
+async function writeBackupToDir(dir, blob, fileName){
+  let perm = 'prompt';
+  try{ perm = await dir.queryPermission({ mode:'readwrite' }); }catch(e){}
+  if(perm !== 'granted') perm = await dir.requestPermission({ mode:'readwrite' });
+  if(perm !== 'granted') throw new Error('dozvola odbijena');
+  const fh = await dir.getFileHandle(fileName, { create:true });
+  const w = await fh.createWritable();
+  await w.write(blob);
+  await w.close();
+  try{
+    const names = [];
+    for await (const [name, h] of dir.entries()){
+      if(h.kind === 'file' && BACKUP_NAME_RE.test(name)) names.push(name);
+    }
+    names.sort().reverse();
+    for(const old of names.slice(BACKUP_KEEP)){ await dir.removeEntry(old); }
+  }catch(e){ console.error(e); }
+}
+function downloadBackup(blob, fileName){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+async function exportBackup(){
   const data = {
     version: 2,
     exportedAt: new Date().toISOString(),
@@ -3106,19 +3204,26 @@ function exportBackup(){
     settings: { theme: getTheme() }
   };
   const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const stamp = new Date().toISOString().slice(0,10);
-  a.href = url;
-  a.download = 'arhiva-backup-' + stamp + '.json';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+  const d = new Date();
+  const stamp = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const fileName = 'arhiva-backup-' + stamp + '.json';
+  let msg = 'Rezervna kopija sačuvana.';
+  if(backupDirHandle){
+    try{
+      await writeBackupToDir(backupDirHandle, blob, fileName);
+      msg = 'Rezervna kopija upisana u \u201E' + backupDirHandle.name + '\u201C.';
+    }catch(e){
+      console.error(e);
+      downloadBackup(blob, fileName);
+      msg = 'Fascikla nije dostupna \u2014 kopija sačuvana preuzimanjem.';
+    }
+  }else{
+    downloadBackup(blob, fileName);
+  }
   markBackupDone();
   const hintEl = document.getElementById('lastBackupHint');
   if(hintEl) hintEl.textContent = lastBackupDisplay();
-  toast('Rezervna kopija sačuvana.');
+  toast(msg);
 }
 
 const importInput = document.getElementById('importInput');
