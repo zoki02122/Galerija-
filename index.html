@@ -125,6 +125,15 @@
     white-space:normal;overflow-wrap:anywhere;min-width:0;}
   .crumb .crumb-count{font-family:var(--font-num);font-size:11px;letter-spacing:0.5px;color:var(--ink-dim);white-space:nowrap;flex:none;}
   .header-actions{display:flex;align-items:center;gap:10px;}
+  /* uzi telefoni: logo + 4 ikonice moraju stati u jedan red */
+  @media (max-width:380px){
+    .header-actions{gap:7px;}
+    .mark-row h1{font-size:22px;letter-spacing:1px;}
+  }
+  @media (max-width:350px){
+    .header-actions{gap:5px;}
+    .mark-row h1{font-size:19px;letter-spacing:.5px;}
+  }
 
   .back-btn{
     width:42px;height:42px;border-radius:50%;flex:none;
@@ -804,6 +813,9 @@ html[data-theme="ponoc"]{
         <h1>Arhiva</h1>
       </div>
       <div class="header-actions">
+        <button class="icon-btn" id="newAlbumBtn" type="button" title="Novi album" aria-label="Novi album">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5A2 2 0 0 1 5 5.5h4l2 2h8a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><line x1="12" y1="10.5" x2="12" y2="16"></line><line x1="9.25" y1="13.25" x2="14.75" y2="13.25"></line></svg>
+        </button>
         <button class="icon-btn" id="viewToggleBtn" type="button" style="display:none;"></button>
         <button class="icon-btn" id="searchBtn" title="Pretraga">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>
@@ -1324,6 +1336,8 @@ function openPdf(item){
 }
 
 const INBOX = '__inbox__';
+/* Ikonica za dodavanje slika/dokumenata sa telefona (razlikuje se od ikonice "Novi album") */
+const PHOTO_PLUS_SVG = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h8"></path><polyline points="3 17 8.5 12 13 16.5 15.5 14 20 18"></polyline><circle cx="8.5" cy="9.5" r="1.3"></circle><line x1="19" y1="2.5" x2="19" y2="8.5"></line><line x1="16" y1="5.5" x2="22" y2="5.5"></line></svg>';
 
 /* ---------- Albumi i podalbumi (jedan nivo) ---------- */
 function childrenOf(id){ return categories.filter(c=>c.parent===id); }
@@ -1549,6 +1563,7 @@ function render(){
   toolbarWrap.style.display = 'none';
   document.getElementById('settingsBtn').style.display = selectionMode ? 'none' : 'flex';
   document.getElementById('searchBtn').style.display = selectionMode ? 'none' : 'flex';
+  document.getElementById('newAlbumBtn').style.display = selectionMode ? 'none' : 'flex';
   document.getElementById('viewToggleBtn').style.display = 'none';
   if(selectionMode){
     selCount.textContent = selectedIds.size + (selectedIds.size===1 ? ' odabrano' : ' odabrano');
@@ -1576,7 +1591,8 @@ function render(){
       albumAdd.type = 'button';
       albumAdd.className = 'add-sq album-add';
       albumAdd.title = 'Dodaj u ovaj album';
-      albumAdd.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
+      albumAdd.setAttribute('aria-label', 'Dodaj slike ili dokumente u ovaj album');
+      albumAdd.innerHTML = PHOTO_PLUS_SVG;
       albumAdd.onclick = ()=>openAddSheet();
       // lupa u redu albuma (red "Arhiva" je u albumu sakriven)
       const albumSearch = document.createElement('button');
@@ -1724,8 +1740,9 @@ function render(){
   const inboxAdd = document.createElement('button');
   inboxAdd.type = 'button';
   inboxAdd.className = 'add-sq';
-  inboxAdd.title = 'Dodaj';
-  inboxAdd.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
+  inboxAdd.title = 'Dodaj slike ili dokumente';
+  inboxAdd.setAttribute('aria-label', 'Dodaj slike ili dokumente');
+  inboxAdd.innerHTML = PHOTO_PLUS_SVG;
   inboxAdd.onclick = (e)=>{ e.stopPropagation(); openAddSheet(); };
   inboxTile.appendChild(inboxAdd);
   inboxRow.appendChild(inboxTile);
@@ -2502,6 +2519,7 @@ function createFolder(){
   }
 
   let newCat = categories.find(c=>!c.parent && c.name===name);
+  const existedTop = !!newCat;
   if(!newCat){
     newCat = {id:newCatId(), name, pinned:false, cover:null, parent:null};
     categories.push(newCat);
@@ -2512,10 +2530,11 @@ function createFolder(){
   }else if(pendingAssignItemId){
     requestClose();
   }else{
-    currentFolder = newCat.id;
-    render();
-    toast('Album "'+name+'" napravljen.');
-    requestClose();
+    const openIt = newCat;
+    requestCloseThen(()=>{
+      currentFolder = openIt.id; searchEl.value=''; pushBack(parentCloser(null)); render();   /* nazad -> pocetni ekran */
+      toast(existedTop ? 'Album "'+name+'" već postoji.' : 'Album "'+name+'" napravljen.');
+    });
   }
 }
 document.getElementById('newFolderCreate').onclick = createFolder;
@@ -3022,7 +3041,7 @@ function renderSettingsTiles(){
     settingsTile('♻️', 'korpa', trashTileSub(), "openSettingsSub('trash')")+
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 55</div>'+
+    '<div class="settings-hint set-build">verzija 56</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -3084,6 +3103,7 @@ function openSettingsSub(which){
 const settingsBackToTiles = ()=>{ settingsSubOpen = false; renderSettingsTiles(); };
 function triggerImportBackup(){ importInput.click(); }
 document.getElementById('settingsBtn').onclick = openSettings;
+document.getElementById('newAlbumBtn').onclick = ()=>openNewFolderSheet(null);
 
 function updateStorageInfo(){
   let bytes = 0;
