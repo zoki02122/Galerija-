@@ -571,6 +571,15 @@
 .settings-row .chevron{ color:var(--ink-dim); font-size:13px; flex:none; }
 .settings-hint{ font-size:11px; color:var(--ink-dim); padding:8px 4px 0; line-height:1.5; }
 .set-build{ text-align:center; padding-top:18px; }
+/* prelazak na novu bazu */
+.mig-p{ font-size:14.5px; line-height:1.55; color:var(--ink); margin:0 0 12px; }
+.mig-strong{ font-weight:700; }
+.mig-warn{ color:var(--danger); }
+.mig-sub{ display:block; font-size:12px; font-weight:500; color:var(--ink-dim); margin-top:2px; }
+.mig-cta{ margin-top:18px; border-radius:12px; }
+.mig-cta:disabled{ opacity:.45; cursor:default; }
+.mig-bar{ height:10px; border-radius:6px; background:var(--surface); border:1px solid var(--line); overflow:hidden; margin:6px 0 4px; }
+.mig-bar i{ display:block; height:100%; background:var(--brass); transition:width .2s; }
 /* Korpa */
 .trash-top{ display:flex; align-items:center; justify-content:space-between; margin-top:18px; }
 .trash-link{ border:none; background:none; padding:8px 4px; font-family:inherit; font-size:14px; font-weight:600; color:var(--brass); cursor:pointer; }
@@ -969,7 +978,8 @@ html[data-theme="ponoc"]{
 </div>
 
 <div class="set-screen" id="settingsScreen"><div id="settingsPanel"></div></div>
-<input type="file" id="importInput" accept="application/json" style="display:none">
+<input type="file" id="importInput" accept=".zip,.json,application/zip,application/json" style="display:none">
+<div class="set-screen" id="migrateScreen" style="z-index:75;"><div id="migratePanel"></div></div>
 
 <div class="exit-modal-backdrop" id="delBackdrop">
   <div class="exit-modal">
@@ -1165,19 +1175,14 @@ function matchItemQuery(item, q){
 }
 
 /* ---------- Izvlačenje teksta iz dokumenata (za detaljnu pretragu) ---------- */
-function base64ToUint8Array(dataUrl){
-  const base64 = dataUrl.split(',')[1];
-  const raw = atob(base64);
-  const bytes = new Uint8Array(raw.length);
-  for(let i=0;i<raw.length;i++){ bytes[i] = raw.charCodeAt(i); }
-  return bytes;
-}
 async function extractContentForItem(item){
   try{
+    if(item.type !== 'pdf' && item.type !== 'doc') return null;
+    const ext = (item.ext || '').toLowerCase();
     if(item.type === 'pdf'){
       if(typeof pdfjsLib === 'undefined') return null;
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-      const bytes = base64ToUint8Array(item.dataUrl);
+      const bytes = new Uint8Array(await (await getFileBlob(item)).arrayBuffer());
       const pdf = await pdfjsLib.getDocument({data: bytes}).promise;
       let text = '';
       const maxPages = Math.min(pdf.numPages, 15);
@@ -1187,21 +1192,18 @@ async function extractContentForItem(item){
         text += tc.items.map(t=>t.str).join(' ') + ' ';
       }
       return text.slice(0, 20000);
-    }else if(item.type === 'doc'){
-      const ext = (item.ext || '').toLowerCase();
-      if(ext === 'docx' && typeof mammoth !== 'undefined'){
-        const bytes = base64ToUint8Array(item.dataUrl);
-        const result = await mammoth.extractRawText({arrayBuffer: bytes.buffer});
-        return result.value.slice(0, 20000);
-      }else if((ext === 'xlsx' || ext === 'xls') && typeof XLSX !== 'undefined'){
-        const base64 = item.dataUrl.split(',')[1];
-        const wb = XLSX.read(base64, {type:'base64'});
-        let text = '';
-        wb.SheetNames.forEach(name=>{
-          text += XLSX.utils.sheet_to_csv(wb.Sheets[name]) + ' ';
-        });
-        return text.slice(0, 20000);
-      }
+    }else if(ext === 'docx' && typeof mammoth !== 'undefined'){
+      const buf = await (await getFileBlob(item)).arrayBuffer();
+      const result = await mammoth.extractRawText({arrayBuffer: buf});
+      return result.value.slice(0, 20000);
+    }else if((ext === 'xlsx' || ext === 'xls') && typeof XLSX !== 'undefined'){
+      const bytes = new Uint8Array(await (await getFileBlob(item)).arrayBuffer());
+      const wb = XLSX.read(bytes, {type:'array'});
+      let text = '';
+      wb.SheetNames.forEach(name=>{
+        text += XLSX.utils.sheet_to_csv(wb.Sheets[name]) + ' ';
+      });
+      return text.slice(0, 20000);
     }
   }catch(e){
     console.error('extractContentForItem failed:', e);
@@ -1209,6 +1211,8 @@ async function extractContentForItem(item){
   return null;
 }
 async function backfillContent(){
+  try{ await loadTexts(); }catch(e){ console.error(e); }
+  render();
   const targets = items.filter(i=>(i.type==='pdf' || i.type==='doc') && !i.content);
   if(targets.length === 0) return;
   toastPersist('Priprema detaljne pretrage: 0 / ' + targets.length + '...');
@@ -1216,8 +1220,7 @@ async function backfillContent(){
   for(const it of targets){
     const content = await extractContentForItem(it);
     if(content){
-      it.content = normalizeSr(content);
-      idbPut(it).catch(e=>console.error(e));
+      await saveDocText(it, normalizeSr(content)).catch(e=>console.error(e));
     }
     done++;
     toastPersist('Priprema detaljne pretrage: ' + done + ' / ' + targets.length + '...');
@@ -1232,90 +1235,424 @@ try{ albumViewMode = localStorage.getItem(LS_PREFIX+'albumViewMode') || 'grid'; 
 let albumSort = '';
 try{ albumSort = localStorage.getItem(LS_PREFIX+'albumSort') || ''; }catch(e){}
 
-/* ---------- IndexedDB sloj za stavke (slike/dokumenti) ---------- */
-const IDB_NAME = 'galerijaDB';
-const IDB_STORE = 'items';
-let _idbPromise = null;
-function idbOpen(){
-  if(_idbPromise) return _idbPromise;
-  _idbPromise = new Promise((resolve, reject)=>{
-    const req = indexedDB.open(IDB_NAME, 1);
+/* ---------- Rečnik prevoda (novi tekstovi idu samo kroz t()) ---------- */
+const I18N = {
+  sr: {
+    migTitle: 'Nov način čuvanja',
+    migIntro: 'Arhiva prelazi na brži način čuvanja, pripremljen za stotine dokumenata: brže otvaranje, male sličice za prikaz, a pun fajl tek kad ga otvoriš.',
+    migWhat: 'Za prenos: {items} stavki i {albums} albuma.',
+    migSafe: 'Ništa staro se ne briše. Stari podaci ostaju netaknuti dok sam ne potvrdiš da je sve u redu.',
+    migStep1: '1. Napravi rezervnu kopiju',
+    migStep1Sub: 'poslednja kopija: {when}',
+    migStep1Done: 'kopija napravljena: {when}',
+    migStep2: '2. Započni prelazak',
+    migResume: 'Nastavi prelazak',
+    migNeedBackup: 'Prelazak počinje tek kad napraviš rezervnu kopiju (važi kopija iz poslednja 24 sata).',
+    migResumeHint: 'Prelazak je već započet i biće nastavljen tamo gde je stao.',
+    migCheckingSpace: 'Proveravam slobodan prostor…',
+    migNoSpace: 'Nema dovoljno slobodnog prostora. Potrebno je oko {need} MB, a slobodno je oko {free} MB. Oslobodi prostor na telefonu pa pokušaj ponovo.',
+    migRunning: 'Prenosim {n} / {total}',
+    migRunningHint: 'Ne zatvaraj aplikaciju. Ako se ipak prekine, sledeći put nastavlja tamo gde je stao.',
+    migVerifying: 'Proveravam prenete podatke…',
+    migDoneTitle: 'Prelazak je završen ✓',
+    migDoneText: 'Preneto: {items} stavki i {albums} albuma. Svaki fajl je upisan i pročitan nazad radi provere.',
+    migSkipped: 'Nije preneto ({n}): {names}. Ove stavke su i dalje u starim podacima i u rezervnoj kopiji.',
+    migOpen: 'Otvori Arhivu',
+    migError: 'Prelazak nije završen: {msg}. Ništa nije izgubljeno. Pokušaj ponovo.',
+    migRetry: 'Pokušaj ponovo',
+    never: 'nikad',
+    bkBuilding: 'Pravim rezervnu kopiju: {n} / {total}…',
+    bkReading: 'Čitam kopiju…',
+    bkRestoring: 'Vraćam: {n} / {total}…',
+    bkRestored: 'Vraćeno: {added}. Već postoji: {skipped}.',
+    bkRestoredUpd: 'Vraćeno: {added}. Osveženo: {updated}. Već postoji: {skipped}.',
+    bkBadFile: 'Fajl nije prepoznat kao rezervna kopija.',
+    bkBadCrc: 'Kopija je oštećena (fajl „{name}“). Ništa nije promenjeno za taj fajl.',
+    bkPacked: 'Ova kopija je prepakovana drugim programom. Uvezi originalni ZIP iz Arhive.',
+    bkTooBig: 'Kopija bi bila veća od 4 GB. Obriši nešto ili javi da delimo kopiju na delove.',
+    bkFailed: 'Rezervna kopija nije uspela.',
+    fileMissing: 'Fajl nije pronađen.',
+    saveErr: 'Greška pri čuvanju.',
+    persistOn: 'zaštita od automatskog brisanja: uključena',
+    persistOff: 'zaštita od automatskog brisanja: Chrome je nije odobrio (rezervna kopija je zato još važnija)',
+    oldTile: 'stari podaci (pre prelaska)',
+    oldTileSub: 'obriši kad sve proveriš',
+    oldTitle: 'stari podaci',
+    oldText: 'Posle prelaska na nov način čuvanja stari podaci su ostavljeni netaknuti, kao osiguranje. Kad se uveriš da su sve slike, dokumenti i albumi na mestu, obriši ih da oslobodiš prostor.',
+    oldCount: 'u starim podacima: {n} stavki',
+    oldDelete: 'obriši stare podatke',
+    oldConfirmTitle: 'Obriši stare podatke',
+    oldConfirmText: 'Trajno obrisati stare podatke (od pre prelaska)? Tvoji trenutni dokumenti i albumi ostaju.',
+    oldDeleted: 'Stari podaci su obrisani.',
+    oldBlocked: 'Zatvori druge otvorene prozore Arhive pa pokušaj ponovo.',
+    bkHintZip: 'rezervna kopija je jedan ZIP fajl: u njemu su tvoji dokumenti kao obične slike i PDF-ovi, složeni po albumima, pa se mogu otvoriti i bez Arhive. uvoz prima i stare .json kopije. vraćanje dodaje samo ono što nedostaje, bez duplikata.'
+  },
+  en: {
+    migTitle: 'New storage',
+    migIntro: 'Arhiva is moving to a faster storage built for hundreds of documents: quicker start, small previews, the full file only when you open it.',
+    migWhat: 'To move: {items} items and {albums} albums.',
+    migSafe: 'Nothing old is deleted. Your old data stays untouched until you confirm everything is fine.',
+    migStep1: '1. Make a backup',
+    migStep1Sub: 'last backup: {when}',
+    migStep1Done: 'backup made: {when}',
+    migStep2: '2. Start the move',
+    migResume: 'Continue the move',
+    migNeedBackup: 'The move starts only after you make a backup (a backup from the last 24 hours counts).',
+    migResumeHint: 'The move has already started and will continue where it stopped.',
+    migCheckingSpace: 'Checking free space…',
+    migNoSpace: 'Not enough free space. About {need} MB is needed and about {free} MB is free. Free up space and try again.',
+    migRunning: 'Moving {n} / {total}',
+    migRunningHint: 'Do not close the app. If it stops anyway, next time it continues where it stopped.',
+    migVerifying: 'Checking the moved data…',
+    migDoneTitle: 'The move is complete ✓',
+    migDoneText: 'Moved: {items} items and {albums} albums. Every file was written and read back to check it.',
+    migSkipped: 'Not moved ({n}): {names}. These items are still in the old data and in the backup.',
+    migOpen: 'Open Arhiva',
+    migError: 'The move did not finish: {msg}. Nothing was lost. Try again.',
+    migRetry: 'Try again',
+    never: 'never',
+    bkBuilding: 'Making backup: {n} / {total}…',
+    bkReading: 'Reading backup…',
+    bkRestoring: 'Restoring: {n} / {total}…',
+    bkRestored: 'Restored: {added}. Already here: {skipped}.',
+    bkRestoredUpd: 'Restored: {added}. Updated: {updated}. Already here: {skipped}.',
+    bkBadFile: 'This file is not a recognized backup.',
+    bkBadCrc: 'The backup is damaged (file “{name}”). Nothing was changed for that file.',
+    bkPacked: 'This backup was repacked by another program. Import the original ZIP from Arhiva.',
+    bkTooBig: 'The backup would be larger than 4 GB.',
+    bkFailed: 'The backup failed.',
+    fileMissing: 'File not found.',
+    saveErr: 'Error while saving.',
+    persistOn: 'protection from automatic deletion: on',
+    persistOff: 'protection from automatic deletion: not granted by Chrome (backups matter even more)',
+    oldTile: 'old data (before the move)',
+    oldTileSub: 'delete once you have checked',
+    oldTitle: 'old data',
+    oldText: 'After the move to the new storage the old data was kept untouched as a safety net. Once you are sure all images, documents and albums are in place, delete it to free space.',
+    oldCount: 'in the old data: {n} items',
+    oldDelete: 'delete old data',
+    oldConfirmTitle: 'Delete old data',
+    oldConfirmText: 'Permanently delete the old data (from before the move)? Your current documents and albums stay.',
+    oldDeleted: 'Old data deleted.',
+    oldBlocked: 'Close other open Arhiva windows and try again.',
+    bkHintZip: 'the backup is one ZIP file: your documents are inside as ordinary images and PDFs, sorted by album, so they open even without Arhiva. import also accepts old .json backups. restoring adds only what is missing, without duplicates.'
+  }
+};
+function appLang(){
+  let v = null;
+  try{ v = localStorage.getItem('galerija:lang'); }catch(e){}
+  return (v && I18N[v]) ? v : 'sr';
+}
+function t(key, vars){
+  const L = I18N[appLang()] || I18N.sr;
+  let s = (key in L) ? L[key] : (I18N.sr[key] || key);
+  if(vars) s = s.replace(/\{(\w+)\}/g, (m, k)=> (k in vars) ? String(vars[k]) : m);
+  return s;
+}
+
+/* ================= SKLADIŠTE: baza arhivaDB =================
+   Stara baza galerijaDB (verzija 1) se NE menja: otvaraju je photo.html i arhiva-slika.
+   Nova baza je odvojena:
+     albums  – albumi (umesto localStorage)
+     docs    – podaci o dokumentu (mali zapisi; svi se učitavaju pri otvaranju)
+     files   – sadržaj fajla kao Blob (čita se tek kad se dokument otvori)
+     thumbs  – male sličice za prikaz (ključ = ID fajla)
+     texts   – izvučen tekst za pretragu (učitava se tek pri pretrazi po sadržaju)
+     meta    – stanje prelaska i slično
+   Trajno brisanje ostavlja oznaku (purged), a ne prazninu — zbog kasnije sinhronizacije. */
+const OLD_DB = 'galerijaDB';
+const OLD_STORE = 'items';
+const DB2 = 'arhivaDB';
+const DB2_STORES = {albums:'id', docs:'id', files:'id', thumbs:'id', texts:'id', meta:'key'};
+const REC_SCHEMA = 1;
+let _db2P = null;
+function db2Open(){
+  if(_db2P) return _db2P;
+  const createMissing = (db)=>{
+    Object.keys(DB2_STORES).forEach(n=>{
+      if(!db.objectStoreNames.contains(n)) db.createObjectStore(n, {keyPath: DB2_STORES[n]});
+    });
+  };
+  const attach = (db)=>{ db.onversionchange = ()=>{ db.close(); _db2P = null; }; return db; };
+  _db2P = new Promise((resolve, reject)=>{
+    const req = indexedDB.open(DB2);
+    req.onupgradeneeded = ()=>createMissing(req.result);
+    req.onsuccess = ()=>{
+      const db = req.result;
+      const missing = Object.keys(DB2_STORES).some(n=>!db.objectStoreNames.contains(n));
+      if(!missing){ resolve(attach(db)); return; }
+      /* baza postoji bez nekog skladišta: dodaje se novom verzijom */
+      const v = db.version + 1;
+      db.close();
+      const r2 = indexedDB.open(DB2, v);
+      r2.onupgradeneeded = ()=>createMissing(r2.result);
+      r2.onsuccess = ()=>resolve(attach(r2.result));
+      r2.onerror = ()=>reject(r2.error);
+    };
+    req.onerror = ()=>reject(req.error);
+  });
+  _db2P.catch(()=>{ _db2P = null; });
+  return _db2P;
+}
+/* Jedna transakcija: work(st, out) — st(ime) daje skladište, out.v je rezultat. */
+function db2Run(stores, mode, work){
+  return db2Open().then(db=>new Promise((resolve, reject)=>{
+    let tx;
+    try{ tx = db.transaction(stores, mode); }catch(e){ _db2P = null; reject(e); return; }
+    const out = {};
+    try{ work(n=>tx.objectStore(n), out); }catch(e){ try{ tx.abort(); }catch(_){} reject(e); return; }
+    tx.oncomplete = ()=>resolve(out.v);
+    tx.onerror = ()=>reject(tx.error);
+    tx.onabort = ()=>reject(tx.error || new Error('abort'));
+  }));
+}
+function db2Get(store, key){
+  return db2Run([store], 'readonly', (st, o)=>{ const r = st(store).get(key); r.onsuccess = ()=>{ o.v = r.result; }; });
+}
+function db2GetAll(store){
+  return db2Run([store], 'readonly', (st, o)=>{ const r = st(store).getAll(); r.onsuccess = ()=>{ o.v = r.result || []; }; });
+}
+function db2Put(store, val){
+  return db2Run([store], 'readwrite', (st)=>{ st(store).put(val); });
+}
+function newFileId(){ return 'f' + Date.now().toString(36) + Math.random().toString(36).slice(2,10); }
+function newItemId(){ return 'i' + Date.now() + Math.random().toString(36).slice(2,8); }
+
+/* Zapis dokumenta u bazi (bez sadržaja, sličica i teksta) */
+function docRecord(it){
+  return {
+    id: it.id, schema: REC_SCHEMA,
+    name: it.name || '', albumId: it.category || null,
+    kind: it.type || 'image', ext: it.ext || null,
+    pages: (it.pages || []).map(p=>({file:p.file, mime:p.mime||'', size:p.size||0, w:p.w||0, h:p.h||0, thumb:!!p.thumb})),
+    createdAt: it.ts || Date.now(), updatedAt: it.updatedAt || Date.now(),
+    deletedAt: it.deletedAt || null,
+    validUntil: it.validUntil || null, lang: it.lang || null, derivedFrom: it.derivedFrom || null,
+    sourceSig: it.sourceSig || null, hasText: !!it.hasText
+  };
+}
+function itemFromRecord(r){
+  const it = {
+    id: r.id, name: r.name || '', category: r.albumId || null, type: r.kind || 'image',
+    pages: Array.isArray(r.pages) ? r.pages : [], ts: r.createdAt || 0, updatedAt: r.updatedAt || 0,
+    validUntil: r.validUntil || null, lang: r.lang || null, derivedFrom: r.derivedFrom || null,
+    sourceSig: r.sourceSig || null, hasText: !!r.hasText, thumb: ''
+  };
+  if(r.ext) it.ext = r.ext;
+  if(r.deletedAt) it.deletedAt = r.deletedAt;
+  return it;
+}
+function setThumbUrl(item, blob){
+  if(item.thumb){ try{ URL.revokeObjectURL(item.thumb); }catch(e){} }
+  item.thumb = blob ? URL.createObjectURL(blob) : '';
+}
+/* Čuvanje podataka o dokumentu (ime, album, korpa…). Ime ostaje zbog postojećih poziva. */
+async function idbPut(item){
+  item.updatedAt = Date.now();
+  await db2Put('docs', docRecord(item));
+}
+/* Nov dokument: podaci, fajlovi, sličice i tekst u JEDNOJ transakciji (sve ili ništa). */
+async function db2AddDoc(item, pages, text, opts){
+  item.pages = pages.map(p=>({file:newFileId(), mime:(p.blob && p.blob.type) || '', size:p.blob ? p.blob.size : 0, w:p.w||0, h:p.h||0, thumb:!!p.thumbBlob}));
+  item.updatedAt = Date.now();
+  if(text){ item.content = text; item.hasText = true; }
+  await db2Run(['docs','files','thumbs','texts'], 'readwrite', (st)=>{
+    pages.forEach((p, i)=>{
+      const f = item.pages[i];
+      st('files').put({id:f.file, doc:item.id, blob:p.blob});
+      if(p.thumbBlob) st('thumbs').put({id:f.file, blob:p.thumbBlob});
+    });
+    if(text) st('texts').put({id:item.id, text});
+    st('docs').put(docRecord(item));
+  });
+  if(!(opts && opts.noUrl)){
+    const tb = pages[0] && pages[0].thumbBlob;
+    if(tb) setThumbUrl(item, tb);
+  }
+}
+async function saveDocText(item, text){
+  item.content = text;
+  item.hasText = true;
+  item.updatedAt = Date.now();
+  await db2Run(['docs','texts'], 'readwrite', (st)=>{
+    st('texts').put({id:item.id, text});
+    st('docs').put(docRecord(item));
+  });
+}
+/* Trajno brisanje: sadržaj, sličice i tekst nestaju, ostaje samo oznaka da je obrisano. */
+async function idbDelete(id){
+  const now = Date.now();
+  await db2Run(['docs','files','thumbs','texts'], 'readwrite', (st)=>{
+    const r = st('docs').get(id);
+    r.onsuccess = ()=>{
+      const d = r.result;
+      if(d && Array.isArray(d.pages)) d.pages.forEach(p=>{ st('files').delete(p.file); st('thumbs').delete(p.file); });
+      st('texts').delete(id);
+      st('docs').put({id, schema:REC_SCHEMA, purged:true, deletedAt:(d && d.deletedAt) || now, updatedAt:now});
+    };
+  });
+}
+async function getFileBlob(item, pageIndex){
+  const p = (item.pages || [])[pageIndex || 0];
+  if(!p) throw new Error('nema fajla');
+  const rec = await db2Get('files', p.file);
+  if(!rec || !rec.blob) throw new Error('fajl nedostaje');
+  return rec.blob;
+}
+/* Pun prikaz: pamti se nekoliko poslednjih, starije adrese se oslobađaju */
+const _fullUrls = new Map();
+async function fullUrlFor(item){
+  if(_fullUrls.has(item.id)){
+    const u = _fullUrls.get(item.id);
+    _fullUrls.delete(item.id); _fullUrls.set(item.id, u);
+    return u;
+  }
+  const blob = await getFileBlob(item);
+  const u = URL.createObjectURL(blob);
+  _fullUrls.set(item.id, u);
+  while(_fullUrls.size > 4){
+    const first = _fullUrls.keys().next().value;
+    try{ URL.revokeObjectURL(_fullUrls.get(first)); }catch(e){}
+    _fullUrls.delete(first);
+  }
+  return u;
+}
+/* Tekst za pretragu po sadržaju: učitava se tek kad zatreba */
+let _textsLoaded = false;
+async function loadTexts(){
+  if(_textsLoaded) return;
+  const all = await db2GetAll('texts');
+  const map = new Map(all.map(x=>[x.id, x.text]));
+  items.concat(trash).forEach(it=>{ if(map.has(it.id)) it.content = map.get(it.id); });
+  _textsLoaded = true;
+}
+/* Zaštita od automatskog brisanja (Chrome odlučuje sam, bez pitanja) — traži se pri čuvanju */
+let _persistAsked = false;
+function requestPersistOnce(){
+  if(_persistAsked) return;
+  _persistAsked = true;
+  try{
+    if(navigator.storage && navigator.storage.persist){
+      navigator.storage.persisted().then(p=>{ if(!p) return navigator.storage.persist(); }).catch(()=>{});
+    }
+  }catch(e){}
+}
+
+/* ---------- Albumi u bazi ---------- */
+let _albumSaved = new Map();   /* id -> poslednji upisani oblik (upisuje se samo ono što se promenilo) */
+function albumRecord(c, idx){
+  return {id:c.id, schema:REC_SCHEMA, name:c.name, parent:c.parent || null, pinned:!!c.pinned, cover:c.cover || null, order:idx};
+}
+function saveCategories(){
+  const now = Date.now();
+  const puts = [];
+  const live = new Set();
+  categories.forEach((c, i)=>{
+    const r = albumRecord(c, i);
+    live.add(c.id);
+    const key = JSON.stringify(r);
+    if(_albumSaved.get(c.id) !== key){
+      if(!c.createdAt) c.createdAt = now;
+      c.updatedAt = now;
+      r.createdAt = c.createdAt;
+      r.updatedAt = now;
+      puts.push(r);
+      _albumSaved.set(c.id, key);
+    }
+  });
+  Array.from(_albumSaved.keys()).forEach(id=>{
+    if(!live.has(id)){
+      puts.push({id, schema:REC_SCHEMA, deletedAt:now, updatedAt:now});
+      _albumSaved.delete(id);
+    }
+  });
+  if(!puts.length) return Promise.resolve();
+  return db2Run(['albums'], 'readwrite', (st)=>{ puts.forEach(r=>st('albums').put(r)); })
+    .catch(e=>{ console.error(e); toast(t('saveErr')); });
+}
+
+/* ---------- Stara baza (samo za prelazak, staru kopiju i brisanje starih podataka) ---------- */
+async function dbListed(name){
+  if(!indexedDB.databases) return null;
+  try{ return (await indexedDB.databases()).some(d=>d.name === name); }catch(e){ return null; }
+}
+function oldDbOpen(){
+  return new Promise((resolve, reject)=>{
+    const req = indexedDB.open(OLD_DB, 1);
     req.onupgradeneeded = ()=>{
       const db = req.result;
-      if(!db.objectStoreNames.contains(IDB_STORE)){
-        db.createObjectStore(IDB_STORE, {keyPath:'id'});
-      }
+      if(!db.objectStoreNames.contains(OLD_STORE)) db.createObjectStore(OLD_STORE, {keyPath:'id'});
     };
     req.onsuccess = ()=>resolve(req.result);
     req.onerror = ()=>reject(req.error);
   });
-  return _idbPromise;
 }
-async function idbPut(item){
-  const db = await idbOpen();
+function oldReq(db, fn){
   return new Promise((resolve, reject)=>{
-    const tx = db.transaction(IDB_STORE, 'readwrite');
-    tx.objectStore(IDB_STORE).put(item);
-    tx.oncomplete = ()=>resolve();
-    tx.onerror = ()=>reject(tx.error);
+    const r = fn(db.transaction(OLD_STORE, 'readonly').objectStore(OLD_STORE));
+    r.onsuccess = ()=>resolve(r.result);
+    r.onerror = ()=>reject(r.error);
   });
 }
-async function idbDelete(id){
-  const db = await idbOpen();
-  return new Promise((resolve, reject)=>{
-    const tx = db.transaction(IDB_STORE, 'readwrite');
-    tx.objectStore(IDB_STORE).delete(id);
-    tx.oncomplete = ()=>resolve();
-    tx.onerror = ()=>reject(tx.error);
-  });
-}
-async function idbGetAll(){
-  const db = await idbOpen();
-  return new Promise((resolve, reject)=>{
-    const tx = db.transaction(IDB_STORE, 'readonly');
-    const req = tx.objectStore(IDB_STORE).getAll();
-    req.onsuccess = ()=>resolve(req.result || []);
-    req.onerror = ()=>reject(req.error);
-  });
-}
+/* Vrlo stare verzije su stavke držale u localStorage: prvo ih prebaci u staru bazu */
 async function migrateLegacyLocalStorageItems(){
   try{
     const raw = localStorage.getItem(LS_PREFIX+'item-ids');
     if(!raw) return;
     const ids = JSON.parse(raw);
-    if(!Array.isArray(ids) || ids.length === 0){
-      localStorage.removeItem(LS_PREFIX+'item-ids');
-      return;
-    }
-    for(const id of ids){
-      const raw2 = localStorage.getItem(LS_PREFIX+'item:'+id);
-      if(raw2){
-        try{ await idbPut(JSON.parse(raw2)); }catch(e){ console.error(e); }
-        localStorage.removeItem(LS_PREFIX+'item:'+id);
+    if(Array.isArray(ids) && ids.length){
+      const db = await oldDbOpen();
+      for(const id of ids){
+        const raw2 = localStorage.getItem(LS_PREFIX+'item:'+id);
+        if(raw2){
+          await new Promise((res)=>{
+            const tx = db.transaction(OLD_STORE, 'readwrite');
+            try{ tx.objectStore(OLD_STORE).put(JSON.parse(raw2)); }catch(e){ console.error(e); }
+            tx.oncomplete = res; tx.onerror = res; tx.onabort = res;
+          });
+          localStorage.removeItem(LS_PREFIX+'item:'+id);
+        }
       }
+      db.close();
     }
     localStorage.removeItem(LS_PREFIX+'item-ids');
-  }catch(e){
-    console.error(e);
-  }
+  }catch(e){ console.error(e); }
 }
+/* Albumi iz starog zapisa (localStorage), sređeni isto kao ranije */
+function legacyCategories(){
+  let parsed = [];
+  try{ const raw = localStorage.getItem(LS_PREFIX+'categories'); parsed = raw ? JSON.parse(raw) : []; }catch(e){ parsed = []; }
+  if(!Array.isArray(parsed)) parsed = [];
+  let cats = parsed.map(c=> typeof c === 'string' ? {name:c, pinned:false, cover:null} : c).filter(c=>c && c.name);
+  cats = cats.filter(c=>!(!c.id && cats.some(o=>o.id && o.id === c.name)));
+  cats.forEach(c=>{ if(!c.id) c.id = newCatId(); if(c.parent === undefined) c.parent = null; });
+  cats.forEach(c=>{
+    if(!c.parent) return;
+    const par = cats.find(o=>o.id === c.parent);
+    if(!par || par.parent || par === c) c.parent = null;
+  });
+  return cats;
+}
+function dataUrlToBlob(dataUrl){
+  const m = /^data:([^;,]*)(;base64)?,/.exec(dataUrl || '');
+  if(!m || !m[2]) throw new Error('neispravan zapis');
+  const raw = atob(dataUrl.slice(m[0].length));
+  const bytes = new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++) bytes[i] = raw.charCodeAt(i);
+  return new Blob([bytes], {type: m[1] || 'application/octet-stream'});
+}
+function normKind(tp){ return tp === 'pdf' ? 'pdf' : (tp === 'doc' ? 'doc' : 'image'); }
 
+/* ---------- Učitavanje ---------- */
 async function loadAll(){
   try{
-    const rawCats = localStorage.getItem(LS_PREFIX+'categories');
-    let parsed = rawCats ? JSON.parse(rawCats) : [];
-    categories = parsed.map(c => typeof c === 'string' ? {name:c, pinned:false, cover:null} : c);
-    /* Albumi dobijaju interni ID (ime je samo natpis). Prvo se sacuva spisak sa ID-jevima,
-       pa tek onda slike — ako se prekine na pola, ponovno otvaranje zavrsava posao. */
+    await ensureMigrated();
+    const [albumRecs, docRecs, thumbRecs] = await Promise.all([db2GetAll('albums'), db2GetAll('docs'), db2GetAll('thumbs')]);
+    const liveAlbums = albumRecs.filter(a=>!a.deletedAt).sort((a,b)=>(a.order||0)-(b.order||0));
+    categories = liveAlbums.map(a=>({id:a.id, name:a.name, pinned:!!a.pinned, cover:a.cover || null, parent:a.parent || null, createdAt:a.createdAt || 0, updatedAt:a.updatedAt || 0}));
+    _albumSaved = new Map();
+    liveAlbums.forEach(a=>_albumSaved.set(a.id, JSON.stringify(albumRecord({id:a.id, name:a.name, parent:a.parent, pinned:a.pinned, cover:a.cover}, a.order||0))));
     let catsChanged = false;
-    /* Ako je stara (kesirana) verzija radila bez interneta, napravila je lazne albume
-       nazvane po ID-ju — takve uklanjamo, slike su i dalje u pravom albumu. */
-    const cleaned = categories.filter(c=>!(!c.id && categories.some(o=>o.id && o.id===c.name)));
-    if(cleaned.length !== categories.length){ categories = cleaned; catsChanged = true; }
-    categories.forEach(c=>{
-      if(!c.id){ c.id = newCatId(); catsChanged = true; }
-      if(c.parent === undefined){ c.parent = null; catsChanged = true; }
-    });
     /* Roditelj mora postojati i biti na prvom nivou; inace album ide na pocetni ekran */
     categories.forEach(c=>{
       if(!c.parent) return;
@@ -1323,8 +1660,13 @@ async function loadAll(){
       if(!par || par.parent || par === c){ c.parent = null; catsChanged = true; }
     });
     if(catsChanged) saveCategories();
-    await migrateLegacyLocalStorageItems();
-    const loaded = await idbGetAll();
+    const thumbMap = new Map(thumbRecs.map(x=>[x.id, x.blob]));
+    const loaded = docRecs.filter(r=>!r.purged).map(itemFromRecord);
+    loaded.forEach(it=>{
+      const p = it.pages[0];
+      const tb = p ? thumbMap.get(p.file) : null;
+      if(tb) setThumbUrl(it, tb);
+    });
     loaded.sort((a,b)=>a.ts-b.ts);
     trash = loaded.filter(i=>i.deletedAt);
     items = loaded.filter(i=>!i.deletedAt);
@@ -1333,7 +1675,7 @@ async function loadAll(){
     const expired = trash.filter(i=>i.deletedAt < limit);
     if(expired.length){
       trash = trash.filter(i=>i.deletedAt >= limit);
-      for(const it of expired){ try{ await idbDelete(it.id); }catch(err){ console.error(err); } }
+      for(const it of expired){ try{ setThumbUrl(it, null); await idbDelete(it.id); }catch(err){ console.error(err); } }
     }
     // Slike: category = ID albuma. Staro ime se prevodi u ID; nepoznat album se vraca u spisak.
     let recovered = 0;
@@ -1359,8 +1701,232 @@ async function loadAll(){
   }
   render();
   checkBackupReminder();
+  ensureMissingThumbs();
 }
-function saveCategories(){ localStorage.setItem(LS_PREFIX+'categories', JSON.stringify(categories)); }
+/* Slika bez sličice (npr. posle vraćanja): sličica se pravi u pozadini, jedna po jedna */
+let _thumbFixRunning = false;
+async function ensureMissingThumbs(){
+  if(_thumbFixRunning) return;
+  _thumbFixRunning = true;
+  try{
+    const todo = items.concat(trash).filter(it=>it.type === 'image' && !it.thumb && it.pages[0] && !it._thumbFailed);
+    for(const it of todo){
+      try{
+        const blob = await getFileBlob(it);
+        const r = await makeThumb(blob);
+        it.pages[0].thumb = true;
+        if(r.w){ it.pages[0].w = r.w; it.pages[0].h = r.h; }
+        await db2Run(['thumbs','docs'], 'readwrite', (st)=>{
+          st('thumbs').put({id:it.pages[0].file, blob:r.tblob});
+          st('docs').put(docRecord(it));
+        });
+        setThumbUrl(it, r.tblob);
+      }catch(e){ it._thumbFailed = true; console.error(e); }
+    }
+    if(todo.length) render();
+  }finally{ _thumbFixRunning = false; }
+}
+
+/* ================= PRELAZAK NA NOVU BAZU =================
+   Pravila: 1) prvo rezervna kopija; 2) prenos stavku po stavku, svaka u jednoj transakciji
+   (podaci + fajl + sličica + tekst zajedno), pa se prekid može nastaviti; 3) svaki fajl se
+   pročita nazad i uporedi veličina; 4) stara baza ostaje netaknuta. */
+async function ensureMigrated(){
+  const m = await db2Get('meta', 'migration');
+  if(m && m.state === 'done') return;
+  await migrateLegacyLocalStorageItems();
+  let count = 0;
+  const listed = await dbListed(OLD_DB);
+  if(listed !== false){
+    try{
+      const odb = await oldDbOpen();
+      count = await oldReq(odb, s=>s.count());
+      odb.close();
+    }catch(e){ console.error(e); count = 0; }
+  }
+  const cats = legacyCategories();
+  if(count === 0){
+    /* nema slika: albumi (ako ih ima) se prenose odmah, bez rizika */
+    await migrateAlbums(cats);
+    await db2Put('meta', {key:'migration', state:'done', doneAt:Date.now(), count:0, albums:cats.length});
+    return;
+  }
+  await new Promise(resolve=>showMigrationScreen({count, albums:cats.length, resumed: !!(m && m.state === 'running')}, resolve));
+}
+async function migrateAlbums(cats){
+  const have = new Set((await db2GetAll('albums')).map(a=>a.id));
+  const now = Date.now();
+  await db2Run(['albums'], 'readwrite', (st)=>{
+    cats.forEach((c, i)=>{
+      if(have.has(c.id)) return;
+      st('albums').put({id:c.id, schema:REC_SCHEMA, name:c.name, parent:c.parent || null, pinned:!!c.pinned, cover:c.cover || null, order:i, createdAt:now, updatedAt:now});
+    });
+  });
+}
+function backupRecent(){
+  const last = getLastBackupDate();
+  return !!last && (Date.now() - last.getTime()) < 86400000;
+}
+function fmtDateTime(d){
+  if(!d) return t('never');
+  return String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear()+'. '+
+    String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+function showMigrationScreen(info, onDone){
+  const scr = document.getElementById('migrateScreen');
+  const panel = document.getElementById('migratePanel');
+  scr.classList.add('open');
+  let busy = false;
+  const head = '<div class="set-header"><h2 class="set-title" style="padding-left:12px;">'+escapeHtml(t('migTitle'))+'</h2></div>';
+  const intro = ()=>{
+    const ok = info.resumed || backupRecent();
+    const last = getLastBackupDate();
+    panel.innerHTML = head + '<div class="set-body">'+
+      '<p class="mig-p">'+escapeHtml(t('migIntro'))+'</p>'+
+      '<p class="mig-p mig-strong">'+escapeHtml(t('migWhat', {items:info.count, albums:info.albums}))+'</p>'+
+      '<p class="mig-p">'+escapeHtml(t('migSafe'))+'</p>'+
+      '<div class="settings-card" style="margin-top:16px;">'+
+        '<button type="button" class="settings-row" id="migBackupBtn"><span class="row-icon">💾</span><span class="row-label">'+escapeHtml(t('migStep1'))+
+        '<span class="mig-sub">'+escapeHtml(backupRecent() ? t('migStep1Done', {when:fmtDateTime(last)}) : t('migStep1Sub', {when:fmtDateTime(last)}))+'</span></span>'+
+        '<span class="chevron">'+(backupRecent() ? '✓' : '›')+'</span></button>'+
+      '</div>'+
+      '<button type="button" class="sheet-cta mig-cta" id="migStartBtn"'+(ok ? '' : ' disabled')+'>'+escapeHtml(info.resumed ? t('migResume') : t('migStep2'))+'</button>'+
+      '<div class="settings-hint">'+escapeHtml(info.resumed ? t('migResumeHint') : (ok ? '' : t('migNeedBackup')))+'</div>'+
+      '</div>';
+    document.getElementById('migBackupBtn').onclick = async ()=>{
+      if(busy) return;
+      busy = true;
+      try{ await legacyExportBackup(); }finally{ busy = false; }
+      intro();
+    };
+    document.getElementById('migStartBtn').onclick = ()=>{ if(!busy && (info.resumed || backupRecent())) start(); };
+  };
+  const progress = (label, n, total, hint)=>{
+    const pct = total ? Math.round(n * 100 / total) : 0;
+    panel.innerHTML = head + '<div class="set-body">'+
+      '<p class="mig-p mig-strong">'+escapeHtml(label)+'</p>'+
+      '<div class="mig-bar"><i style="width:'+pct+'%"></i></div>'+
+      '<div class="settings-hint">'+escapeHtml(hint || '')+'</div></div>';
+  };
+  const start = async ()=>{
+    busy = true;
+    requestPersistOnce();
+    try{
+      progress(t('migCheckingSpace'), 0, 0, '');
+      const est = (navigator.storage && navigator.storage.estimate) ? await navigator.storage.estimate().catch(()=>null) : null;
+      if(est && est.quota){
+        const need = (est.usage || 0) * 0.8 + info.count * 60 * 1024;
+        const free = est.quota - (est.usage || 0);
+        if(free < need){
+          busy = false;
+          panel.innerHTML = head + '<div class="set-body"><p class="mig-p">'+escapeHtml(t('migNoSpace', {need:Math.ceil(need/1048576), free:Math.floor(free/1048576)}))+'</p>'+
+            '<button type="button" class="sheet-cta mig-cta" id="migRetryBtn">'+escapeHtml(t('migRetry'))+'</button></div>';
+          document.getElementById('migRetryBtn').onclick = ()=>{ info.resumed = true; intro(); };
+          return;
+        }
+      }
+      const res = await migrateAllItems((n, total)=>progress(t('migRunning', {n, total}), n, total, t('migRunningHint')));
+      busy = false;
+      panel.innerHTML = head + '<div class="set-body">'+
+        '<p class="mig-p mig-strong">'+escapeHtml(t('migDoneTitle'))+'</p>'+
+        '<p class="mig-p">'+escapeHtml(t('migDoneText', {items:res.count, albums:res.albums}))+'</p>'+
+        (res.skipped.length ? '<p class="mig-p mig-warn">'+escapeHtml(t('migSkipped', {n:res.skipped.length, names:res.skipped.slice(0,8).join(', ') + (res.skipped.length > 8 ? '…' : '')}))+'</p>' : '')+
+        '<button type="button" class="sheet-cta mig-cta" id="migOpenBtn">'+escapeHtml(t('migOpen'))+'</button></div>';
+      document.getElementById('migOpenBtn').onclick = ()=>{ scr.classList.remove('open'); onDone(); };
+    }catch(e){
+      console.error(e);
+      busy = false;
+      info.resumed = true;
+      panel.innerHTML = head + '<div class="set-body"><p class="mig-p">'+escapeHtml(t('migError', {msg:(e && e.message) || String(e)}))+'</p>'+
+        '<button type="button" class="sheet-cta mig-cta" id="migRetryBtn">'+escapeHtml(t('migRetry'))+'</button></div>';
+      document.getElementById('migRetryBtn').onclick = ()=>start();
+    }
+  };
+  intro();
+}
+async function migrateAllItems(onProgress){
+  const prev = await db2Get('meta', 'migration');
+  await db2Put('meta', {key:'migration', state:'running', startedAt:(prev && prev.startedAt) || Date.now()});
+  const cats = legacyCategories();
+  await migrateAlbums(cats);
+  const odb = await oldDbOpen();
+  try{
+    const keys = await oldReq(odb, s=>s.getAllKeys());
+    const done = new Set((await db2GetAll('docs')).map(d=>d.id));
+    const skipped = [];
+    let n = 0;
+    for(const key of keys){
+      n++;
+      if(n === 1 || n % 3 === 0 || n === keys.length) onProgress(n, keys.length);
+      if(done.has(key)) continue;   /* već prenet (podaci i fajl su upisani zajedno) */
+      const it = await oldReq(odb, s=>s.get(key));
+      if(!it) continue;
+      try{ await migrateOneItem(it); }
+      catch(e){ console.error('prelazak stavke', key, e); skipped.push(it.name || String(key)); }
+    }
+    onProgress(keys.length, keys.length);
+    const now = new Set((await db2GetAll('docs')).map(d=>d.id));
+    const moved = keys.filter(k=>now.has(k)).length;
+    await db2Put('meta', {key:'migration', state:'done', doneAt:Date.now(), count:moved, total:keys.length, albums:cats.length});
+    return {count:moved, albums:cats.length, skipped};
+  }finally{ odb.close(); }
+}
+async function migrateOneItem(it){
+  let blob;
+  try{ blob = dataUrlToBlob(it.dataUrl); }
+  catch(e){ blob = await (await fetch(it.dataUrl)).blob(); }
+  if(!blob || !blob.size) throw new Error('prazan fajl');
+  const kind = normKind(it.type);
+  let thumbBlob = null, w = 0, h = 0;
+  if(kind === 'image'){
+    try{ const r = await makeThumb(blob); thumbBlob = r.tblob; w = r.w; h = r.h; }catch(e){ console.error(e); }
+  }
+  const item = {id:it.id, name:it.name || 'Stavka', category:it.category || null, type:kind, ts:it.ts || Date.now(), sourceSig:it.sourceSig || null};
+  if(it.ext) item.ext = it.ext;
+  if(it.deletedAt) item.deletedAt = it.deletedAt;
+  await db2AddDoc(item, [{blob, thumbBlob, w, h}], it.content || null, {noUrl:true});
+  /* provera: fajl se čita nazad i veličina mora biti ista */
+  const rec = await db2Get('files', item.pages[0].file);
+  if(!rec || !rec.blob || rec.blob.size !== blob.size){
+    await db2Run(['docs','files','thumbs','texts'], 'readwrite', (st)=>{
+      st('docs').delete(item.id); st('files').delete(item.pages[0].file); st('thumbs').delete(item.pages[0].file); st('texts').delete(item.id);
+    });
+    throw new Error('provera fajla nije prošla');
+  }
+}
+/* Rezervna kopija starim načinom (JSON verzija 2), direktno iz starih podataka.
+   Pravi se deo po deo, bez jednog ogromnog teksta u memoriji. */
+async function legacyExportBackup(){
+  const dirOk = backupDirHandle ? await ensureDirPermission(backupDirHandle) : false;
+  toastPersist(t('bkBuilding', {n:0, total:'…'}));
+  try{
+    const odb = await oldDbOpen();
+    const keys = await oldReq(odb, s=>s.getAllKeys());
+    const parts = [];
+    const cats = legacyCategories().map(c=>({id:c.id, name:c.name, pinned:!!c.pinned, cover:c.cover || null, parent:c.parent || null}));
+    parts.push('{"version":2,"exportedAt":'+JSON.stringify(new Date().toISOString())+',"categories":'+JSON.stringify(cats)+',"items":[');
+    let first = true, n = 0;
+    for(const key of keys){
+      n++;
+      const it = await oldReq(odb, s=>s.get(key));
+      if(it && !it.deletedAt && it.dataUrl){
+        parts.push((first ? '' : ',') + JSON.stringify(it));
+        first = false;
+      }
+      if(n % 5 === 0) toastPersist(t('bkBuilding', {n, total:keys.length}));
+    }
+    odb.close();
+    parts.push('],"settings":'+JSON.stringify({theme:getTheme()})+'}');
+    const blob = new Blob(parts, {type:'application/json'});
+    const msg = await saveBackupFile(blob, backupFileName('json'), dirOk);
+    toastHide();
+    toast(msg);
+  }catch(e){
+    console.error(e);
+    toastHide();
+    toast(t('bkFailed'));
+  }
+}
 function newCatId(){ return 'alb_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
 function catById(id){ return categories.find(c=>c.id===id) || null; }
 function catLabel(id){ const c = catById(id); return c ? c.name : ''; }
@@ -1448,7 +2014,7 @@ const buildFolderTile = (cat, groupCats, onOpen)=>{
   const coverItem = coverItemFor(cat);
   const isList = albumViewMode === 'list';
   tile.className = isList ? 'folder-tile-row' : 'folder-tile';
-  const coverInner = coverItem ? '<img src="'+coverItem.dataUrl+'">' : folderIconSvg();
+  const coverInner = (coverItem && coverItem.thumb) ? '<img src="'+coverItem.thumb+'">' : folderIconSvg();
   if(isList){
     tile.innerHTML = '<div class="ftile-cover">'+coverInner+'</div><div class="fr-text"><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+count+' '+(count===1?'stavka':'stavki')+'</span></div>';
   }else{
@@ -1768,7 +2334,7 @@ function render(){
           const coverItem = coverItemFor(cat);
           tile.className = 'folder-tile';
           if(coverItem){
-            tile.innerHTML = '<div class="ftile-cover"><img src="'+coverItem.dataUrl+'"></div><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+count+' '+(count===1?'stavka':'stavki')+'</span>';
+            tile.innerHTML = '<div class="ftile-cover">'+(coverItem.thumb ? '<img src="'+coverItem.thumb+'">' : folderIconSvg())+'</div><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+count+' '+(count===1?'stavka':'stavki')+'</span>';
           }else{
             tile.innerHTML = '<div class="ftile-cover">'+folderIconSvg()+'</div><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+count+' '+(count===1?'stavka':'stavki')+'</span>';
           }
@@ -1985,7 +2551,7 @@ function openCoverPicker(catId){
     t.style.aspectRatio = '1/1';
     t.style.cursor = 'pointer';
     t.style.border = '1px solid var(--line)';
-    t.innerHTML = '<img src="'+it.dataUrl+'" style="width:100%;height:100%;object-fit:cover;display:block;">';
+    t.innerHTML = it.thumb ? '<img src="'+it.thumb+'" style="width:100%;height:100%;object-fit:cover;display:block;">' : '';
     t.onclick = ()=>{
       const cat = catById(catId);
       if(cat){ cat.cover = it.id; saveCategories(); }
@@ -2021,12 +2587,13 @@ function buildCard(item, indexNumber){
   thumbBox.className = 'thumb-box' + ((isPdf || isDoc) ? ' pdf-thumb' : '');
   const corner = document.createElement('div');
   corner.className = 'corner';
-  if(isPdf || isDoc){
-    thumbBox.innerHTML = pdfIconSvg() + '<span class="pdf-label">'+(isPdf ? 'PDF' : (item.ext || 'FAJL'))+'</span>';
+  if(isPdf || isDoc || !item.thumb){
+    if(!isPdf && !isDoc) thumbBox.className = 'thumb-box pdf-thumb';
+    thumbBox.innerHTML = pdfIconSvg() + '<span class="pdf-label">'+(isPdf ? 'PDF' : (isDoc ? (item.ext || 'FAJL') : 'SLIKA'))+'</span>';
     thumbBox.appendChild(corner);
   }else{
     const img = document.createElement('img');
-    img.src = item.dataUrl;
+    img.src = item.thumb;
     img.loading = 'lazy';
     thumbBox.appendChild(img);
     thumbBox.appendChild(corner);
@@ -2224,7 +2791,10 @@ document.addEventListener('fullscreenchange', ()=>{
 let modalItemId = null;
 function showModalItem(item){
   modalItemId = item.id;
-  modalImg.src = item.dataUrl;
+  /* odmah sličica, pa pun fajl čim se pročita */
+  modalImg.src = item.thumb || '';
+  fullUrlFor(item).then(u=>{ if(modalItemId === item.id) modalImg.src = u; })
+    .catch(e=>{ console.error(e); if(modalItemId === item.id) toast(t('fileMissing')); });
   modalCaption.textContent = item.name;
   const total = currentGalleryItems.length;
   const showNav = total > 1;
@@ -2381,20 +2951,35 @@ function moveSelectedToFolder(catId){
   exitSelection();
   toast(catId ? 'Premešteno u "'+catLabel(catId)+'".' : 'Uklonjeno iz albuma.');
 }
-function copySelectedToFolder(catId){
-  const ids = Array.from(selectedIds);
-  ids.forEach(id=>{
-    const orig = items.find(i=>i.id===id);
-    if(orig){
-      const newId = 'i' + Date.now() + Math.random().toString(36).slice(2,8);
-      const clone = { id:newId, name:orig.name, dataUrl:orig.dataUrl, ts:Date.now(), category:catId || null, type: orig.type, ext: orig.ext };
-      items.push(clone);
-      idbPut(clone).catch(e=>console.error(e));
-      maybeAutoCover(catId, clone);
-    }
-  });
+/* Kopija je samostalan dokument: svoj ID i svoja kopija fajla (brisanje jednog ne dira drugi) */
+async function copyDoc(orig, catId){
+  const pages = [];
+  for(let i=0;i<orig.pages.length;i++){
+    const blob = await getFileBlob(orig, i);
+    const trec = orig.pages[i].thumb ? await db2Get('thumbs', orig.pages[i].file) : null;
+    pages.push({blob, thumbBlob: trec ? trec.blob : null, w: orig.pages[i].w, h: orig.pages[i].h});
+  }
+  let text = orig.content || null;
+  if(!text && orig.hasText){ const tr = await db2Get('texts', orig.id); text = tr ? tr.text : null; }
+  const clone = { id:newItemId(), name:orig.name, ts:Date.now(), category:catId || null, type: orig.type };
+  if(orig.ext) clone.ext = orig.ext;
+  await db2AddDoc(clone, pages, text);
+  return clone;
+}
+async function copySelectedToFolder(catId){
+  const chosen = items.filter(i=>selectedIds.has(i.id));
   exitSelection();
-  toast('Kopirano u "'+catLabel(catId)+'".');
+  let ok = 0;
+  for(const orig of chosen){
+    try{
+      const clone = await copyDoc(orig, catId);
+      items.push(clone);
+      maybeAutoCover(catId, clone);
+      ok++;
+    }catch(e){ console.error(e); }
+  }
+  render();
+  toast(ok === chosen.length ? 'Kopirano u "'+catLabel(catId)+'".' : t('saveErr'));
 }
 
 function deleteSelected(){
@@ -2441,9 +3026,8 @@ async function shareSelected(){
   if(chosen.length === 0) return;
   try{
     const files = await Promise.all(chosen.map(async (it, idx)=>{
-      const res = await fetch(it.dataUrl);
-      const blob = await res.blob();
-      const ext = it.ext ? it.ext.toLowerCase() : (blob.type.split('/')[1] || 'jpg').replace('jpeg','jpg');
+      const blob = await getFileBlob(it);
+      const ext = getItemExt(it);
       return new File([blob], (it.name||'fajl')+'.'+ext, {type: blob.type});
     }));
     if(navigator.canShare && navigator.canShare({files})){
@@ -2457,14 +3041,8 @@ async function shareSelected(){
 }
 document.getElementById('btnShare').onclick = shareSelected;
 
-function extFromDataUrl(dataUrl){
-  const m = /^data:image\/([a-zA-Z0-9.+-]+);/.exec(dataUrl || '');
-  if(!m) return 'jpg';
-  const sub = m[1].toLowerCase();
-  return sub === 'jpeg' ? 'jpg' : sub;
-}
 function getItemExt(item){
-  return item.ext ? item.ext.toLowerCase() : extFromDataUrl(item.dataUrl);
+  return pageExt(item, item.pages && item.pages[0]);
 }
 
 async function saveSelectedToDevice(){
@@ -2474,12 +3052,15 @@ async function saveSelectedToDevice(){
   for(let idx=0; idx<chosen.length; idx++){
     const it = chosen[idx];
     const ext = getItemExt(it);
+    let url = null;
+    try{ url = URL.createObjectURL(await getFileBlob(it)); }catch(e){ console.error(e); toast(t('fileMissing')); continue; }
     const a = document.createElement('a');
-    a.href = it.dataUrl;
+    a.href = url;
     a.download = (it.name || (it.type==='image' ? 'slika' : 'fajl')) + '.' + ext;
     document.body.appendChild(a);
     a.click();
     a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
     if(idx < chosen.length - 1) await new Promise(r=>setTimeout(r, 400));
   }
   toast(chosen.length === 1 ? 'Sačuvano na telefon.' : chosen.length + ' stavke sačuvano na telefon.');
@@ -2710,15 +3291,14 @@ addSheet.onclick = (e)=>{ if(e.target === addSheet) requestClose(); };
 document.getElementById('addFromGallery').onclick = ()=>{ requestClose(); fileInput.click(); };
 document.getElementById('addFromCamera').onclick = ()=>{ requestClose(); cameraInput.click(); };
 document.getElementById('addFromDocs').onclick = ()=>{ requestClose(); docInput.click(); };
-function readFileAsDataUrl(file){
-  return new Promise((resolve, reject)=>{
-    const r = new FileReader();
-    r.onload = ()=>resolve(r.result);
-    r.onerror = reject;
-    r.readAsDataURL(file);
-  });
-}
-/* ---------- Kompresija slike u pozadinskim nitima (Web Worker pool), da ne blokira UI i da ide paralelno ---------- */
+/* ---------- Obrada slike u pozadinskim nitima (Web Worker pool), da ne blokira UI i da ide paralelno ----------
+   Iz jedne dekodirane slike prave se dve: dokument (najviše IMG_MAX_DIM px) i mala sličica za prikaz.
+   Rezultat je Blob (ne dugačak tekst). */
+const IMG_MAX_DIM = 2400;
+const IMG_QUALITY = 0.85;
+const THUMB_SHORT = 360;    /* kraća strana sličice */
+const THUMB_LONG = 1080;    /* duža strana najviše (dugi računi) */
+const THUMB_QUALITY = 0.8;
 const COMPRESS_POOL_SIZE = 3;
 let _compressWorkers = [];
 let _compressWorkerBroken = false;
@@ -2727,25 +3307,24 @@ const _compressPending = new Map();
 let _compressNextWorker = 0;
 
 const COMPRESS_WORKER_CODE = [
+  "function fit(W, H, maxDim){ if(W <= maxDim && H <= maxDim) return [W, H];",
+  "  return W > H ? [maxDim, Math.max(1, Math.round(H * maxDim / W))] : [Math.max(1, Math.round(W * maxDim / H)), maxDim]; }",
+  "function thumbSize(W, H, s, l){ const k = Math.min(1, s / Math.min(W, H), l / Math.max(W, H));",
+  "  return [Math.max(1, Math.round(W * k)), Math.max(1, Math.round(H * k))]; }",
+  "async function draw(bitmap, w, h, q){ const c = new OffscreenCanvas(w, h); c.getContext('2d').drawImage(bitmap, 0, 0, w, h);",
+  "  const b = await c.convertToBlob({type:'image/jpeg', quality:q}); return await b.arrayBuffer(); }",
   "self.onmessage = async (e)=>{",
-  "  const { id, buffer, mime, maxDim, quality } = e.data;",
+  "  const d = e.data;",
   "  try{",
-  "    const blob = new Blob([buffer], {type: mime || 'image/jpeg'});",
-  "    const bitmap = await createImageBitmap(blob);",
-  "    let w = bitmap.width, h = bitmap.height;",
-  "    if(w > maxDim || h > maxDim){",
-  "      if(w > h){ h = Math.round(h * maxDim / w); w = maxDim; }",
-  "      else{ w = Math.round(w * maxDim / h); h = maxDim; }",
-  "    }",
-  "    const canvas = new OffscreenCanvas(w, h);",
-  "    const ctx = canvas.getContext('2d');",
-  "    ctx.drawImage(bitmap, 0, 0, w, h);",
+  "    const bitmap = await createImageBitmap(new Blob([d.buffer], {type: d.mime || 'image/jpeg'}));",
+  "    const W = bitmap.width, H = bitmap.height;",
+  "    const out = {id: d.id, w: W, h: H}; const trans = [];",
+  "    if(d.maxDim){ const s = fit(W, H, d.maxDim); out.buffer = await draw(bitmap, s[0], s[1], d.quality); out.w = s[0]; out.h = s[1]; trans.push(out.buffer); }",
+  "    const ts = thumbSize(W, H, d.thumbShort, d.thumbLong); out.tbuffer = await draw(bitmap, ts[0], ts[1], d.thumbQ); trans.push(out.tbuffer);",
   "    bitmap.close();",
-  "    const outBlob = await canvas.convertToBlob({type:'image/jpeg', quality});",
-  "    const outBuffer = await outBlob.arrayBuffer();",
-  "    self.postMessage({id, buffer: outBuffer}, [outBuffer]);",
+  "    self.postMessage(out, trans);",
   "  }catch(err){",
-  "    self.postMessage({id, error: String(err && err.message || err)});",
+  "    self.postMessage({id: d.id, error: String(err && err.message || err)});",
   "  }",
   "};"
 ].join('\n');
@@ -2761,12 +3340,12 @@ function getCompressWorker(){
       const blob = new Blob([COMPRESS_WORKER_CODE], {type:'application/javascript'});
       const worker = new Worker(URL.createObjectURL(blob));
       worker.onmessage = (e)=>{
-        const { id, buffer, error } = e.data;
-        const p = _compressPending.get(id);
+        const d = e.data;
+        const p = _compressPending.get(d.id);
         if(!p) return;
-        _compressPending.delete(id);
-        if(error){ p.reject(new Error(error)); }
-        else{ p.resolve(buffer); }
+        _compressPending.delete(d.id);
+        if(d.error){ p.reject(new Error(d.error)); }
+        else{ p.resolve(d); }
       };
       worker.onerror = ()=>{ _compressWorkerBroken = true; _compressWorkers = []; };
       _compressWorkers.push(worker);
@@ -2780,68 +3359,75 @@ function getCompressWorker(){
   _compressNextWorker++;
   return w;
 }
-
-function bufferToDataUrl(buffer, mime){
-  return new Promise((resolve)=>{
-    const blob = new Blob([buffer], {type: mime});
-    const reader = new FileReader();
-    reader.onload = ()=>resolve(reader.result);
-    reader.onerror = ()=>resolve(null);
-    reader.readAsDataURL(blob);
-  });
-}
-
-async function compressImageViaWorker(file){
+/* resize = true: nov dokument (smanjen + sličica); false: samo sličica od postojećeg fajla */
+async function imageViaWorker(blob, resize){
   const worker = getCompressWorker();
   if(!worker) return null;
-  const buffer = await file.arrayBuffer();
+  const buffer = await blob.arrayBuffer();
   const id = ++_compressReqId;
-  const resultBuffer = await new Promise((resolve, reject)=>{
+  const d = await new Promise((resolve, reject)=>{
     _compressPending.set(id, {resolve, reject});
-    worker.postMessage({id, buffer, mime: file.type, maxDim: 1600, quality: 0.85}, [buffer]);
+    worker.postMessage({id, buffer, mime: blob.type, maxDim: resize ? IMG_MAX_DIM : 0, quality: IMG_QUALITY,
+      thumbShort: THUMB_SHORT, thumbLong: THUMB_LONG, thumbQ: THUMB_QUALITY}, [buffer]);
   });
-  return await bufferToDataUrl(resultBuffer, 'image/jpeg');
+  return {
+    blob: d.buffer ? new Blob([d.buffer], {type:'image/jpeg'}) : null,
+    tblob: new Blob([d.tbuffer], {type:'image/jpeg'}),
+    w: d.w, h: d.h
+  };
 }
-
-function compressImageMainThread(file){
-  return new Promise((resolve, reject)=>{
-    const MAX_DIM = 1600;
-    const QUALITY = 0.85;
-    const reader = new FileReader();
-    reader.onload = (e)=>{
-      const img = new Image();
-      img.onload = ()=>{
-        let w = img.width, h = img.height;
-        if(w > MAX_DIM || h > MAX_DIM){
-          if(w > h){ h = Math.round(h * MAX_DIM / w); w = MAX_DIM; }
-          else{ w = Math.round(w * MAX_DIM / h); h = MAX_DIM; }
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = w; canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL('image/jpeg', QUALITY));
-      };
-      img.onerror = ()=>resolve(e.target.result); // fallback: use uncompressed if decode fails
-      img.src = e.target.result;
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+function canvasToBlob(canvas, q){
+  return new Promise((resolve, reject)=>canvas.toBlob(b=>b ? resolve(b) : reject(new Error('toBlob')), 'image/jpeg', q));
 }
-
-let _diag = { worker: 0, fallback: 0, errors: [] };
-async function compressImage(file){
+async function imageMainThread(blob, resize){
+  const url = URL.createObjectURL(blob);
   try{
-    const viaWorker = await compressImageViaWorker(file);
-    if(viaWorker){ _diag.worker++; return viaWorker; }
+    const img = await new Promise((resolve, reject)=>{
+      const im = new Image();
+      im.onload = ()=>resolve(im);
+      im.onerror = ()=>reject(new Error('slika se ne može pročitati'));
+      im.src = url;
+    });
+    const W = img.naturalWidth, H = img.naturalHeight;
+    const draw = (w, h, q)=>{
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      return canvasToBlob(c, q);
+    };
+    let out = {blob:null, w:W, h:H};
+    if(resize){
+      let w = W, h = H;
+      if(w > IMG_MAX_DIM || h > IMG_MAX_DIM){
+        if(w > h){ h = Math.max(1, Math.round(h * IMG_MAX_DIM / w)); w = IMG_MAX_DIM; }
+        else{ w = Math.max(1, Math.round(w * IMG_MAX_DIM / h)); h = IMG_MAX_DIM; }
+      }
+      out.blob = await draw(w, h, IMG_QUALITY);
+      out.w = w; out.h = h;
+    }
+    const k = Math.min(1, THUMB_SHORT / Math.min(W, H), THUMB_LONG / Math.max(W, H));
+    out.tblob = await draw(Math.max(1, Math.round(W * k)), Math.max(1, Math.round(H * k)), THUMB_QUALITY);
+    return out;
+  }finally{ URL.revokeObjectURL(url); }
+}
+let _diag = { worker: 0, fallback: 0, errors: [] };
+async function processImage(blob, resize){
+  try{
+    const r = await imageViaWorker(blob, resize);
+    if(r){ _diag.worker++; return r; }
   }catch(e){
-    console.error('Compress worker failed, falling back to main thread:', e);
+    console.error('Obrada u pozadini nije uspela, radi se na glavnoj niti:', e);
     _diag.errors.push(String(e && e.message || e));
   }
   _diag.fallback++;
-  return compressImageMainThread(file);
+  return imageMainThread(blob, resize);
 }
+function makeThumb(blob){ return processImage(blob, false); }
+
+const EXT_MIME = {pdf:'application/pdf', doc:'application/msword', docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  xls:'application/vnd.ms-excel', xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', ppt:'application/vnd.ms-powerpoint',
+  pptx:'application/vnd.openxmlformats-officedocument.presentationml.presentation', txt:'text/plain', csv:'text/csv', json:'application/json',
+  zip:'application/zip', jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', webp:'image/webp', gif:'image/gif', heic:'image/heic'};
 async function addFile(file, category){
   try{
     const sourceSig = file.name + '|' + file.size;
@@ -2854,33 +3440,38 @@ async function addFile(file, category){
       });
       if(!again) return;
     }
+    requestPersistOnce();
     const isPdf = file.type === 'application/pdf';
     const isImage = file.type.startsWith('image/');
     const isDoc = !isPdf && !isImage;
-    const dataUrl = isImage ? await compressImage(file) : await readFileAsDataUrl(file);
-    const id = 'i' + Date.now() + Math.random().toString(36).slice(2,8);
-    const baseName = file.name.replace(/\.[^.]+$/, '');
     const ext = (file.name.match(/\.([^.]+)$/) || [,''])[1].toUpperCase();
+    /* sadržaj se odmah pročita (fajl sa telefona ne mora ostati dostupan kasnije) */
+    const original = new Blob([await file.arrayBuffer()], {type: file.type || EXT_MIME[ext.toLowerCase()] || 'application/octet-stream'});
+    let page = {blob: original, thumbBlob: null, w: 0, h: 0};
+    if(isImage){
+      try{
+        const r = await processImage(original, true);
+        page = {blob: r.blob, thumbBlob: r.tblob, w: r.w, h: r.h};
+      }catch(e){ console.error('slika se ne može obraditi, čuva se original', e); }
+    }
+    const id = newItemId();
+    const baseName = file.name.replace(/\.[^.]+$/, '');
     const item = {
       id,
       name: baseName || (isPdf ? 'Dokument' : (isDoc ? 'Dokument' : 'Slika')),
-      dataUrl,
       ts: Date.now(),
       category: category || null,
       type: isPdf ? 'pdf' : (isDoc ? 'doc' : 'image'),
-      ext: isDoc ? ext : undefined,
       sourceSig
     };
-    await idbPut(item);
+    if(isDoc) item.ext = ext;
+    await db2AddDoc(item, [page], null);
     items.push(item);
     maybeAutoCover(category, item);
     render();
     if(item.type === 'pdf' || item.type === 'doc'){
       extractContentForItem(item).then(content=>{
-        if(content){
-          item.content = normalizeSr(content);
-          idbPut(item).catch(e=>console.error(e));
-        }
+        if(content) saveDocText(item, normalizeSr(content)).catch(e=>console.error(e));
       });
     }
   }catch(e){
@@ -2889,7 +3480,6 @@ async function addFile(file, category){
     else{ toast('Greška pri dodavanju.'); }
   }
 }
-
 searchEl.addEventListener('input', render);
 const closeSearch = ()=>{
   searchOpen = false;
@@ -2910,7 +3500,7 @@ document.getElementById('deepSearchToggle').onclick = ()=>{
   render();
 };
 
-loadAll().then(checkDeepLink);
+loadAll().then(()=>{ refreshOldDbPresent().catch(()=>{}); checkDeepLink(); });
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
 }
@@ -2991,7 +3581,7 @@ function renderTrashList(){
     cell.className = 'trash-cell' + (trashSel.has(it.id) ? ' sel' : '');
     const left = trashDaysLeft(it);
     const inner = it.type === 'image'
-      ? '<img src="'+it.dataUrl+'" alt="">'
+      ? (it.thumb ? '<img src="'+it.thumb+'" alt="">' : pdfIconSvg() + '<span>SLIKA</span>')
       : pdfIconSvg() + '<span>' + escapeHtml(it.type === 'pdf' ? 'PDF' : (it.ext || 'DOK')) + '</span>';
     cell.innerHTML = '<div class="trash-thumb">'+inner+'<span class="trash-check">'+(trashSel.has(it.id)?'\u2713':'')+'</span></div>'+
       '<div class="trash-name">'+escapeHtml(it.name)+'</div>'+
@@ -3040,7 +3630,7 @@ function trashPurgeSelected(){
 function purgeTrash(list){
   const ids = new Set(list.map(i=>i.id));
   trash = trash.filter(t=>!ids.has(t.id));
-  list.forEach(it=>{ idbDelete(it.id).catch(e=>console.error(e)); });
+  list.forEach(it=>{ setThumbUrl(it, null); idbDelete(it.id).catch(e=>console.error(e)); });
   trashSel = new Set();
   renderTrashList();
   toast(list.length === 1 ? 'Trajno obrisano.' : 'Trajno obrisano: ' + list.length + '.');
@@ -3109,9 +3699,11 @@ function renderSettingsTiles(){
     settingsTile('🎨', 'tema', themeName(getTheme()), "openSettingsSub('theme')")+
     settingsTile('💾', 'rezervna kopija', lastBackupDisplay(), "openSettingsSub('backup')")+
     settingsTile('♻️', 'korpa', trashTileSub(), "openSettingsSub('trash')")+
+    (_oldDbPresent ? settingsTile('🗄️', t('oldTile'), t('oldTileSub'), "openSettingsSub('old')") : '')+
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 58</div>'+
+    '<div class="settings-hint" id="persistInfo"></div>'+
+    '<div class="settings-hint set-build">verzija 59</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -3119,6 +3711,9 @@ function renderSettingsTiles(){
 function openSettings(){
   settingsSubOpen = false;
   renderSettingsTiles();
+  /* ako stari podaci još postoje, pločica se pojavi čim se to proveri */
+  const had = _oldDbPresent;
+  refreshOldDbPresent().then(now=>{ if(now !== had && !settingsSubOpen && settingsScreen.classList.contains('open')) renderSettingsTiles(); });
   settingsScreen.classList.add('open');
   pushBack(closeSettings);
 }
@@ -3137,6 +3732,7 @@ function openSettingsSub(which){
       '<button type="button" class="settings-row" onclick="triggerImportBackup()"><span class="row-icon">📂</span><span class="row-label">rezervna kopija - uvezi</span><span class="chevron">›</span></button>'+
       '</div>'+
       '<div class="settings-hint">rezervna kopija čuva sve slike, dokumente i albume odjednom - sačuvaj je povremeno (npr. u Google Drive) da ne izgubiš podatke.</div>'+
+      '<div class="settings-hint">'+escapeHtml(t('bkHintZip'))+'</div>'+
       (backupDirSupported() ?
         '<div class="settings-card" style="margin-top:14px;">'+
         '<button type="button" class="settings-row" onclick="chooseBackupDir()"><span class="row-icon">📁</span><span class="row-label">fascikla za kopiju<span id="backupDirName" style="display:block;font-size:12px;font-weight:500;color:var(--ink-dim);margin-top:2px;"></span></span><span class="chevron">›</span></button>'+
@@ -3149,6 +3745,14 @@ function openSettingsSub(which){
       '</div>'+
       '<div class="settings-hint">kad prođe ovoliko dana od poslednje rezervne kopije, gore će se pojaviti podsetnik.</div>'+
       '<div class="settings-hint" id="lastBackupHint">'+lastBackupDisplay()+'</div>';
+  }else if(which === 'old'){
+    title = t('oldTitle');
+    body =
+      '<p class="mig-p">'+escapeHtml(t('oldText'))+'</p>'+
+      '<div class="settings-hint" id="oldCountHint"></div>'+
+      '<div class="settings-card" style="margin-top:14px;">'+
+      '<button type="button" class="settings-row" onclick="confirmDeleteOldData()"><span class="row-icon">🗑️</span><span class="row-label" style="color:var(--danger);">'+escapeHtml(t('oldDelete'))+'</span><span class="chevron">›</span></button>'+
+      '</div>';
   }else if(which === 'trash'){
     title = 'korpa';
     trashSel = new Set();
@@ -3163,6 +3767,7 @@ function openSettingsSub(which){
     (which === 'trash' ? '<div class="trash-bar" id="trashBar"><button type="button" class="trash-btn" id="trashRestoreBtn" onclick="trashRestoreSelected()">Vrati</button><button type="button" class="trash-btn danger" id="trashPurgeBtn" onclick="trashPurgeSelected()">Obriši trajno</button></div>' : '');
   if(which === 'trash') renderTrashList();
   if(which === 'backup') refreshBackupDirRow();
+  if(which === 'old') oldDataCount().then(n=>{ const el = document.getElementById('oldCountHint'); if(el) el.textContent = t('oldCount', {n}); });
   settingsScreen.scrollTop = 0;
   if(!settingsSubOpen){
     settingsSubOpen = true;
@@ -3177,10 +3782,14 @@ document.getElementById('newAlbumBtn').onclick = ()=>openNewFolderSheet(null);
 
 function updateStorageInfo(){
   let bytes = 0;
-  items.concat(trash).forEach(it=>{ bytes += (it.dataUrl ? it.dataUrl.length : 0); });
+  items.concat(trash).forEach(it=>{ (it.pages || []).forEach(p=>{ bytes += p.size || 0; }); });
   const mb = bytes / 1024 / 1024;
   const infoEl = document.getElementById('storageInfo');
   if(!infoEl) return;
+  const pEl = document.getElementById('persistInfo');
+  if(pEl && navigator.storage && navigator.storage.persisted){
+    navigator.storage.persisted().then(p=>{ pEl.textContent = p ? t('persistOn') : t('persistOff'); }).catch(()=>{});
+  }
   const trashPart = trash.length ? ' (u korpi ' + trash.length + ')' : '';
   infoEl.textContent = 'Iskorišćeno: ~' + mb.toFixed(1) + ' MB \u00B7 ' + items.length + ' stavki' + trashPart;
   if(navigator.storage && navigator.storage.estimate){
@@ -3201,7 +3810,7 @@ function updateStorageInfo(){
    trazi ponovo posle zatvaranja: zato upis ide na dodir, uz najvise jedno pitanje "Dozvoli". */
 const BACKUP_DIR_DB = 'arhivaBackupDir';
 const BACKUP_KEEP = 3;
-const BACKUP_NAME_RE = /^arhiva-backup-\d{4}-\d{2}-\d{2}\.json$/;
+const BACKUP_NAME_RE = /^arhiva-backup-\d{4}-\d{2}-\d{2}\.(json|zip)$/;
 let backupDirHandle = null;
 function backupDirSupported(){ return 'showDirectoryPicker' in window; }
 function backupDirDb(){
@@ -3285,20 +3894,22 @@ function downloadBackup(blob, fileName){
   document.body.removeChild(a);
   setTimeout(()=>URL.revokeObjectURL(url), 2000);
 }
-async function exportBackup(){
-  const data = {
-    version: 2,
-    exportedAt: new Date().toISOString(),
-    categories: categories,
-    items: items,
-    settings: { theme: getTheme() }
-  };
-  const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
+/* Dozvola za fasciklu se traži ODMAH na dodir (Chrome traži svež dodir), pre dugog pakovanja. */
+async function ensureDirPermission(dir){
+  try{
+    let perm = await dir.queryPermission({ mode:'readwrite' });
+    if(perm !== 'granted') perm = await dir.requestPermission({ mode:'readwrite' });
+    return perm === 'granted';
+  }catch(e){ console.error(e); return false; }
+}
+function backupFileName(ext){
   const d = new Date();
-  const stamp = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  const fileName = 'arhiva-backup-' + stamp + '.json';
+  return 'arhiva-backup-' + d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0') + '.' + ext;
+}
+/* Upis u izabranu fasciklu (ako je dozvoljeno), inače preuzimanje. Vraća poruku za korisnika. */
+async function saveBackupFile(blob, fileName, dirOk){
   let msg = 'Rezervna kopija sačuvana.';
-  if(backupDirHandle){
+  if(backupDirHandle && dirOk){
     try{
       await writeBackupToDir(backupDirHandle, blob, fileName);
       msg = 'Rezervna kopija upisana u \u201E' + backupDirHandle.name + '\u201C.';
@@ -3308,15 +3919,327 @@ async function exportBackup(){
       msg = 'Fascikla nije dostupna \u2014 kopija sačuvana preuzimanjem.';
     }
   }else{
+    if(backupDirHandle) msg = 'Fascikla nije dostupna \u2014 kopija sačuvana preuzimanjem.';
     downloadBackup(blob, fileName);
   }
   markBackupDone();
   const hintEl = document.getElementById('lastBackupHint');
   if(hintEl) hintEl.textContent = lastBackupDisplay();
-  toast(msg);
+  return msg;
+}
+
+/* ================= ZIP (bez sažimanja: JPEG i PDF su već sažeti) =================
+   Standardni ZIP (PKWARE APPNOTE): lokalno zaglavlje + podaci, centralni spisak, završni zapis.
+   Imena su UTF-8 (bit 11). Fajlovi se ne prepisuju u memoriju: ZIP je Blob sastavljen od Blob-ova. */
+const CRC_TABLE = (()=>{
+  const tb = new Uint32Array(256);
+  for(let n=0;n<256;n++){ let c = n; for(let k=0;k<8;k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); tb[n] = c >>> 0; }
+  return tb;
+})();
+function crc32(bytes){
+  let c = 0xFFFFFFFF;
+  for(let i=0;i<bytes.length;i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+function dosTimeDate(ts){
+  const d = new Date(ts || Date.now());
+  const y = Math.max(1980, d.getFullYear());
+  return {
+    time: ((d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1)) & 0xFFFF,
+    date: (((y - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate()) & 0xFFFF
+  };
+}
+/* entries: [{name, blob, ts}] */
+async function zipBuild(entries, onProgress){
+  const enc = new TextEncoder();
+  const parts = [];
+  const central = [];
+  let offset = 0;
+  for(let i=0;i<entries.length;i++){
+    const e = entries[i];
+    const nameBytes = enc.encode(e.name);
+    const bytes = new Uint8Array(await e.blob.arrayBuffer());
+    const crc = crc32(bytes);
+    const size = bytes.length;
+    const dt = dosTimeDate(e.ts);
+    if(offset + 30 + nameBytes.length + size > 0xFFFFFFFF) throw new Error('TOO_BIG');
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
+    lh.setUint16(10, dt.time, true); lh.setUint16(12, dt.date, true); lh.setUint32(14, crc, true);
+    lh.setUint32(18, size, true); lh.setUint32(22, size, true); lh.setUint16(26, nameBytes.length, true); lh.setUint16(28, 0, true);
+    parts.push(lh.buffer, nameBytes, e.blob);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true);
+    ch.setUint16(10, 0, true); ch.setUint16(12, dt.time, true); ch.setUint16(14, dt.date, true); ch.setUint32(16, crc, true);
+    ch.setUint32(20, size, true); ch.setUint32(24, size, true); ch.setUint16(28, nameBytes.length, true);
+    ch.setUint16(30, 0, true); ch.setUint16(32, 0, true); ch.setUint16(34, 0, true); ch.setUint16(36, 0, true);
+    ch.setUint32(38, 0, true); ch.setUint32(42, offset, true);
+    central.push(ch.buffer, nameBytes);
+    offset += 30 + nameBytes.length + size;
+    if(onProgress) onProgress(i + 1, entries.length);
+  }
+  if(entries.length > 0xFFFF) throw new Error('TOO_BIG');
+  let cdSize = 0;
+  central.forEach(p=>{ cdSize += p.byteLength; });
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(4, 0, true); end.setUint16(6, 0, true);
+  end.setUint16(8, entries.length, true); end.setUint16(10, entries.length, true);
+  end.setUint32(12, cdSize, true); end.setUint32(16, offset, true); end.setUint16(20, 0, true);
+  return new Blob(parts.concat(central, [end.buffer]), {type:'application/zip'});
+}
+/* Čitanje ZIP-a: vraća Map(ime -> {size, crc, read()}); read() daje Blob posle provere CRC-a. */
+async function zipRead(file){
+  const tailLen = Math.min(file.size, 65557);
+  const tail = new DataView(await file.slice(file.size - tailLen).arrayBuffer());
+  let eocd = -1;
+  for(let i = tail.byteLength - 22; i >= 0; i--){ if(tail.getUint32(i, true) === 0x06054b50){ eocd = i; break; } }
+  if(eocd < 0) throw new Error('NOT_ZIP');
+  const count = tail.getUint16(eocd + 10, true);
+  const cdSize = tail.getUint32(eocd + 12, true);
+  const cdOff = tail.getUint32(eocd + 16, true);
+  const cd = new DataView(await file.slice(cdOff, cdOff + cdSize).arrayBuffer());
+  const dec = new TextDecoder();
+  const out = new Map();
+  let p = 0;
+  for(let i=0;i<count;i++){
+    if(cd.getUint32(p, true) !== 0x02014b50) throw new Error('NOT_ZIP');
+    const method = cd.getUint16(p + 10, true);
+    const crc = cd.getUint32(p + 16, true);
+    const csize = cd.getUint32(p + 20, true);
+    const nlen = cd.getUint16(p + 28, true), xlen = cd.getUint16(p + 30, true), clen = cd.getUint16(p + 32, true);
+    const lho = cd.getUint32(p + 42, true);
+    const name = dec.decode(new Uint8Array(cd.buffer, cd.byteOffset + p + 46, nlen));
+    p += 46 + nlen + xlen + clen;
+    out.set(name, {
+      name, method, crc, size: csize,
+      read: async (mime)=>{
+        if(method !== 0) throw new Error('PACKED');
+        const lh = new DataView(await file.slice(lho, lho + 30).arrayBuffer());
+        if(lh.getUint32(0, true) !== 0x04034b50) throw new Error('NOT_ZIP');
+        const start = lho + 30 + lh.getUint16(26, true) + lh.getUint16(28, true);
+        const bytes = new Uint8Array(await file.slice(start, start + csize).arrayBuffer());
+        if(crc32(bytes) !== crc){ const err = new Error('CRC'); err.fileName = name; throw err; }
+        return new Blob([bytes], {type: mime || ''});
+      }
+    });
+  }
+  return out;
+}
+
+/* Putanja u ZIP-u: Dokumenti/<album>/<podalbum>/<naziv>.<ekst> — da se kopija može pregledati i bez Arhive */
+function safeName(s){
+  const v = String(s || '').replace(/[\\/:*?"<>|\u0000-\u001f]/g, ' ').replace(/\s+/g, ' ').trim().replace(/^\.+/, '');
+  return (v || 'bez naziva').slice(0, 80);
+}
+function pageExt(it, p){
+  if(it.ext) return it.ext.toLowerCase();
+  const m = /^image\/([a-z0-9.+-]+)/i.exec((p && p.mime) || '');
+  if(it.type === 'pdf') return 'pdf';
+  if(m) return m[1].toLowerCase() === 'jpeg' ? 'jpg' : m[1].toLowerCase();
+  return 'jpg';
+}
+function albumPath(catId){
+  const c = catById(catId);
+  if(!c) return 'Bez albuma';
+  const par = c.parent ? catById(c.parent) : null;
+  return par ? safeName(par.name) + '/' + safeName(c.name) : safeName(c.name);
+}
+
+let _backupBusy = false;
+async function exportBackup(){
+  if(_backupBusy) return;
+  _backupBusy = true;
+  const dirOk = backupDirHandle ? await ensureDirPermission(backupDirHandle) : false;
+  try{
+    toastPersist(t('bkBuilding', {n:0, total:items.length}));
+    await loadTexts().catch(e=>console.error(e));
+    const docs = items.slice().sort((a,b)=>a.ts-b.ts);
+    const used = new Set(['arhiva.json']);
+    const fileEntries = [];
+    const docOut = docs.map(it=>{
+      const rec = docRecord(it);
+      rec.pages = rec.pages.map((p, i)=>{
+        const base = 'Dokumenti/' + albumPath(it.category) + '/' + safeName(it.name) + (rec.pages.length > 1 ? ' - ' + (i + 1) : '');
+        const ext = pageExt(it, p);
+        let path = base + '.' + ext, k = 2;
+        while(used.has(path.toLowerCase())){ path = base + ' (' + k + ').' + ext; k++; }
+        used.add(path.toLowerCase());
+        fileEntries.push({it, i, path});
+        return Object.assign({}, p, {path});
+      });
+      if(it.content) rec.text = it.content;
+      return rec;
+    });
+    const albums = categories.map((c, i)=>Object.assign(albumRecord(c, i), {createdAt:c.createdAt || 0, updatedAt:c.updatedAt || 0}));
+    const manifest = {app:'Arhiva', format:3, exportedAt:new Date().toISOString(), settings:{theme:getTheme()}, albums, docs:docOut};
+    const entries = [{name:'arhiva.json', blob:new Blob([JSON.stringify(manifest)], {type:'application/json'}), ts:Date.now()}];
+    for(const fe of fileEntries){
+      entries.push({name:fe.path, blob:await getFileBlob(fe.it, fe.i), ts:fe.it.ts});
+    }
+    const zip = await zipBuild(entries, (n, total)=>{ if(n % 3 === 0 || n === total) toastPersist(t('bkBuilding', {n, total})); });
+    const msg = await saveBackupFile(zip, backupFileName('zip'), dirOk);
+    toastHide();
+    toast(msg);
+  }catch(e){
+    console.error(e);
+    toastHide();
+    toast(e && e.message === 'TOO_BIG' ? t('bkTooBig') : t('bkFailed'));
+  }finally{ _backupBusy = false; }
+}
+
+/* ================= VRAĆANJE IZ KOPIJE =================
+   ID-jevi se čuvaju (prečice i kasnija sinhronizacija). Vraća se ono što nedostaje;
+   ono što već postoji ostaje, osim ako je u kopiji novija izmena (tada se osveže podaci). */
+async function mergeBackup(src){
+  /* src: {albums:[{key, id?, name, parentKey, pinned, cover, updatedAt}], docs:[{id?, name, albumKey, kind, ext, createdAt, updatedAt,
+     validUntil, lang, derivedFrom, sourceSig, text, pages:[{mime, w, h, getBlob}]}], coverOf:{albumKey: docId}} */
+  const idMap = {};
+  const place = (a, parentId)=>{
+    let cat = a.id ? catById(a.id) : null;
+    if(cat){
+      if((a.updatedAt || 0) > (cat.updatedAt || 0)){ cat.name = a.name; cat.pinned = !!a.pinned; }
+    }else{
+      cat = categories.find(x=>(x.parent || null) === parentId && x.name === a.name) || null;
+      if(!cat){
+        cat = {id: a.id || newCatId(), name:a.name, pinned:!!a.pinned, cover:null, parent:parentId};
+        categories.push(cat);
+      }
+    }
+    idMap[a.key] = cat.id;
+  };
+  src.albums.filter(a=>!a.parentKey).forEach(a=>place(a, null));
+  src.albums.filter(a=>a.parentKey).forEach(a=>{
+    const pid = idMap[a.parentKey];
+    const par = pid ? catById(pid) : null;
+    place(a, par && !par.parent ? pid : null);
+  });
+  await saveCategories();
+  let added = 0, updated = 0, skipped = 0, n = 0;
+  for(const d of src.docs){
+    n++;
+    if(n % 3 === 0 || n === src.docs.length) toastPersist(t('bkRestoring', {n, total:src.docs.length}));
+    const catId = (d.albumKey && idMap[d.albumKey]) || null;
+    const active = d.id ? items.find(i=>i.id === d.id) : null;
+    if(active){
+      if((d.updatedAt || 0) > (active.updatedAt || 0)){
+        active.name = d.name; active.category = catId;
+        if(d.validUntil !== undefined) active.validUntil = d.validUntil || null;
+        await idbPut(active);
+        updated++;
+      }else skipped++;
+      continue;
+    }
+    const inTrash = d.id ? trash.find(i=>i.id === d.id) : null;
+    if(inTrash && inTrash.pages.length){
+      inTrash.name = d.name; inTrash.category = catId;
+      restoreFromTrash([inTrash]);
+      added++;
+      continue;
+    }
+    try{
+      const pages = [];
+      for(const p of d.pages){
+        const blob = await p.getBlob();
+        let thumbBlob = null, w = p.w || 0, h = p.h || 0;
+        if(d.kind === 'image'){
+          try{ const r = await makeThumb(blob); thumbBlob = r.tblob; w = r.w; h = r.h; }catch(e){ console.error(e); }
+        }
+        pages.push({blob, thumbBlob, w, h});
+      }
+      if(!pages.length) continue;
+      if(inTrash){ trash = trash.filter(x=>x !== inTrash); setThumbUrl(inTrash, null); }
+      const item = {id: d.id || newItemId(), name: d.name || 'Stavka', category: catId, type: normKind(d.kind),
+        ts: d.createdAt || Date.now(), sourceSig: d.sourceSig || null, validUntil: d.validUntil || null,
+        lang: d.lang || null, derivedFrom: d.derivedFrom || null};
+      if(d.ext) item.ext = d.ext;
+      await db2AddDoc(item, pages, d.text || null);
+      items.push(item);
+      added++;
+    }catch(e){
+      if(e && e.message === 'CRC'){ toast(t('bkBadCrc', {name: e.fileName || d.name})); await new Promise(r=>setTimeout(r, 1500)); continue; }
+      if(e && e.message === 'PACKED') throw e;
+      console.error(e);
+    }
+  }
+  /* naslovne: samo gde album još nema svoju */
+  Object.keys(src.coverOf || {}).forEach(key=>{
+    const cat = catById(idMap[key]);
+    const docId = src.coverOf[key];
+    if(cat && !cat.cover && items.some(i=>i.id === docId)) cat.cover = docId;
+  });
+  await saveCategories();
+  items.sort((a,b)=>a.ts-b.ts);
+  toastHide();
+  render();
+  updateStorageInfo();
+  toast(updated ? t('bkRestoredUpd', {added, updated, skipped}) : t('bkRestored', {added, skipped}));
+}
+async function importZipBackup(file){
+  const zip = await zipRead(file);
+  const man = zip.get('arhiva.json');
+  if(!man) throw new Error('NOT_BACKUP');
+  const data = JSON.parse(await (await man.read('application/json')).text());
+  if(!data || data.format !== 3 || !Array.isArray(data.docs)) throw new Error('NOT_BACKUP');
+  if(data.settings && data.settings.theme) setTheme(data.settings.theme);
+  const coverOf = {};
+  const albums = (data.albums || []).filter(a=>a && a.id && a.name && !a.deletedAt).map(a=>{
+    if(a.cover) coverOf[a.id] = a.cover;
+    return {key:a.id, id:a.id, name:a.name, parentKey:a.parent || null, pinned:!!a.pinned, updatedAt:a.updatedAt || 0};
+  });
+  const docs = data.docs.filter(d=>d && !d.purged && !d.deletedAt).map(d=>({
+    id:d.id, name:d.name, albumKey:d.albumId || null, kind:d.kind, ext:d.ext || null,
+    createdAt:d.createdAt, updatedAt:d.updatedAt, validUntil:d.validUntil || null, lang:d.lang || null,
+    derivedFrom:d.derivedFrom || null, sourceSig:d.sourceSig || null, text:d.text || null,
+    pages:(d.pages || []).map(p=>({mime:p.mime, w:p.w, h:p.h, getBlob: ()=>{
+      const e = zip.get(p.path);
+      if(!e) return Promise.reject(new Error('nema fajla u kopiji'));
+      return e.read(p.mime);
+    }}))
+  }));
+  await mergeBackup({albums, docs, coverOf});
+}
+function importJsonBackup(data){
+  if(!data || !Array.isArray(data.items)) throw new Error('NOT_BACKUP');
+  if(data.settings && data.settings.theme) setTheme(data.settings.theme);
+  const isV2 = data.version >= 2;
+  const coverOf = {};
+  const albums = (data.categories || []).map(c=> typeof c === 'string' ? {name:c} : c).filter(c=>c && c.name).map(c=>{
+    const key = isV2 ? c.id : c.name;
+    if(c.cover) coverOf[key] = c.cover;
+    return {key, id: isV2 ? c.id : null, name:c.name, parentKey: isV2 ? (c.parent || null) : null, pinned:!!c.pinned, updatedAt:0};
+  });
+  const docs = data.items.filter(it=>it && it.dataUrl && !it.deletedAt).map(it=>({
+    id: it.id || null, name: it.name || 'Stavka', albumKey: it.category || null, kind: normKind(it.type), ext: it.ext || null,
+    createdAt: it.ts || Date.now(), updatedAt: 0, sourceSig: it.sourceSig || null, text: it.content || null,
+    pages:[{getBlob: async ()=>{ try{ return dataUrlToBlob(it.dataUrl); }catch(e){ return await (await fetch(it.dataUrl)).blob(); } }}]
+  }));
+  return mergeBackup({albums, docs, coverOf});
 }
 
 const importInput = document.getElementById('importInput');
+function isZipFile(file){
+  return /\.zip$/i.test(file.name) || file.type === 'application/zip' || file.type === 'application/x-zip-compressed';
+}
+importInput.addEventListener('change', async (e)=>{
+  const file = e.target.files && e.target.files[0];
+  importInput.value = '';
+  if(!file) return;
+  requestPersistOnce();
+  toastPersist(t('bkReading'));
+  try{
+    if(isZipFile(file)){
+      await importZipBackup(file);
+    }else{
+      const text = await file.text();
+      await importJsonBackup(JSON.parse(text));
+    }
+  }catch(err){
+    console.error(err);
+    toastHide();
+    toast(err && err.message === 'PACKED' ? t('bkPacked') : t('bkBadFile'));
+  }
+});
+
 async function wipeAllData(){
   if(!await askConfirm({
     icon:'⚠️', title:'Obriši sve podatke',
@@ -3329,11 +4252,16 @@ async function wipeAllData(){
     okIcon:'🗑️', okLabel:'Da, obriši'
   })) return;
   try{
-    for(const it of items.concat(trash)){ await idbDelete(it.id).catch(()=>{}); }
+    await db2Run(['albums','docs','files','thumbs','texts'], 'readwrite', (st)=>{
+      ['albums','docs','files','thumbs','texts'].forEach(n=>st(n).clear());
+    });
+    items.concat(trash).forEach(it=>setThumbUrl(it, null));
     items = [];
     trash = [];
     categories = [];
-    saveCategories();
+    _albumSaved = new Map();
+    /* i stari podaci od pre prelaska, da se ništa ne bi vratilo samo */
+    await deleteOldDb().catch(e=>console.error(e));
     currentFolder = null;
     render();
     updateStorageInfo();
@@ -3344,65 +4272,37 @@ async function wipeAllData(){
     toast('Greška pri brisanju.');
   }
 }
-importInput.addEventListener('change', (e)=>{
-  const file = e.target.files && e.target.files[0];
-  importInput.value = '';
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = async (ev)=>{
-    try{
-      const data = JSON.parse(ev.target.result);
-      if(!data || !Array.isArray(data.items)) throw new Error('bad format');
-      if(data.settings && data.settings.theme) setTheme(data.settings.theme);
-      /* idMap: kljuc iz backupa (v1 = ime, v2 = ID) -> ID albuma ovde.
-         Isto ime na istom mestu se spaja sa postojecim albumom. */
-      const isV2 = data.version >= 2;
-      const srcCats = (data.categories || []).map(c=> typeof c === 'string' ? {name:c} : c).filter(c=>c && c.name);
-      const idMap = {};
-      const placeCat = (c, parentId)=>{
-        let cat = categories.find(x=>(x.parent||null)===parentId && x.name===c.name);
-        if(!cat){
-          cat = {id:newCatId(), name:c.name, pinned:!!c.pinned, cover:null, parent:parentId};
-          categories.push(cat);
-        }
-        idMap[isV2 ? c.id : c.name] = cat.id;
-      };
-      srcCats.filter(c=>!isV2 || !c.parent).forEach(c=>placeCat(c, null));
-      if(isV2){
-        srcCats.filter(c=>c.parent).forEach(c=>{
-          const pid = idMap[c.parent];
-          const parentCat = pid ? catById(pid) : null;
-          placeCat(c, parentCat && !parentCat.parent ? pid : null);
-        });
-      }
-      saveCategories();
-      let added = 0;
-      for(const it of data.items){
-        if(!it || !it.dataUrl) continue;
-        const newId = 'i' + Date.now() + Math.random().toString(36).slice(2,8);
-        const clone = {
-          id: newId,
-          name: it.name || 'Stavka',
-          dataUrl: it.dataUrl,
-          ts: it.ts || Date.now(),
-          category: (it.category && idMap[it.category]) || null,
-          type: it.type === 'pdf' ? 'pdf' : (it.type === 'doc' ? 'doc' : 'image'),
-          ext: it.ext
-        };
-        items.push(clone);
-        try{ await idbPut(clone); }catch(err){ console.error(err); }
-        added++;
-      }
-      updateStorageInfo();
-      render();
-      toast('Uvezeno ' + added + ' stavki.');
-    }catch(err){
-      console.error(err);
-      toast('Fajl nije prepoznat kao rezervna kopija.');
-    }
-  };
-  reader.readAsText(file);
-});
+
+/* ---------- Stari podaci (od pre prelaska) ---------- */
+let _oldDbPresent = false;
+async function refreshOldDbPresent(){
+  const listed = await dbListed(OLD_DB);
+  _oldDbPresent = listed === true;
+  return _oldDbPresent;
+}
+function deleteOldDb(){
+  return new Promise((resolve, reject)=>{
+    const r = indexedDB.deleteDatabase(OLD_DB);
+    let blockedTimer = null;
+    r.onsuccess = ()=>{ clearTimeout(blockedTimer); try{ localStorage.removeItem(LS_PREFIX+'categories'); }catch(e){} _oldDbPresent = false; resolve(); };
+    r.onerror = ()=>{ clearTimeout(blockedTimer); reject(r.error); };
+    r.onblocked = ()=>{ blockedTimer = setTimeout(()=>reject(new Error('BLOCKED')), 4000); };
+  });
+}
+async function oldDataCount(){
+  try{ const db = await oldDbOpen(); const n = await oldReq(db, s=>s.count()); db.close(); return n; }catch(e){ return 0; }
+}
+async function confirmDeleteOldData(){
+  if(!await askConfirm({icon:'🗄️', title:t('oldConfirmTitle'), text:t('oldConfirmText'), okIcon:'🗑️', okLabel:t('oldDelete')})) return;
+  try{
+    await deleteOldDb();
+    toast(t('oldDeleted'));
+    requestClose();
+  }catch(e){
+    console.error(e);
+    toast(e && e.message === 'BLOCKED' ? t('oldBlocked') : 'Greška pri brisanju.');
+  }
+}
 
 function checkDeepLink(){
   const hashMatch = location.hash.match(/^#p=(.+)$/);
