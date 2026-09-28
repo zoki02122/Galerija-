@@ -125,6 +125,12 @@
     white-space:normal;overflow-wrap:anywhere;min-width:0;}
   .crumb .crumb-count{font-family:var(--font-num);font-size:11px;letter-spacing:0.5px;color:var(--ink-dim);white-space:nowrap;flex:none;}
   .header-actions{display:flex;align-items:center;gap:10px;}
+  .album-row2-right{display:flex;align-items:center;gap:12px;flex:none;}
+  /* na uskim telefonima veliki broj stavki prelazi u dva reda umesto da se preklopi sa ikonicama */
+  .album-row2 > #crumbCount{white-space:normal;min-width:0;flex:1 1 auto;line-height:1.2;}
+  .album-tools{display:flex;align-items:center;gap:10px;}
+  .album-tools .icon-btn{width:44px;height:44px;}
+  @media (max-width:370px){ .album-row2-right{gap:8px;} .album-tools{gap:7px;} .album-tools .icon-btn{width:42px;height:42px;} }
   /* uzi telefoni: logo + 4 ikonice moraju stati u jedan red */
   @media (max-width:380px){
     .header-actions{gap:7px;}
@@ -977,6 +983,18 @@ html[data-theme="ponoc"]{
   </div>
 </div>
 
+<div class="exit-modal-backdrop" id="confirmBackdrop" style="z-index:92;">
+  <div class="exit-modal" role="alertdialog" aria-modal="true" aria-labelledby="cfTitle">
+    <div id="cfIcon" style="font-size:96px;line-height:1;margin-bottom:8px;"></div>
+    <h2 id="cfTitle"></h2>
+    <div class="sub" id="cfSub"></div>
+    <div class="exit-actions">
+      <button type="button" class="exit-btn stay" id="cfCancel"><span class="ic">↩️</span>Otkaži</button>
+      <button type="button" class="exit-btn leave" id="cfOk"><span class="ic" id="cfOkIc"></span><span id="cfOkLabel"></span></button>
+    </div>
+  </div>
+</div>
+
 <div class="exit-modal-backdrop" id="exitBackdrop">
   <div class="exit-modal">
     <div style="font-size:108px;line-height:1;margin-bottom:8px;">🚪</div>
@@ -1017,6 +1035,34 @@ function pushBack(closer){
 }
 function requestClose(){
   if(backStack.length > 0){ history.back(); }
+}
+/* Nas prozor za potvrdu (umesto Chrome-ovog confirm): u bojama teme, sa ikonicom.
+   Vraca Promise<boolean>. Pokret nazad = Otkazi. Prozori idu jedan po jedan (red cekanja),
+   jer se pri dodavanju vise fajlova odjednom moze javiti vise pitanja. */
+let _confirmChain = Promise.resolve();
+function askConfirm(o){
+  const run = ()=>new Promise(resolve=>{
+    const bg = document.getElementById('confirmBackdrop');
+    document.getElementById('cfIcon').textContent = o.icon || '⚠️';
+    document.getElementById('cfTitle').textContent = o.title || '';
+    document.getElementById('cfSub').textContent = o.text || '';
+    document.getElementById('cfOkIc').textContent = o.okIcon || '';
+    document.getElementById('cfOkIc').style.display = o.okIcon ? '' : 'none';
+    document.getElementById('cfOkLabel').textContent = o.okLabel || 'U redu';
+    const okBtn = document.getElementById('cfOk');
+    okBtn.classList.toggle('leave', o.danger !== false);
+    okBtn.classList.toggle('stay', o.danger === false);
+    let result = false;
+    const closer = ()=>{ bg.classList.remove('open'); resolve(result); };
+    okBtn.onclick = ()=>{ result = true; requestClose(); };
+    document.getElementById('cfCancel').onclick = ()=>{ result = false; requestClose(); };
+    bg.onclick = (e)=>{ if(e.target === bg){ result = false; requestClose(); } };
+    bg.classList.add('open');
+    pushBack(closer);
+  });
+  const p = _confirmChain.then(run);
+  _confirmChain = p.catch(()=>{});
+  return p;
 }
 function requestCloseThen(fn){
   pendingAfterClose = fn;
@@ -1584,8 +1630,11 @@ function render(){
     const albumHead = document.createElement('div');
     albumHead.style.cssText = 'display:flex;flex-direction:column;gap:10px;margin-bottom:16px;';
     const nameRow = document.createElement('div');
-    nameRow.style.cssText = 'display:flex;align-items:center;gap:6px;';
+    nameRow.style.cssText = 'display:flex;align-items:center;gap:10px;';
     nameRow.appendChild(crumb);
+    /* lupa i novi podalbum idu u drugi red (uz broj stavki), da naziv ima vise mesta */
+    const albumTools = document.createElement('div');
+    albumTools.className = 'album-tools';
     if(!selectionMode){
       const albumAdd = document.createElement('button');
       albumAdd.type = 'button';
@@ -1599,9 +1648,10 @@ function render(){
       albumSearch.type = 'button';
       albumSearch.className = 'icon-btn album-search';
       albumSearch.title = 'Pretraga';
-      albumSearch.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>';
+      albumSearch.setAttribute('aria-label', 'Pretraga');
+      albumSearch.innerHTML = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>';
       albumSearch.onclick = ()=>document.getElementById('searchBtn').onclick();
-      nameRow.appendChild(albumSearch);
+      albumTools.appendChild(albumSearch);
       /* Novi podalbum: samo u glavnom albumu (jedan nivo) */
       const curAlbum = currentFolder !== INBOX ? catById(currentFolder) : null;
       if(curAlbum && !curAlbum.parent){
@@ -1610,15 +1660,16 @@ function render(){
         albumNewSub.className = 'icon-btn album-search album-newsub';
         albumNewSub.title = 'Novi podalbum';
         albumNewSub.setAttribute('aria-label', 'Novi podalbum');
-        albumNewSub.innerHTML = FOLDER_PLUS_SVG;
+        albumNewSub.innerHTML = FOLDER_PLUS_SVG.replace('width="18" height="18"', 'width="21" height="21"');
         albumNewSub.onclick = ()=>openNewSubalbumSheet(curAlbum.id);
-        nameRow.appendChild(albumNewSub);
+        albumTools.appendChild(albumNewSub);
       }
       nameRow.appendChild(albumAdd);
     }
     albumHead.appendChild(nameRow);
     const sortRow = document.createElement('div');
     sortRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:10px;';
+    sortRow.className = 'album-row2';
     sortRow.appendChild(crumbCount);
     albumHead.appendChild(sortRow);
     const sortBtns = document.createElement('div');
@@ -1631,7 +1682,11 @@ function render(){
       btn.onclick = ()=>{ sortMode = mode; render(); };
       sortBtns.appendChild(btn);
     });
-    sortRow.appendChild(sortBtns);
+    const sortRight = document.createElement('div');
+    sortRight.className = 'album-row2-right';
+    if(albumTools.children.length) sortRight.appendChild(albumTools);
+    sortRight.appendChild(sortBtns);
+    sortRow.appendChild(sortRight);
     // zaglavlje albuma ide u zakucani deo (#stickyTop) — skroluju se samo slike
     albumHead.style.marginBottom = '0';
     albumHeaderZone.appendChild(albumHead);
@@ -2792,9 +2847,12 @@ async function addFile(file, category){
     const sourceSig = file.name + '|' + file.size;
     const dup = items.find(i => i.sourceSig === sourceSig);
     if(dup){
-      if(!confirm('Izgleda da "'+dup.name+'" već postoji u arhivi (isti naziv i veličina fajla). Dodati je ipak?')){
-        return;
-      }
+      const again = await askConfirm({
+        icon:'🗂️', title:'Već postoji',
+        text:'Izgleda da "'+dup.name+'" već postoji u arhivi (isti naziv i veličina fajla). Dodati je ipak?',
+        okIcon:'➕', okLabel:'Dodaj ipak', danger:false
+      });
+      if(!again) return;
     }
     const isPdf = file.type === 'application/pdf';
     const isImage = file.type.startsWith('image/');
@@ -2950,8 +3008,11 @@ function renderTrashList(){
     renderTrashList();
   };
   document.getElementById('trashEmpty').onclick = ()=>{
-    if(!confirm('Trajno obrisati sve iz korpe ('+trash.length+')? Nema vraćanja.')) return;
-    purgeTrash(trash.slice());
+    askConfirm({
+      icon:'🗑️', title:'Isprazni korpu',
+      text:'Trajno obrisati sve iz korpe ('+trash.length+')? Nema vraćanja.',
+      okIcon:'🗑️', okLabel:'Isprazni'
+    }).then(yes=>{ if(yes) purgeTrash(trash.slice()); });
   };
   const n = trashSel.size;
   bar.classList.toggle('show', n > 0);
@@ -2970,8 +3031,11 @@ function trashRestoreSelected(){
 function trashPurgeSelected(){
   const list = trash.filter(t=>trashSel.has(t.id));
   if(!list.length) return;
-  if(!confirm('Trajno obrisati izabrano ('+list.length+')? Nema vraćanja.')) return;
-  purgeTrash(list);
+  askConfirm({
+    icon:'🗑️', title:'Trajno brisanje',
+    text:'Trajno obrisati izabrano ('+list.length+')? Nema vraćanja.',
+    okIcon:'🗑️', okLabel:'Obriši trajno'
+  }).then(yes=>{ if(yes) purgeTrash(list); });
 }
 function purgeTrash(list){
   const ids = new Set(list.map(i=>i.id));
@@ -3047,7 +3111,7 @@ function renderSettingsTiles(){
     settingsTile('♻️', 'korpa', trashTileSub(), "openSettingsSub('trash')")+
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 57</div>'+
+    '<div class="settings-hint set-build">verzija 58</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -3254,8 +3318,16 @@ async function exportBackup(){
 
 const importInput = document.getElementById('importInput');
 async function wipeAllData(){
-  if(!confirm('Ovo trajno briše SVE slike, dokumente i albume iz Arhive na ovom uređaju. Nema opoziva. Da li si siguran/na?')) return;
-  if(!confirm('Poslednja potvrda — stvarno obrisati baš sve?')) return;
+  if(!await askConfirm({
+    icon:'⚠️', title:'Obriši sve podatke',
+    text:'Ovo trajno briše SVE slike, dokumente i albume iz Arhive na ovom uređaju. Nema opoziva.',
+    okIcon:'🗑️', okLabel:'Obriši sve'
+  })) return;
+  if(!await askConfirm({
+    icon:'🛑', title:'Poslednja potvrda',
+    text:'Stvarno obrisati baš sve?',
+    okIcon:'🗑️', okLabel:'Da, obriši'
+  })) return;
   try{
     for(const it of items.concat(trash)){ await idbDelete(it.id).catch(()=>{}); }
     items = [];
