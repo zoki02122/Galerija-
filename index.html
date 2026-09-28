@@ -809,6 +809,112 @@ html[data-theme="ponoc"]{
 [data-theme="ponoc"] .sheet-input:focus{ border-color:#2F6B45; }
 [data-theme="ponoc"] .sheet-cta.secondary, [data-theme="ponoc"] .exit-btn.stay{ background:#000; border:1px solid var(--line); color:var(--ink); }
 [data-theme="ponoc"] .modal-nav, [data-theme="ponoc"] .modal-close{ background:#000; border:1px solid var(--line); color:var(--brass); }
+/* =========================================================
+   KORAK 2: dokument od više stranica, PDF, uputstvo
+   ========================================================= */
+/* oznaka broja stranica u mreži */
+.pages-badge{ position:absolute; right:5px; bottom:5px; z-index:2; padding:3px 7px; border-radius:9px;
+  background:var(--mark-bg); color:var(--ink); border:1px solid var(--line);
+  font-family:var(--font-num); font-size:10.5px; line-height:1.2; letter-spacing:.3px; pointer-events:none; }
+/* dokument od više stranica: tanka „sledeća stranica“ iza sličice */
+.card.multi .thumb-box{ box-shadow:3px -3px 0 -1px var(--surface-2), 3px -3px 0 0 var(--line); }
+/* red u meniju za dodavanje sa podnaslovom */
+.sheet-row .row-sub{ display:block; font-size:12.5px; color:var(--ink-dim); margin-top:3px; }
+/* opšti meni sa radnjama */
+.act-row{ gap:12px; justify-content:flex-start; }
+.act-row .act-ic{ flex:none; width:26px; text-align:center; font-size:19px; line-height:1; }
+.act-row .row-name{ font-size:16px; }
+.act-row .act-hint{ display:block; font-size:12.5px; color:var(--ink-dim); margin-top:3px; }
+.act-row.disabled{ cursor:default; }
+.act-row.disabled .row-name, .act-row.disabled .act-ic{ opacity:.45; }
+.act-row.disabled .act-hint{ opacity:1; }
+.act-row.danger .row-name{ color:var(--danger); }
+.act-row.danger .act-ic{ color:var(--danger); font-weight:700; }
+#actList{ max-height:62vh; overflow-y:auto; }
+/* pregled: dugmad Stranice i PDF, broj stranice */
+.modal-pages{ position:absolute; top:calc(20px + env(safe-area-inset-top, 0px)); right:72px; z-index:3; }
+.modal-pdf{ position:absolute; top:calc(20px + env(safe-area-inset-top, 0px)); right:124px; z-index:3; }
+:where(html[data-theme]:not([data-theme="klasicna"])) .modal-pages{ right:70px; }
+:where(html[data-theme]:not([data-theme="klasicna"])) .modal-pdf{ right:120px; }
+.modal-bg .modal-pages, .modal-bg .modal-pdf{ transition:opacity .22s ease, border-color .2s, color .2s; }
+.modal-bg.ui-hidden .modal-pages, .modal-bg.ui-hidden .modal-pdf{ opacity:0; pointer-events:none; }
+.modal-pdf-txt{ font-family:var(--font-ui); font-size:6.4px; font-weight:800; letter-spacing:.2px; }
+.modal-page-no{ display:inline-block; margin-top:6px; padding:3px 10px; border-radius:10px; font-family:var(--font-num);
+  font-size:12px; letter-spacing:.5px; color:var(--on-accent); background:var(--accent); }
+.modal-page-no:empty{ display:none; }
+[data-theme="ponoc"] .modal-page-no{ background:var(--g-grad); }
+.modal-info{ text-align:center; }
+[data-theme="ponoc"] .modal-pages, [data-theme="ponoc"] .modal-pdf{ background:#000; border:1px solid var(--line); color:var(--brass); }
+
+/* ekran sa stranicama */
+.pg-screen{ display:none; position:fixed; inset:0; z-index:54; background:var(--bg); flex-direction:column; }
+.pg-screen.open{ display:flex; }
+.pg-screen .set-header{ position:relative; flex:none; }
+.pg-body{ flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
+.pg-inner{ max-width:560px; margin:0 auto; padding:16px 14px 24px; }
+.pg-meta{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin:16px 2px 0; }
+.pg-count{ font-size:13px; font-weight:600; color:var(--ink); white-space:nowrap; }
+.pg-hint{ font-size:11.5px; color:var(--ink-dim); line-height:1.45; margin:4px 2px 0; }
+.pg-hint:empty{ display:none; }
+.pg-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px 10px; margin-top:12px; }
+.pg-tile{ position:relative; aspect-ratio:3/4; background:var(--surface-2); border:1px solid var(--line); border-radius:10px;
+  overflow:hidden; cursor:pointer; -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
+.pg-tile img{ width:100%; height:100%; object-fit:contain; display:block; }
+.pg-tile.pending{ cursor:default; }
+.pg-wait{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--ink-dim); font-size:22px; }
+.pg-tile.pending .pg-wait{ animation:pgPulse 1.1s ease-in-out infinite; }
+@keyframes pgPulse{ 50%{ opacity:.35; } }
+.pg-num{ position:absolute; left:5px; bottom:5px; min-width:26px; height:26px; padding:0 7px; border-radius:13px;
+  background:var(--accent); color:var(--on-accent); font-family:var(--font-ui); font-size:12.5px; font-weight:700;
+  display:flex; align-items:center; justify-content:center; box-sizing:border-box; }
+[data-theme="ponoc"] .pg-num{ background:var(--g-grad); }
+.pg-x{ position:absolute; top:4px; right:4px; width:34px; height:34px; border-radius:50%; padding:0;
+  background:var(--mark-bg); border:1px solid var(--line); color:var(--danger); cursor:pointer;
+  display:flex; align-items:center; justify-content:center; }
+.pg-x:active{ background:var(--danger-soft); }
+.pg-tile .pg-handle{ right:3px; bottom:3px; top:auto; width:36px; height:36px; border-radius:10px;
+  background:var(--mark-bg); border:1px solid var(--line); color:var(--ink-dim); box-sizing:border-box; }
+.pg-ph{ border:1.5px dashed var(--brass); background:transparent; }
+.pg-empty{ grid-column:1/-1; text-align:center; padding:42px 18px; color:var(--ink-dim); font-size:14.5px; line-height:1.5;
+  border:1px dashed var(--line); border-radius:14px; }
+.pg-bar{ flex:none; display:grid; grid-template-columns:1fr 1fr; gap:8px; background:var(--surface);
+  border-top:1px solid var(--line); padding:10px 12px calc(10px + env(safe-area-inset-bottom)); }
+.pg-bar-in{ display:contents; }
+.pg-btn{ height:48px; border-radius:12px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink);
+  font-family:var(--font-ui); font-size:14.5px; font-weight:600; cursor:pointer; padding:0 8px;
+  display:flex; align-items:center; justify-content:center; gap:7px; white-space:nowrap; }
+.pg-btn svg{ flex:none; color:var(--brass); }
+.pg-btn:active{ opacity:.8; }
+.pg-save{ grid-column:1/-1; height:50px; border:none; background:var(--accent); color:var(--on-accent); font-size:15.5px; font-weight:700; }
+.pg-save:disabled{ opacity:.45; cursor:default; }
+[data-theme="ponoc"] .pg-save{ background:var(--g-grad); box-shadow:var(--g-shine); }
+[data-theme="ponoc"] .pg-btn:not(.pg-save){ background:#000; }
+[data-theme="ponoc"] .pg-bar{ background:#000; }
+@media (max-width:360px){ .pg-btn{ font-size:13.5px; gap:5px; } .pg-grid{ gap:10px 8px; } }
+
+/* traka izbora: šest dugmadi mora stati i na uskom telefonu */
+.sel-bar button{ min-width:0; }
+@media (max-width:420px){
+  .sel-bar{ padding-left:4px; padding-right:4px; }
+  .sel-bar button{ padding:4px 3px; font-size:11.5px; flex:1 1 0; text-align:center; line-height:1.15; }
+}
+@media (max-width:360px){ .sel-bar button{ font-size:10.5px; } }
+
+/* uputstvo */
+.guide-intro{ font-size:13px; color:var(--ink-dim); }
+.guide-list{ background:var(--surface); border:1px solid var(--line); border-radius:13px; overflow:hidden; }
+.guide-item{ border-bottom:1px solid var(--line); }
+.guide-item:last-child{ border-bottom:none; }
+.guide-item summary{ list-style:none; display:flex; align-items:center; gap:10px; padding:15px 14px; cursor:pointer;
+  font-size:15px; font-weight:600; color:var(--ink); }
+.guide-item summary::-webkit-details-marker{ display:none; }
+.guide-item summary span{ flex:1; min-width:0; }
+.guide-chev{ font-style:normal; color:var(--ink-dim); font-size:20px; line-height:1; transition:transform .18s ease; }
+.guide-item[open] .guide-chev{ transform:rotate(90deg); color:var(--brass); }
+.guide-item[open] summary{ color:var(--title-color); }
+.guide-item p{ margin:0; padding:0 14px 12px; font-size:14px; line-height:1.55; color:var(--ink); }
+.guide-item p:last-child{ padding-bottom:16px; }
+[data-theme="ponoc"] .guide-list{ background:var(--card-shine), var(--surface); }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -896,6 +1002,10 @@ html[data-theme="ponoc"]{
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"></rect><path d="M12 8v8M8 12h8"></path></svg>
     Prečica
   </button>
+  <button id="btnMore">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.3"></circle><circle cx="12" cy="12" r="1.3"></circle><circle cx="19" cy="12" r="1.3"></circle></svg>
+    <span id="btnMoreLbl">Više</span>
+  </button>
   <button id="btnDelete" class="danger">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path></svg>
     Izbriši
@@ -909,6 +1019,12 @@ html[data-theme="ponoc"]{
   <button class="back-btn modal-del" id="modalDelete" aria-label="Obriši sliku">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path></svg>
   </button>
+  <button class="back-btn modal-pages" id="modalPages" type="button">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="12" height="15" rx="1.8"></rect><path d="M4.5 7v11.5A2.5 2.5 0 0 0 7 21h9"></path><line x1="13" y1="7.5" x2="13" y2="13.5"></line><line x1="10" y1="10.5" x2="16" y2="10.5"></line></svg>
+  </button>
+  <button class="back-btn modal-pdf" id="modalPdf" type="button">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2.5H6.5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V8z"></path><polyline points="14 2.5 14 8 19.5 8"></polyline><text x="12" y="17.6" text-anchor="middle" fill="currentColor" stroke="none" class="modal-pdf-txt">PDF</text></svg>
+  </button>
   <button class="modal-nav prev" id="modalPrev">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
   </button>
@@ -919,6 +1035,7 @@ html[data-theme="ponoc"]{
     <div class="modal-frame" id="modalFrame"><img id="modalImg" src=""></div>
     <div class="modal-info">
       <div class="modal-caption" id="modalCaption"></div>
+      <span class="modal-page-no" id="modalPageNo"></span>
       <div class="modal-position" id="modalPosition"></div>
     </div>
   </div>
@@ -946,6 +1063,7 @@ html[data-theme="ponoc"]{
     <div class="sheet-head"><button class="back-btn" id="addSheetBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h3>Dodaj</h3></div>
     <div class="sheet-row" id="addFromGallery"><span>Iz galerije</span></div>
     <div class="sheet-row" id="addFromCamera"><span>Slikaj</span></div>
+    <div class="sheet-row" id="addMulti"><span class="row-name"><span id="addMultiLbl"></span><span class="row-sub" id="addMultiSub"></span></span></div>
     <div class="sheet-row" id="addFromDocs"><span>Dokument</span></div>
   </div>
 </div>
@@ -974,6 +1092,29 @@ html[data-theme="ponoc"]{
   <div class="sheet">
     <div class="sheet-head"><button class="back-btn" id="coverPickerBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h3>Izaberi naslovnu sliku</h3></div>
     <div id="coverPickerGrid" class="grid" style="grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:8px;max-height:50vh;overflow-y:auto;"></div>
+  </div>
+</div>
+
+<div class="pg-screen" id="pageEditor">
+  <div class="set-header"><button type="button" class="set-back" id="pgBack" aria-label="nazad"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h2 class="set-title" id="pgTitle"></h2></div>
+  <div class="pg-body"><div class="pg-inner">
+    <div class="settings-card"><div class="settings-field"><label for="pgName" id="pgNameLbl"></label><input id="pgName" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done"></div></div>
+    <div class="pg-meta"><span class="pg-count" id="pgCount"></span></div>
+    <div class="pg-hint" id="pgHint"></div>
+    <div class="pg-grid" id="pgGrid"></div>
+  </div></div>
+  <div class="pg-bar">
+    <button type="button" class="pg-btn" id="pgCamera"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.6-2.4h6.8L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"></path><circle cx="12" cy="13" r="3.4"></circle></svg><span id="pgCameraLbl"></span></button>
+    <button type="button" class="pg-btn" id="pgGallery"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><polyline points="3 16 8.5 11 13 15.5 15.5 13 21 18"></polyline><circle cx="8.5" cy="8.5" r="1.4"></circle></svg><span id="pgGalleryLbl"></span></button>
+    <button type="button" class="pg-btn pg-save" id="pgSave"></button>
+  </div>
+  <input id="pgCamInput" type="file" accept="image/*" capture="environment" hidden>
+  <input id="pgGalInput" type="file" accept="image/*" multiple hidden>
+</div>
+<div class="sheet-bg" id="actSheet">
+  <div class="sheet">
+    <div class="sheet-head"><button class="back-btn" id="actBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h3 id="actTitle"></h3></div>
+    <div id="actList"></div>
   </div>
 </div>
 
@@ -1238,6 +1379,74 @@ try{ albumSort = localStorage.getItem(LS_PREFIX+'albumSort') || ''; }catch(e){}
 /* ---------- Rečnik prevoda (novi tekstovi idu samo kroz t()) ---------- */
 const I18N = {
   sr: {
+    addMulti: 'Dokument od više stranica',
+    addMultiSub: 'slikaj stranicu po stranicu ili izaberi više slika',
+    pgNewTitle: 'dokument od više stranica',
+    pgEditTitle: 'stranice dokumenta',
+    pgNameLbl: 'naziv dokumenta',
+    pgDefaultName: 'Dokument',
+    pgCamera: 'Slikaj stranicu',
+    pgGallery: 'Iz galerije',
+    pgSave: 'Sačuvaj',
+    pgProcessing: 'Obrađujem stranice…',
+    pgEmpty: 'Još nema stranica. Slikaj prvu stranicu ili izaberi slike iz galerije.',
+    pgHint: 'Redosled menjaš prevlačenjem ručke u uglu stranice. Dodir na stranicu otvara izbor.',
+    pgCountLong: 'stranica: {n}',
+    pgCount: '{n} str.',
+    pgPageNo: 'str. {n} / {total}',
+    pgDrag: 'Prevuci za redosled',
+    pgBadImg: 'Slika „{name}“ ne može da se pročita, pa nije dodata.',
+    pgSaved: 'Dokument je sačuvan ({n} str.).',
+    pgSavedTrash: 'Sačuvano. Uklonjene stranice su u korpi kao posebne slike.',
+    pgDiscardTitle: 'Odbaci izmene',
+    pgDiscardText: 'Izmene na stranicama nisu sačuvane. Odbaciti ih?',
+    pgDiscardOk: 'Odbaci',
+    pgPageSheet: 'Stranica {n}',
+    pgExtract: 'Izdvoji kao posebnu sliku',
+    pgExtractHint: 'odmah postaje posebna slika u istom albumu',
+    pgExtractNo: 'moguće kod sačuvanog dokumenta sa bar dve stranice',
+    pgRemove: 'Ukloni iz dokumenta',
+    pgExtracted: 'Stranica je izdvojena kao posebna slika u istom albumu.',
+    pgPartName: '{name} – str. {n}',
+    pgNeedOne: 'Dokument mora imati bar jednu stranicu.',
+    pgWait: 'Sačekaj da se sve stranice obrade.',
+    delDocTitle: 'Brisanje dokumenta',
+    delDocSub: 'Dokument „{name}“ ({n} str.) biće obrisan.',
+    selMore: 'Više',
+    moreTitle: 'Izabrano: {n}',
+    mergeRow: 'Spoji u jedan dokument',
+    mergeHint: 'redom kojim si označavao; originali idu u korpu',
+    mergeOnlyImages: 'spajaju se samo slike (ne PDF i drugi fajlovi)',
+    mergeBusy: 'Spajam: {n} / {total}…',
+    merged: 'Spojeno u „{name}“ ({n} str.).',
+    pdfTitle: 'PDF ({n} str.)',
+    pdfShare: 'Podeli kao jedan PDF',
+    pdfSave: 'Sačuvaj kao jedan PDF',
+    pdfBuilding: 'Pravim PDF: {n} / {total}…',
+    pdfNoImages: 'PDF se pravi od slika i dokumenata od više stranica.',
+    pdfSkipped: 'Preskočeno (nisu slike): {n}.',
+    pdfFailed: 'PDF nije napravljen.',
+    pdfSaved: 'PDF je sačuvan na telefon.',
+    pdfShareNo: 'Deljenje nije podržano, PDF je preuzet.',
+    pdfReady: 'PDF je spreman.',
+    pdfShareNow: 'Podeli',
+    guideTile: 'uputstvo',
+    guideTileSub: 'kako se koristi Arhiva',
+    guideIntro: 'Dodirni naslov da otvoriš objašnjenje.',
+    guide: [
+      ['Albumi i podalbumi', 'Novi album praviš ikonicom fascikle sa plusom na vrhu početnog ekrana. U albumu ista ikonica pravi podalbum.', 'Dugi pritisak na album otvara izbor: zakači na vrh, preimenuj, naslovna slika, premesti ili izbriši. Redosled albuma menjaš prevlačenjem ručke u uglu.'],
+      ['Dodavanje', 'Ikonica slike sa plusom dodaje sa telefona: iz galerije (više slika odjednom), slikanjem ili kao dokument (PDF, Word, Excel…). Svaka izabrana slika postaje posebna stavka.', 'Ono što dodaš dok si u albumu (iz galerije, slikanjem ili kao dokument) ide pravo u taj album.'],
+      ['Dokument od više stranica', 'U meniju za dodavanje izaberi „Dokument od više stranica“. Slikaj stranicu po stranicu ili izaberi više slika iz galerije, upiši naziv i dodirni „Sačuvaj“.', 'Redosled menjaš prevlačenjem ručke u uglu stranice, a ✕ uklanja stranicu. U mreži se vidi prva stranica sa oznakom broja stranica.'],
+      ['Pregled i listanje', 'Dodir na sliku otvara pregled. Prevlačenjem levo i desno listaš stranice, a posle poslednje stranice prelaziš na sledeću stavku. Jedan dodir sakriva ili vraća dugmad.', 'Dugme sa stranicama u pregledu dodaje nove stranice u dokument ili menja njihov redosled.'],
+      ['Spajanje i izdvajanje', 'Označi dve ili više slika (dugi pritisak), pa u traci dodirni „Više“ i „Spoji u jedan dokument“. Stranice idu redom kojim si ih označio, a naziv i album uzimaju se od prve. Originali idu u korpu, a „Opozovi“ sve vraća.', 'Pojedinačnu stranicu izdvajaš na ekranu sa stranicama: dodir na stranicu, pa „Izdvoji kao posebnu sliku“.'],
+      ['PDF', 'Dokument ili više označenih slika pretvaraš u jedan PDF: u pregledu dugmetom PDF, a kod izbora preko „Više“. Zatim biraš da li ga deliš (Viber, e-pošta…) ili čuvaš na telefon.', 'Stranice idu u PDF bez gubitka kvaliteta.'],
+      ['Pretraga', 'Lupa pretražuje nazive albuma, slika i dokumenata. „Detaljno“ traži i reči unutar PDF, Word i Excel dokumenata.', 'U albumu pretraga obuhvata i njegove podalbume.'],
+      ['Prečica na početnom ekranu', 'Označi jednu stavku i dodirni „Prečica“. Stavka se otvara u Chrome-u, a iz Chrome menija biraš „Dodaj na početni ekran“. Prečica dokumenta od više stranica lista sve stranice.'],
+      ['Korpa', 'Obrisano ide u korpu (Podešavanja → korpa) i tamo čeka zadati broj dana, a zatim se trajno briše. Iz korpe stavku vraćaš ili je odmah trajno brišeš.'],
+      ['Rezervna kopija', 'Podešavanja → rezervna kopija pravi jedan ZIP fajl sa svim dokumentima i albumima. Čuvaj ga van telefona, npr. na Google Drive-u.', 'Vraćanje dodaje samo ono što nedostaje, bez duplikata. Traka na vrhu te podseti kad prođe zadati broj dana od poslednje kopije.'],
+      ['Teme', 'Podešavanja → tema menja izgled cele aplikacije. Izbor se pamti i čuva u rezervnoj kopiji.'],
+      ['Stari podaci', 'Posle prelaska na nov način čuvanja stari podaci su ostavljeni kao osiguranje. Kad proveriš da je sve na mestu, obriši ih u Podešavanjima da oslobodiš prostor. Pločica se vidi samo dok stari podaci postoje.']
+    ],
     migTitle: 'Nov način čuvanja',
     migIntro: 'Arhiva prelazi na brži način čuvanja, pripremljen za stotine dokumenata: brže otvaranje, male sličice za prikaz, a pun fajl tek kad ga otvoriš.',
     migWhat: 'Za prenos: {items} stavki i {albums} albuma.',
@@ -1288,6 +1497,74 @@ const I18N = {
     bkHintZip: 'rezervna kopija je jedan ZIP fajl: u njemu su tvoji dokumenti kao obične slike i PDF-ovi, složeni po albumima, pa se mogu otvoriti i bez Arhive. uvoz prima i stare .json kopije. vraćanje dodaje samo ono što nedostaje, bez duplikata.'
   },
   en: {
+    addMulti: 'Multi-page document',
+    addMultiSub: 'photograph page by page or pick several images',
+    pgNewTitle: 'multi-page document',
+    pgEditTitle: 'document pages',
+    pgNameLbl: 'document name',
+    pgDefaultName: 'Document',
+    pgCamera: 'Take page photo',
+    pgGallery: 'From gallery',
+    pgSave: 'Save',
+    pgProcessing: 'Processing pages…',
+    pgEmpty: 'No pages yet. Take a photo of the first page or pick images from the gallery.',
+    pgHint: 'Drag the handle in the corner of a page to change the order. Tap a page for options.',
+    pgCountLong: 'pages: {n}',
+    pgCount: '{n} pp.',
+    pgPageNo: 'p. {n} / {total}',
+    pgDrag: 'Drag to reorder',
+    pgBadImg: 'Image “{name}” cannot be read, so it was not added.',
+    pgSaved: 'Document saved ({n} pp.).',
+    pgSavedTrash: 'Saved. Removed pages are in the trash as separate images.',
+    pgDiscardTitle: 'Discard changes',
+    pgDiscardText: 'Changes to the pages are not saved. Discard them?',
+    pgDiscardOk: 'Discard',
+    pgPageSheet: 'Page {n}',
+    pgExtract: 'Split off as a separate image',
+    pgExtractHint: 'becomes a separate image in the same album right away',
+    pgExtractNo: 'possible for a saved document with at least two pages',
+    pgRemove: 'Remove from document',
+    pgExtracted: 'The page is now a separate image in the same album.',
+    pgPartName: '{name} – p. {n}',
+    pgNeedOne: 'A document needs at least one page.',
+    pgWait: 'Wait until all pages are processed.',
+    delDocTitle: 'Delete document',
+    delDocSub: 'Document “{name}” ({n} pp.) will be deleted.',
+    selMore: 'More',
+    moreTitle: 'Selected: {n}',
+    mergeRow: 'Merge into one document',
+    mergeHint: 'in the order you selected them; originals go to the trash',
+    mergeOnlyImages: 'only images can be merged (not PDFs or other files)',
+    mergeBusy: 'Merging: {n} / {total}…',
+    merged: 'Merged into “{name}” ({n} pp.).',
+    pdfTitle: 'PDF ({n} pp.)',
+    pdfShare: 'Share as one PDF',
+    pdfSave: 'Save as one PDF',
+    pdfBuilding: 'Making PDF: {n} / {total}…',
+    pdfNoImages: 'A PDF is made from images and multi-page documents.',
+    pdfSkipped: 'Skipped (not images): {n}.',
+    pdfFailed: 'The PDF was not made.',
+    pdfSaved: 'PDF saved to the phone.',
+    pdfShareNo: 'Sharing is not supported, the PDF was downloaded.',
+    pdfReady: 'The PDF is ready.',
+    pdfShareNow: 'Share',
+    guideTile: 'guide',
+    guideTileSub: 'how to use Arhiva',
+    guideIntro: 'Tap a title to open the explanation.',
+    guide: [
+      ['Albums and sub-albums', 'Create a new album with the folder-plus icon at the top of the home screen. Inside an album the same icon creates a sub-album.', 'Long-press an album for options: pin to top, rename, cover image, move or delete. Drag the handle in the corner to change the album order.'],
+      ['Adding', 'The image-plus icon adds from the phone: from the gallery (several images at once), by taking a photo, or as a document (PDF, Word, Excel…). Every picked image becomes a separate item.', 'What you add while inside an album (from the gallery, by taking a photo or as a document) goes straight into that album.'],
+      ['Multi-page document', 'In the add menu choose “Multi-page document”. Photograph page by page or pick several images from the gallery, type a name and tap “Save”.', 'Drag the handle in the corner of a page to change the order; ✕ removes a page. The grid shows the first page with the page count.'],
+      ['Viewing and paging', 'Tap an image to open it. Swipe left and right to turn pages; after the last page you move on to the next item. One tap hides or shows the buttons.', 'The pages button in the viewer adds new pages to a document or changes their order.'],
+      ['Merging and splitting', 'Select two or more images (long-press), then tap “More” and “Merge into one document”. Pages follow the order you selected them in; the name and album come from the first. The originals go to the trash and “Undo” brings everything back.', 'To split off a single page, open the pages screen, tap the page and choose “Split off as a separate image”.'],
+      ['PDF', 'Turn a document or several selected images into one PDF: with the PDF button in the viewer, or via “More” when selecting. Then share it (Viber, email…) or save it to the phone.', 'Pages go into the PDF without losing quality.'],
+      ['Search', 'The magnifier searches the names of albums, images and documents. “Detailed” also searches words inside PDF, Word and Excel documents.', 'Inside an album, search also covers its sub-albums.'],
+      ['Home screen shortcut', 'Select one item and tap “Shortcut”. The item opens in Chrome; choose “Add to home screen” from the Chrome menu. The shortcut of a multi-page document shows all pages.'],
+      ['Trash', 'Deleted items go to the trash (Settings → trash) and wait there for the set number of days, then they are deleted for good. From the trash you can restore an item or delete it right away.'],
+      ['Backup', 'Settings → backup makes one ZIP file with all documents and albums. Keep it off the phone, for example on Google Drive.', 'Restoring adds only what is missing, without duplicates. A bar at the top reminds you when the set number of days has passed since the last backup.'],
+      ['Themes', 'Settings → theme changes the look of the whole app. The choice is remembered and saved in the backup.'],
+      ['Old data', 'After the move to the new storage the old data was kept as a safety net. Once you have checked everything is in place, delete it in Settings to free up space. The tile is shown only while old data exists.']
+    ],
     migTitle: 'New storage',
     migIntro: 'Arhiva is moving to a faster storage built for hundreds of documents: quicker start, small previews, the full file only when you open it.',
     migWhat: 'To move: {items} items and {albums} albums.',
@@ -1501,15 +1778,18 @@ async function getFileBlob(item, pageIndex){
 }
 /* Pun prikaz: pamti se nekoliko poslednjih, starije adrese se oslobađaju */
 const _fullUrls = new Map();
-async function fullUrlFor(item){
-  if(_fullUrls.has(item.id)){
-    const u = _fullUrls.get(item.id);
-    _fullUrls.delete(item.id); _fullUrls.set(item.id, u);
+async function fullUrlFor(item, pageIndex){
+  const p = (item.pages || [])[pageIndex || 0];
+  if(!p) throw new Error('nema fajla');
+  const key = p.file;
+  if(_fullUrls.has(key)){
+    const u = _fullUrls.get(key);
+    _fullUrls.delete(key); _fullUrls.set(key, u);
     return u;
   }
-  const blob = await getFileBlob(item);
+  const blob = await getFileBlob(item, pageIndex || 0);
   const u = URL.createObjectURL(blob);
-  _fullUrls.set(item.id, u);
+  _fullUrls.set(key, u);
   while(_fullUrls.size > 4){
     const first = _fullUrls.keys().next().value;
     try{ URL.revokeObjectURL(_fullUrls.get(first)); }catch(e){}
@@ -2598,6 +2878,14 @@ function buildCard(item, indexNumber){
     thumbBox.appendChild(img);
     thumbBox.appendChild(corner);
   }
+  const nPages = pageCount(item);
+  if(nPages > 1){
+    card.classList.add('multi');
+    const badge = document.createElement('span');
+    badge.className = 'pages-badge';
+    badge.textContent = t('pgCount', {n:nPages});
+    thumbBox.appendChild(badge);
+  }
   card.appendChild(thumbBox);
 
   const mark = document.createElement('div');
@@ -2709,9 +2997,9 @@ function startRename(item, nameSpan, meta, idx){
   });
 }
 
-function openModal(item){
+function openModal(item, page){
   currentGalleryIndex = currentGalleryItems.findIndex(i=>i.id===item.id);
-  showModalItem(item);
+  showModalItem(item, page || 0);
   modalBg.classList.remove('ui-hidden');
   modalBg.classList.add('open');
   pushBack(closeModal);
@@ -2789,24 +3077,47 @@ document.addEventListener('fullscreenchange', ()=>{
   }
 });
 let modalItemId = null;
-function showModalItem(item){
+let modalPage = 0;        /* stranica dokumenta koja je sada u pregledu */
+let _modalReq = 0;        /* poslednji zahtev za prikaz (stariji odgovori se odbacuju) */
+function setModalSrc(u){ if(u) modalImg.src = u; else modalImg.removeAttribute('src'); }
+function showModalItem(item, page){
   modalItemId = item.id;
+  const n = pageCount(item);
+  modalPage = Math.max(0, Math.min(page || 0, n - 1));
+  const pg = modalPage;
+  const req = ++_modalReq;
+  let fullShown = false;
   /* odmah sličica, pa pun fajl čim se pročita */
-  modalImg.src = item.thumb || '';
-  fullUrlFor(item).then(u=>{ if(modalItemId === item.id) modalImg.src = u; })
-    .catch(e=>{ console.error(e); if(modalItemId === item.id) toast(t('fileMissing')); });
+  const pf = item.pages[pg];
+  setModalSrc(pg === 0 ? (item.thumb || '') : ((pf && _pageThumbs.get(pf.file)) || ''));
+  if(pg > 0 && !modalImg.getAttribute('src')){
+    pageThumbUrl(item, pg).then(u=>{ if(req === _modalReq && !fullShown && u) modalImg.src = u; }).catch(()=>{});
+  }
+  fullUrlFor(item, pg).then(u=>{ if(req === _modalReq){ fullShown = true; modalImg.src = u; } })
+    .catch(e=>{ console.error(e); if(req === _modalReq) toast(t('fileMissing')); });
   modalCaption.textContent = item.name;
   const total = currentGalleryItems.length;
-  const showNav = total > 1;
+  const showNav = total > 1 || n > 1;
   document.getElementById('modalPrev').hidden = !showNav;
   document.getElementById('modalNext').hidden = !showNav;
-  document.getElementById('modalPosition').textContent = showNav && currentGalleryIndex >= 0
+  document.getElementById('modalPosition').textContent = total > 1 && currentGalleryIndex >= 0
     ? (currentGalleryIndex+1) + ' / ' + total : '';
+  document.getElementById('modalPageNo').textContent = n > 1 ? t('pgPageNo', {n:pg+1, total:n}) : '';
 }
+/* Listanje: prvo stranice dokumenta, posle poslednje sledeća stavka (unazad: poslednja stranica prethodne) */
 function modalNav(dir){
-  if(currentGalleryItems.length < 2 || currentGalleryIndex < 0) return;
+  const cur = currentGalleryIndex >= 0 ? currentGalleryItems[currentGalleryIndex] : items.find(i=>i.id === modalItemId);
+  if(!cur) return;
+  const n = pageCount(cur);
+  if(dir > 0 && modalPage < n - 1){ showModalItem(cur, modalPage + 1); return; }
+  if(dir < 0 && modalPage > 0){ showModalItem(cur, modalPage - 1); return; }
+  if(currentGalleryItems.length < 2 || currentGalleryIndex < 0){
+    if(n > 1) showModalItem(cur, dir > 0 ? 0 : n - 1);
+    return;
+  }
   currentGalleryIndex = (currentGalleryIndex + dir + currentGalleryItems.length) % currentGalleryItems.length;
-  showModalItem(currentGalleryItems[currentGalleryIndex]);
+  const nx = currentGalleryItems[currentGalleryIndex];
+  showModalItem(nx, dir > 0 ? 0 : pageCount(nx) - 1);
 }
 document.getElementById('modalPrev').onclick = (e)=>{ e.stopPropagation(); modalNav(-1); };
 document.getElementById('modalNext').onclick = (e)=>{ e.stopPropagation(); modalNav(1); };
@@ -2843,7 +3154,10 @@ document.getElementById('modalDelete').onclick = (e)=>{
   const item = items.find(i=>i.id===modalItemId);
   if(!item) return;
   pendingModalDeleteId = item.id;
-  document.getElementById('delSub').textContent = 'Slika \u201E' + item.name + '\u201C biće obrisana.';
+  const np = pageCount(item);
+  document.querySelector('#delBackdrop h2').textContent = np > 1 ? t('delDocTitle') : 'Brisanje slike';
+  document.getElementById('delSub').textContent = np > 1 ? t('delDocSub', {name:item.name, n:np})
+    : 'Slika \u201E' + item.name + '\u201C biće obrisana.';
   delBackdrop.classList.add('open');
   pushBack(closeDeleteConfirm);
 };
@@ -3025,11 +3339,15 @@ async function shareSelected(){
   const chosen = items.filter(i=>ids.includes(i.id));
   if(chosen.length === 0) return;
   try{
-    const files = await Promise.all(chosen.map(async (it, idx)=>{
-      const blob = await getFileBlob(it);
-      const ext = getItemExt(it);
-      return new File([blob], (it.name||'fajl')+'.'+ext, {type: blob.type});
-    }));
+    const files = [];
+    for(const it of chosen){
+      const n = Math.max(1, pageCount(it));
+      for(let i=0;i<n;i++){
+        const blob = await getFileBlob(it, i);
+        const ext = pageExt(it, it.pages[i]);
+        files.push(new File([blob], (it.name||'fajl') + (n > 1 ? ' - ' + (i+1) : '') + '.' + ext, {type: blob.type}));
+      }
+    }
     if(navigator.canShare && navigator.canShare({files})){
       await navigator.share({files});
     }else{
@@ -3049,19 +3367,21 @@ async function saveSelectedToDevice(){
   const ids = Array.from(selectedIds);
   const chosen = items.filter(i=>ids.includes(i.id));
   if(chosen.length === 0) return;
-  for(let idx=0; idx<chosen.length; idx++){
-    const it = chosen[idx];
-    const ext = getItemExt(it);
+  const jobs = [];
+  chosen.forEach(it=>{ const n = Math.max(1, pageCount(it)); for(let i=0;i<n;i++) jobs.push([it, i, n]); });
+  for(let idx=0; idx<jobs.length; idx++){
+    const [it, pi, n] = jobs[idx];
+    const ext = pageExt(it, it.pages[pi]);
     let url = null;
-    try{ url = URL.createObjectURL(await getFileBlob(it)); }catch(e){ console.error(e); toast(t('fileMissing')); continue; }
+    try{ url = URL.createObjectURL(await getFileBlob(it, pi)); }catch(e){ console.error(e); toast(t('fileMissing')); continue; }
     const a = document.createElement('a');
     a.href = url;
-    a.download = (it.name || (it.type==='image' ? 'slika' : 'fajl')) + '.' + ext;
+    a.download = (it.name || (it.type==='image' ? 'slika' : 'fajl')) + (n > 1 ? ' - ' + (pi+1) : '') + '.' + ext;
     document.body.appendChild(a);
     a.click();
     a.remove();
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
-    if(idx < chosen.length - 1) await new Promise(r=>setTimeout(r, 400));
+    if(idx < jobs.length - 1) await new Promise(r=>setTimeout(r, 400));
   }
   toast(chosen.length === 1 ? 'Sačuvano na telefon.' : chosen.length + ' stavke sačuvano na telefon.');
 }
@@ -3271,7 +3591,7 @@ const cameraInput = document.getElementById('cameraInput');
 cameraInput.addEventListener('change', async (e)=>{
   const files = Array.from(e.target.files || []);
   cameraInput.value = '';
-  await addFilesWithProgress(files, null);
+  await addFilesWithProgress(files, currentFolder && currentFolder !== INBOX ? currentFolder : null);
 });
 const docInput = document.getElementById('docInput');
 docInput.addEventListener('change', async (e)=>{
@@ -3699,11 +4019,12 @@ function renderSettingsTiles(){
     settingsTile('🎨', 'tema', themeName(getTheme()), "openSettingsSub('theme')")+
     settingsTile('💾', 'rezervna kopija', lastBackupDisplay(), "openSettingsSub('backup')")+
     settingsTile('♻️', 'korpa', trashTileSub(), "openSettingsSub('trash')")+
+    settingsTile('📖', t('guideTile'), t('guideTileSub'), "openSettingsSub('guide')")+
     (_oldDbPresent ? settingsTile('🗄️', t('oldTile'), t('oldTileSub'), "openSettingsSub('old')") : '')+
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 59</div>'+
+    '<div class="settings-hint set-build">verzija 60</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -3762,6 +4083,9 @@ function openSettingsSub(which){
       '</div>'+
       '<div class="settings-hint">obrisane slike i dokumenti čekaju ovde. kad prođe ovoliko dana, trajno se brišu pri otvaranju aplikacije. korpa se ne čuva u rezervnoj kopiji.</div>'+
       '<div id="trashList"></div>';
+  }else if(which === 'guide'){
+    title = t('guideTile');
+    body = guideHtml();
   }else{ return; }
   settingsPanel.innerHTML = settingsHeader(title)+'<div class="set-body">'+body+'</div>'+
     (which === 'trash' ? '<div class="trash-bar" id="trashBar"><button type="button" class="trash-btn" id="trashRestoreBtn" onclick="trashRestoreSelected()">Vrati</button><button type="button" class="trash-btn danger" id="trashPurgeBtn" onclick="trashPurgeSelected()">Obriši trajno</button></div>' : '');
@@ -4303,6 +4627,667 @@ async function confirmDeleteOldData(){
     toast(e && e.message === 'BLOCKED' ? t('oldBlocked') : 'Greška pri brisanju.');
   }
 }
+
+/* =====================================================================
+   KORAK 2: DOKUMENT OD VIŠE STRANICA
+   Dokument od više stranica je obična stavka tipa 'image' sa više zapisa u pages[].
+   Baza se ne menja. Svaka izmena stranica ide u JEDNOJ transakciji (podaci + fajlovi + sličice).
+   ===================================================================== */
+function pageCount(it){ return (it && Array.isArray(it.pages)) ? it.pages.length : 0; }
+function tl(key){ const L = I18N[appLang()] || I18N.sr; return (key in L) ? L[key] : I18N.sr[key]; }
+
+/* ---------- Pouzdano brisanje u polju (Android Chrome + Gboard) ----------
+   Isti obrazac kao u aplikacijama Stanje guma, Cenovnik i Kućna apoteka. */
+const fieldOriginal = new WeakMap();
+const pristineArmed = new WeakSet();
+function snapshotField(el){ fieldOriginal.set(el, el.value); }
+function wireBackspace(el, onRestore){
+  if(!el) return;
+  /* dodir označi ceo naziv (lako se kuca nov); ako Gboard na „obriši“ skine samo kraj
+     označenog teksta umesto celog izbora, polje se isprazni kako je korisnik i hteo */
+  el.addEventListener('focus', ()=>{ snapshotField(el); pristineArmed.add(el); setTimeout(()=>{ try{ el.select(); }catch(e){} }, 0); });
+  el.addEventListener('blur', ()=>{ pristineArmed.delete(el); });
+  el.addEventListener('input', (e)=>{
+    if(!pristineArmed.has(el)) return;
+    pristineArmed.delete(el);
+    if(!e.inputType || e.inputType.indexOf('delete') !== 0) return;
+    let original = fieldOriginal.get(el);
+    if(typeof original !== 'string') original = '';
+    const trimmed = el.value.length < original.length && original.indexOf(el.value) === 0 && el.value !== '';
+    if(trimmed){ el.value = ''; if(onRestore) onRestore(); }
+  });
+}
+
+/* ---------- Opšti donji meni sa redovima (Više, PDF, stranica) ---------- */
+const actSheet = document.getElementById('actSheet');
+const closeActSheet = ()=>actSheet.classList.remove('open');
+function openActionSheet(title, rows){
+  document.getElementById('actTitle').textContent = title;
+  const list = document.getElementById('actList');
+  list.innerHTML = '';
+  rows.forEach(r=>{
+    const row = document.createElement('div');
+    row.className = 'sheet-row act-row' + (r.disabled ? ' disabled' : '') + (r.danger ? ' danger' : '');
+    row.innerHTML = '<span class="act-ic">'+(r.icon || '')+'</span><span class="row-name">'+escapeHtml(r.label)+
+      (r.hint ? '<span class="act-hint">'+escapeHtml(r.hint)+'</span>' : '')+'</span>';
+    if(!r.disabled) row.onclick = ()=>requestCloseThen(r.onClick);
+    list.appendChild(row);
+  });
+  actSheet.classList.add('open');
+  pushBack(closeActSheet);
+}
+document.getElementById('actBack').onclick = ()=>requestClose();
+actSheet.onclick = (e)=>{ if(e.target === actSheet) requestClose(); };
+
+/* Poruka sa dugmetom (npr. „Podeli“ kad Chrome traži nov dodir) */
+function toastAction(msg, label, fn){
+  clearTimeout(_toastTimer); _toastTimer = null;
+  toastEl.innerHTML = '<span class="toast-msg">'+escapeHtml(msg)+'</span><span class="toast-undo" id="toastActBtn">'+escapeHtml(label)+'</span>';
+  toastEl.classList.add('show');
+  document.getElementById('toastActBtn').onclick = ()=>{ toastEl.classList.remove('show'); fn(); };
+  _toastTimer = setTimeout(()=>{ _toastTimer = null; toastEl.classList.remove('show'); }, 9000);
+}
+
+/* ---------- Sličice pojedinačnih stranica (za pregled i uređivanje) ---------- */
+const _pageThumbs = new Map();   /* ID fajla -> adresa sličice */
+async function pageThumbUrl(item, i){
+  const p = item.pages[i];
+  if(!p) return '';
+  if(i === 0 && item.thumb) return item.thumb;
+  if(_pageThumbs.has(p.file)) return _pageThumbs.get(p.file);
+  const rec = p.thumb ? await db2Get('thumbs', p.file) : null;
+  if(!rec || !rec.blob) return '';
+  const u = URL.createObjectURL(rec.blob);
+  _pageThumbs.set(p.file, u);
+  while(_pageThumbs.size > 80){
+    const k = _pageThumbs.keys().next().value;
+    try{ URL.revokeObjectURL(_pageThumbs.get(k)); }catch(e){}
+    _pageThumbs.delete(k);
+  }
+  return u;
+}
+
+/* ---------- Izmena stranica postojećeg dokumenta (jedna transakcija) ----------
+   newPages: [{file} za postojeću stranicu | {blob, thumbBlob, w, h} za novu]
+   detach:   [{file, name, deleted}] postojeće stranice koje postaju posebne slike.
+   Postojeća stranica koja nije ni u newPages ni u detach ide u korpu kao posebna slika
+   (ništa ne ostaje bez vlasnika i ništa se ne briše trajno bez korpe). */
+async function db2UpdatePages(item, newPages, name, detach){
+  const now = Date.now();
+  const oldByFile = new Map(item.pages.map((p, i)=>[p.file, {p, i}]));
+  const meta = newPages.map(p=>{
+    if(p.file){ const o = oldByFile.get(p.file); return Object.assign({}, o ? o.p : {}, {file:p.file}); }
+    return {file:newFileId(), mime:(p.blob && p.blob.type) || 'image/jpeg', size:p.blob ? p.blob.size : 0, w:p.w||0, h:p.h||0, thumb:!!p.thumbBlob};
+  });
+  const kept = new Set(meta.map(p=>p.file));
+  const det = (detach || []).filter(d=>oldByFile.has(d.file) && !kept.has(d.file));
+  const detSet = new Set(det.map(d=>d.file));
+  item.pages.forEach((p, i)=>{
+    if(!kept.has(p.file) && !detSet.has(p.file)){
+      det.push({file:p.file, deleted:true, name:t('pgPartName', {name, n:i+1})});
+      detSet.add(p.file);
+    }
+  });
+  if(!meta.length) throw new Error('bez stranica');
+  /* ime mora biti jedinstveno (izdvojena i uklonjena stranica ne smeju dobiti isti naziv) */
+  const taken = new Set(items.concat(trash).map(i=>i.name));
+  const uniq = (nm)=>{ let v = nm, k = 2; while(taken.has(v)){ v = nm + ' (' + k + ')'; k++; } taken.add(v); return v; };
+  const detItems = det.map(d=>{
+    const o = oldByFile.get(d.file);
+    const it = {id:newItemId(), name:uniq(d.name), ts:now, updatedAt:now, category:item.category || null, type:'image',
+      pages:[Object.assign({}, o.p)], thumb:''};
+    if(d.deleted) it.deletedAt = now;
+    return it;
+  });
+  const upd = Object.assign({}, item, {pages:meta, name, updatedAt:now});
+  await db2Run(['docs','files','thumbs'], 'readwrite', (st)=>{
+    newPages.forEach((p, i)=>{
+      if(p.file) return;
+      st('files').put({id:meta[i].file, doc:item.id, blob:p.blob});
+      if(p.thumbBlob) st('thumbs').put({id:meta[i].file, blob:p.thumbBlob});
+    });
+    detItems.forEach(d=>{
+      const f = d.pages[0].file;
+      const r = st('files').get(f);
+      r.onsuccess = ()=>{ if(r.result){ r.result.doc = d.id; st('files').put(r.result); } };
+      st('docs').put(docRecord(d));
+    });
+    st('docs').put(docRecord(upd));
+  });
+  /* upisano: uskladi prikaz */
+  const oldFirst = item.pages[0] && item.pages[0].file;
+  item.pages = meta; item.name = name; item.updatedAt = now;
+  if(meta[0].file !== oldFirst){
+    const nb = newPages[0].thumbBlob || ((await db2Get('thumbs', meta[0].file)) || {}).blob || null;
+    setThumbUrl(item, nb);
+  }
+  for(const d of detItems){
+    const tr = await db2Get('thumbs', d.pages[0].file).catch(()=>null);
+    if(tr && tr.blob) setThumbUrl(d, tr.blob);
+    if(d.deletedAt) trash.push(d); else items.push(d);
+  }
+  return detItems;
+}
+
+/* =====================================================================
+   2a  EKRAN SA STRANICAMA: nov dokument, dodavanje stranica, redosled, izdvajanje
+   ===================================================================== */
+const pageEditor = document.getElementById('pageEditor');
+let ed = null;   /* {item, category, name, pages:[{key, file?, blob?, thumbBlob?, url, w, h, pending, own}], dirty, busy} */
+let _edKey = 0;
+const pgCamInput = document.getElementById('pgCamInput');
+const pgGalInput = document.getElementById('pgGalInput');
+
+function openPageEditor(item){
+  const cat = item ? item.category : (currentFolder && currentFolder !== INBOX ? currentFolder : null);
+  ed = {item: item || null, category: cat, name: item ? item.name : t('pgDefaultName'), pages: [], dirty: false, busy: false};
+  if(item){
+    item.pages.forEach((p, i)=>{
+      const pg = {key: ++_edKey, file: p.file, url: '', w: p.w, h: p.h, pending: false, own: false};
+      ed.pages.push(pg);
+      pageThumbUrl(item, i).then(u=>{ if(ed && ed.pages.includes(pg)){ pg.url = u; renderPageEditor(); } }).catch(()=>{});
+    });
+  }
+  document.getElementById('pgTitle').textContent = item ? t('pgEditTitle') : t('pgNewTitle');
+  const nameEl = document.getElementById('pgName');
+  nameEl.value = ed.name;
+  snapshotField(nameEl);
+  pageEditor.classList.add('open');
+  pageEditor.querySelector('.pg-body').scrollTop = 0;
+  renderPageEditor();
+  pushBack(closePageEditor);
+}
+/* Zatvaranje: sa nesačuvanim izmenama prvo pita (korak nazad se tada vraća) */
+function closePageEditor(){
+  if(ed && ed.dirty && !ed.discard){
+    pushBack(closePageEditor);
+    askConfirm({icon:'📄', title:t('pgDiscardTitle'), text:t('pgDiscardText'), okIcon:'🗑️', okLabel:t('pgDiscardOk')})
+      .then(yes=>{ if(yes && ed){ ed.discard = true; requestClose(); } });
+    return;
+  }
+  pageEditor.classList.remove('open');
+  if(ed){ ed.pages.forEach(p=>{ if(p.own && p.url){ try{ URL.revokeObjectURL(p.url); }catch(e){} } }); }
+  ed = null;
+}
+closePageEditor.isEditorCloser = true;
+document.getElementById('pgBack').onclick = ()=>requestClose();
+wireBackspace(document.getElementById('pgName'), ()=>{ if(ed){ ed.name = ''; ed.dirty = true; } });
+document.getElementById('pgName').addEventListener('input', (e)=>{
+  if(!ed) return;
+  ed.name = e.target.value;
+  ed.dirty = true;
+});
+
+function renderPageEditor(){
+  if(!ed) return;
+  const grid = document.getElementById('pgGrid');
+  const n = ed.pages.length;
+  const pending = ed.pages.some(p=>p.pending);
+  document.getElementById('pgCount').textContent = n ? t('pgCountLong', {n}) : '';
+  document.getElementById('pgHint').textContent = n > 1 ? t('pgHint') : '';
+  const saveBtn = document.getElementById('pgSave');
+  saveBtn.disabled = !n || pending || ed.busy;
+  saveBtn.textContent = pending ? t('pgProcessing') : t('pgSave');
+  grid.innerHTML = '';
+  if(!n){
+    grid.innerHTML = '<div class="pg-empty">'+escapeHtml(t('pgEmpty'))+'</div>';
+    return;
+  }
+  ed.pages.forEach((pg, idx)=>grid.appendChild(buildPageTile(pg, idx)));
+}
+function buildPageTile(pg, idx){
+  const tile = document.createElement('div');
+  tile.className = 'pg-tile' + (pg.pending ? ' pending' : '');
+  tile.dataset.key = pg.key;
+  tile.innerHTML = (pg.url ? '<img src="'+pg.url+'" alt="">' : '<span class="pg-wait">'+(pg.pending ? '…' : '')+'</span>')+
+    '<span class="pg-num">'+(idx+1)+'</span>';
+  if(pg.pending) return tile;
+  const x = document.createElement('button');
+  x.type = 'button';
+  x.className = 'pg-x';
+  x.setAttribute('aria-label', t('pgRemove'));
+  x.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+  x.onclick = (e)=>{ e.stopPropagation(); edRemovePage(pg.key); };
+  tile.appendChild(x);
+  tile.onclick = ()=>{
+    if(tile.dataset.suppressClick === '1'){ tile.dataset.suppressClick = ''; return; }
+    openPageSheet(pg.key);
+  };
+  if(ed.pages.length > 1) attachPageDrag(tile, pg);
+  return tile;
+}
+function edRemovePage(key){
+  if(!ed) return;
+  const i = ed.pages.findIndex(p=>p.key === key);
+  if(i < 0) return;
+  const pg = ed.pages[i];
+  ed.pages.splice(i, 1);
+  if(pg.own && pg.url){ try{ URL.revokeObjectURL(pg.url); }catch(e){} }
+  ed.dirty = true;
+  renderPageEditor();
+}
+function openPageSheet(key){
+  if(!ed) return;
+  const i = ed.pages.findIndex(p=>p.key === key);
+  if(i < 0) return;
+  const pg = ed.pages[i];
+  const canExtract = !!(ed.item && pg.file && ed.item.pages.length > 1);
+  const rows = [];
+  rows.push({icon:'↗️', label:t('pgExtract'), hint: canExtract ? t('pgExtractHint') : t('pgExtractNo'), disabled:!canExtract, onClick:()=>edExtractPage(key)});
+  rows.push({icon:'✕', label:t('pgRemove'), danger:true, onClick:()=>edRemovePage(key)});
+  openActionSheet(t('pgPageSheet', {n:i+1}), rows);
+}
+/* Izdvajanje: stranica odmah postaje posebna slika u istom albumu (jedna transakcija).
+   Ostale nesačuvane izmene na ekranu ostaju i čuvaju se tek na „Sačuvaj“. */
+async function edExtractPage(key){
+  if(!ed || !ed.item || ed.busy) return;
+  const pg = ed.pages.find(p=>p.key === key);
+  if(!pg || !pg.file) return;
+  const item = ed.item;
+  const origIdx = item.pages.findIndex(p=>p.file === pg.file);
+  if(origIdx < 0 || item.pages.length < 2) return;
+  ed.busy = true;
+  try{
+    const rest = item.pages.filter(p=>p.file !== pg.file).map(p=>({file:p.file}));
+    await db2UpdatePages(item, rest, item.name, [{file:pg.file, name:t('pgPartName', {name:item.name, n:origIdx+1}), deleted:false}]);
+    if(ed){ ed.pages = ed.pages.filter(p=>p !== pg); }
+    render();
+    refreshModalAfterEdit(item);
+    toast(t('pgExtracted'));
+  }catch(e){ console.error(e); toast(t('saveErr')); }
+  if(ed){ ed.busy = false; renderPageEditor(); }
+}
+
+/* Prevlačenje preko ručke (isti način kao kod albuma) */
+function attachPageDrag(tile, pg){
+  const handle = document.createElement('div');
+  handle.className = 'drag-handle pg-handle';
+  handle.setAttribute('aria-label', t('pgDrag'));
+  handle.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.7"></circle><circle cx="16" cy="6" r="1.7"></circle><circle cx="8" cy="12" r="1.7"></circle><circle cx="16" cy="12" r="1.7"></circle><circle cx="8" cy="18" r="1.7"></circle><circle cx="16" cy="18" r="1.7"></circle></svg>';
+  tile.appendChild(handle);
+  let dragging = false, sx = 0, sy = 0, rect = null, ph = null;
+  handle.addEventListener('pointerdown', (e)=>{
+    if(e.button !== undefined && e.button !== 0) return;
+    e.stopPropagation();
+    sx = e.clientX; sy = e.clientY;
+    try{ handle.setPointerCapture(e.pointerId); }catch(err){}
+    dragging = true;
+    rect = tile.getBoundingClientRect();
+    ph = document.createElement('div');
+    ph.className = 'pg-tile pg-ph';
+    tile.parentNode.insertBefore(ph, tile.nextSibling);
+    tile.classList.add('tile-dragging');
+    Object.assign(tile.style, {position:'fixed', left:rect.left+'px', top:rect.top+'px', width:rect.width+'px', height:rect.height+'px', zIndex:'200', pointerEvents:'none'});
+    if(navigator.vibrate){ try{ navigator.vibrate(15); }catch(err){} }
+  });
+  handle.addEventListener('pointermove', (e)=>{
+    if(!dragging) return;
+    e.stopPropagation();
+    if(e.cancelable) e.preventDefault();
+    tile.style.left = (rect.left + e.clientX - sx) + 'px';
+    tile.style.top = (rect.top + e.clientY - sy) + 'px';
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    const over = under && under.closest('.pg-tile');
+    if(over && over !== tile && over !== ph && over.parentNode === ph.parentNode){
+      const r = over.getBoundingClientRect();
+      const before = (e.clientY < r.top + r.height/2 && e.clientY < r.bottom) && (e.clientY < r.top || e.clientX < r.left + r.width/2 || e.clientY < r.top + r.height*0.25);
+      over.parentNode.insertBefore(ph, before ? over : over.nextSibling);
+    }
+    /* blizu ivice ekrana: lista se sama pomera */
+    const body = pageEditor.querySelector('.pg-body');
+    const br = body.getBoundingClientRect();
+    if(e.clientY < br.top + 40) body.scrollTop -= 12;
+    else if(e.clientY > br.bottom - 40) body.scrollTop += 12;
+  });
+  const end = (e)=>{
+    if(!dragging) return;
+    e.stopPropagation();
+    dragging = false;
+    try{ handle.releasePointerCapture(e.pointerId); }catch(err){}
+    tile.classList.remove('tile-dragging');
+    ['position','left','top','width','height','zIndex','pointerEvents'].forEach(k=>{ tile.style[k] = ''; });
+    if(ph && ph.parentNode){
+      ph.parentNode.insertBefore(tile, ph);
+      ph.remove();
+    }
+    ph = null;
+    if(!ed) return;
+    const order = Array.from(document.querySelectorAll('#pgGrid .pg-tile')).map(el=>Number(el.dataset.key));
+    const before = ed.pages.map(p=>p.key).join(',');
+    ed.pages.sort((a, b)=>order.indexOf(a.key) - order.indexOf(b.key));
+    if(ed.pages.map(p=>p.key).join(',') !== before) ed.dirty = true;
+    renderPageEditor();
+  };
+  handle.addEventListener('pointerup', end);
+  handle.addEventListener('pointercancel', end);
+  handle.onclick = (e)=>{ e.stopPropagation(); };
+}
+
+/* Nove stranice: obrada kao kod ostalih slika (najviše 2400 px, JPEG 85% + sličica) */
+async function edAddFiles(files){
+  if(!ed || !files.length) return;
+  requestPersistOnce();
+  const slots = files.map(f=>{
+    const pg = {key: ++_edKey, pending: true, url: '', own: true, _file: f};
+    ed.pages.push(pg);
+    return pg;
+  });
+  ed.dirty = true;
+  renderPageEditor();
+  const body = pageEditor.querySelector('.pg-body');
+  body.scrollTop = body.scrollHeight;
+  let next = 0;
+  const lane = async ()=>{
+    while(next < slots.length){
+      const pg = slots[next++];
+      const f = pg._file; delete pg._file;
+      try{
+        const original = new Blob([await f.arrayBuffer()], {type: f.type || 'image/jpeg'});
+        const r = await processImage(original, true);
+        if(!r || !r.blob) throw new Error('obrada');
+        pg.blob = r.blob; pg.thumbBlob = r.tblob; pg.w = r.w; pg.h = r.h;
+        pg.url = URL.createObjectURL(r.tblob);
+        pg.pending = false;
+      }catch(e){
+        console.error(e);
+        if(ed) ed.pages = ed.pages.filter(p=>p !== pg);
+        toast(t('pgBadImg', {name: f.name || ''}));
+      }
+      if(ed) renderPageEditor();
+    }
+  };
+  await Promise.all([lane(), lane()]);
+}
+document.getElementById('pgCamera').onclick = ()=>pgCamInput.click();
+document.getElementById('pgGallery').onclick = ()=>pgGalInput.click();
+pgCamInput.addEventListener('change', ()=>{ const f = Array.from(pgCamInput.files || []); pgCamInput.value = ''; edAddFiles(f); });
+pgGalInput.addEventListener('change', ()=>{ const f = Array.from(pgGalInput.files || []); pgGalInput.value = ''; edAddFiles(f); });
+
+document.getElementById('pgSave').onclick = async ()=>{
+  if(!ed || ed.busy) return;
+  if(ed.pages.some(p=>p.pending)){ toast(t('pgWait')); return; }
+  if(!ed.pages.length){ toast(t('pgNeedOne')); return; }
+  const name = (document.getElementById('pgName').value || '').trim() || t('pgDefaultName');
+  ed.busy = true;
+  renderPageEditor();
+  try{
+    if(!ed.item){
+      const item = {id:newItemId(), name, ts:Date.now(), category:ed.category || null, type:'image'};
+      await db2AddDoc(item, ed.pages.map(p=>({blob:p.blob, thumbBlob:p.thumbBlob, w:p.w, h:p.h})), null);
+      items.push(item);
+      maybeAutoCover(item.category, item);
+      ed.dirty = false;
+      requestClose();
+      render();
+      toast(t('pgSaved', {n:item.pages.length}));
+    }else{
+      const item = ed.item;
+      const det = await db2UpdatePages(item, ed.pages.map(p=>p.file ? {file:p.file} : {blob:p.blob, thumbBlob:p.thumbBlob, w:p.w, h:p.h}), name, []);
+      ed.dirty = false;
+      requestClose();
+      render();
+      refreshModalAfterEdit(item);
+      toast(det.length ? t('pgSavedTrash') : t('pgSaved', {n:item.pages.length}));
+    }
+  }catch(e){
+    console.error(e);
+    if(ed){ ed.busy = false; renderPageEditor(); }
+    toast(e && e.name === 'QuotaExceededError' ? 'Nema više prostora za nove stavke u browseru.' : t('saveErr'));
+  }
+};
+/* Ako je pregled otvoren na izmenjenom dokumentu: prikaži ga ponovo (isti broj stranice ako postoji) */
+function refreshModalAfterEdit(item){
+  if(!modalBg.classList.contains('open')) return;
+  const cur = items.find(i=>i.id === modalItemId);
+  if(!cur) return;
+  currentGalleryIndex = currentGalleryItems.findIndex(i=>i.id === cur.id);
+  showModalItem(cur, Math.min(modalPage, pageCount(cur) - 1));
+}
+
+/* =====================================================================
+   2c  SPAJANJE: 2+ slike -> jedan dokument (redosled = redosled dodira)
+   Originali idu u korpu; „Opozovi“ vraća originale i uklanja nov dokument.
+   ===================================================================== */
+async function mergeSelected(){
+  const chosen = Array.from(selectedIds).map(id=>items.find(i=>i.id === id)).filter(Boolean);
+  if(chosen.length < 2 || chosen.some(i=>i.type !== 'image')) return;
+  exitSelection();
+  const first = chosen[0];
+  const total = chosen.reduce((s, i)=>s + pageCount(i), 0);
+  try{
+    toastPersist(t('mergeBusy', {n:0, total}));
+    const pages = [];
+    for(const it of chosen){
+      for(let i=0;i<it.pages.length;i++){
+        const blob = await getFileBlob(it, i);
+        const tr = it.pages[i].thumb ? await db2Get('thumbs', it.pages[i].file) : null;
+        pages.push({blob, thumbBlob: tr ? tr.blob : null, w: it.pages[i].w, h: it.pages[i].h});
+        toastPersist(t('mergeBusy', {n:pages.length, total}));
+      }
+    }
+    const doc = {id:newItemId(), name:first.name, ts:Date.now(), category:first.category || null, type:'image'};
+    await db2AddDoc(doc, pages, null);
+    items.push(doc);
+    const ids = new Set(chosen.map(i=>i.id));
+    const coverFix = categories.filter(c=>c.cover && ids.has(c.cover)).map(c=>({c, old:c.cover}));
+    coverFix.forEach(x=>{ x.c.cover = doc.id; });
+    if(coverFix.length) saveCategories();
+    moveToTrash(chosen);
+    toastHide();
+    render();
+    toastUndo(t('merged', {name:doc.name, n:pages.length}), async ()=>{
+      restoreFromTrash(chosen);
+      coverFix.forEach(x=>{ x.c.cover = x.old; });
+      if(coverFix.length) saveCategories();
+      items = items.filter(i=>i !== doc);
+      setThumbUrl(doc, null);
+      try{ await idbDelete(doc.id); }catch(e){ console.error(e); }
+      render();
+    }, ()=>{});
+  }catch(e){
+    console.error(e);
+    toastHide();
+    toast(e && e.name === 'QuotaExceededError' ? 'Nema više prostora za nove stavke u browseru.' : t('saveErr'));
+  }
+}
+
+/* =====================================================================
+   2d  IZVOZ KAO JEDAN PDF (pravimo ga sami, bez biblioteke)
+   JPEG stranica ide u PDF direktno (filter DCTDecode, ISO 32000-1), bez ponovnog sažimanja.
+   Ponovo se kodira samo ono što nije običan (baseline) JPEG u RGB/sivoj: PNG/HEIC original,
+   progresivni ili CMYK JPEG, i JPEG sa EXIF oznakom (orijentaciju PDF ne čita).
+   Stranica je široka kao A4 (595,28 pt), visina prati oblik slike.
+   ===================================================================== */
+function jpegInfo(b){
+  if(b.length < 4 || b[0] !== 0xFF || b[1] !== 0xD8) return null;
+  let i = 2, exif = false;
+  while(i + 4 <= b.length){
+    if(b[i] !== 0xFF){ return null; }
+    const m = b[i+1];
+    if(m === 0xFF){ i++; continue; }
+    if(m === 0xD8 || m === 0x01 || (m >= 0xD0 && m <= 0xD7)){ i += 2; continue; }
+    const len = (b[i+2] << 8) | b[i+3];
+    if(len < 2) return null;
+    if(m === 0xE1 && b[i+4] === 0x45 && b[i+5] === 0x78 && b[i+6] === 0x69 && b[i+7] === 0x66) exif = true;
+    if(m >= 0xC0 && m <= 0xCF && m !== 0xC4 && m !== 0xC8 && m !== 0xCC){
+      if(i + 10 > b.length) return null;
+      return {sof:m, h:(b[i+5] << 8) | b[i+6], w:(b[i+7] << 8) | b[i+8], comps:b[i+9], exif};
+    }
+    if(m === 0xDA || m === 0xD9) return null;
+    i += 2 + len;
+  }
+  return null;
+}
+async function reencodeJpeg(blob){
+  const bmp = await createImageBitmap(blob);
+  const c = document.createElement('canvas');
+  c.width = bmp.width; c.height = bmp.height;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, c.width, c.height);
+  ctx.drawImage(bmp, 0, 0);
+  bmp.close && bmp.close();
+  const out = await canvasToBlob(c, 0.92);
+  c.width = c.height = 0;
+  return new Uint8Array(await out.arrayBuffer());
+}
+async function pdfPageData(blob){
+  let bytes = new Uint8Array(await blob.arrayBuffer());
+  let info = jpegInfo(bytes);
+  const ok = info && (info.sof === 0xC0 || info.sof === 0xC1) && (info.comps === 1 || info.comps === 3) && !info.exif && info.w > 0 && info.h > 0;
+  if(!ok){
+    bytes = await reencodeJpeg(blob);
+    info = jpegInfo(bytes);
+    if(!info || !info.w) throw new Error('JPEG');
+  }
+  return {bytes, w:info.w, h:info.h, gray: info.comps === 1};
+}
+function pdfTextHex(s){
+  let h = 'FEFF';
+  for(const ch of String(s || '')){
+    const cp = ch.codePointAt(0);
+    if(cp > 0xFFFF){
+      const v = cp - 0x10000;
+      h += (0xD800 + (v >> 10)).toString(16).padStart(4, '0') + (0xDC00 + (v & 0x3FF)).toString(16).padStart(4, '0');
+    }else h += cp.toString(16).padStart(4, '0');
+  }
+  return '<' + h.toUpperCase() + '>';
+}
+function pdfNum(x){ return (Math.round(x * 100) / 100).toString(); }
+/* pages: [{bytes, w, h, gray}] -> Blob application/pdf */
+function buildPdfBlob(title, pages){
+  const enc = new TextEncoder();
+  const parts = [];
+  let pos = 0;
+  const offs = [];
+  const push = (x)=>{ const b = typeof x === 'string' ? enc.encode(x) : x; parts.push(b); pos += b.length; };
+  const nObj = 3 + pages.length * 3;
+  push('%PDF-1.4\n');
+  push(new Uint8Array([0x25, 0xE2, 0xE3, 0xCF, 0xD3, 0x0A]));
+  const kids = pages.map((p, k)=>(4 + k*3) + ' 0 R').join(' ');
+  offs[1] = pos; push('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
+  offs[2] = pos; push('2 0 obj\n<< /Type /Pages /Kids [' + kids + '] /Count ' + pages.length + ' >>\nendobj\n');
+  offs[3] = pos; push('3 0 obj\n<< /Title ' + pdfTextHex(title) + ' /Producer (Arhiva) >>\nendobj\n');
+  const A4W = 595.28, MAXD = 14400;
+  pages.forEach((p, k)=>{
+    const pn = 4 + k*3, cn = pn + 1, im = pn + 2;
+    let W = A4W, H = A4W * p.h / p.w;
+    if(H > MAXD){ W = W * MAXD / H; H = MAXD; }
+    const content = 'q ' + pdfNum(W) + ' 0 0 ' + pdfNum(H) + ' 0 0 cm /Im0 Do Q';
+    offs[pn] = pos;
+    push(pn + ' 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + pdfNum(W) + ' ' + pdfNum(H) + '] /Resources << /XObject << /Im0 ' + im + ' 0 R >> >> /Contents ' + cn + ' 0 R >>\nendobj\n');
+    offs[cn] = pos;
+    push(cn + ' 0 obj\n<< /Length ' + content.length + ' >>\nstream\n' + content + '\nendstream\nendobj\n');
+    offs[im] = pos;
+    push(im + ' 0 obj\n<< /Type /XObject /Subtype /Image /Width ' + p.w + ' /Height ' + p.h + ' /ColorSpace /' + (p.gray ? 'DeviceGray' : 'DeviceRGB') +
+      ' /BitsPerComponent 8 /Filter /DCTDecode /Length ' + p.bytes.length + ' >>\nstream\n');
+    push(p.bytes);
+    push('\nendstream\nendobj\n');
+  });
+  const xref = pos;
+  let x = 'xref\n0 ' + (nObj + 1) + '\n0000000000 65535 f \n';
+  for(let n=1;n<=nObj;n++) x += String(offs[n]).padStart(10, '0') + ' 00000 n \n';
+  push(x);
+  push('trailer\n<< /Size ' + (nObj + 1) + ' /Root 1 0 R /Info 3 0 R >>\nstartxref\n' + xref + '\n%%EOF\n');
+  return new Blob(parts, {type:'application/pdf'});
+}
+let _pdfBusy = false;
+/* list: stavke redom; od svake idu sve stranice. mode: 'share' | 'save' */
+async function exportPdf(list, mode){
+  if(_pdfBusy) return;
+  const imgs = list.filter(i=>i && i.type === 'image' && pageCount(i));
+  if(!imgs.length){ toast(t('pdfNoImages')); return; }
+  const skipped = list.length - imgs.length;
+  _pdfBusy = true;
+  try{
+    const refs = [];
+    imgs.forEach(it=>it.pages.forEach((p, i)=>refs.push([it, i])));
+    const pages = [];
+    for(const [it, i] of refs){
+      toastPersist(t('pdfBuilding', {n:pages.length + 1, total:refs.length}));
+      pages.push(await pdfPageData(await getFileBlob(it, i)));
+    }
+    const title = imgs[0].name || t('pgDefaultName');
+    const blob = buildPdfBlob(title, pages);
+    const file = new File([blob], safeName(title) + '.pdf', {type:'application/pdf'});
+    toastHide();
+    const note = skipped ? ' ' + t('pdfSkipped', {n:skipped}) : '';
+    if(mode === 'share' && navigator.canShare && navigator.canShare({files:[file]})){
+      const doShare = ()=>navigator.share({files:[file]}).catch(e=>{
+        if(e && e.name === 'NotAllowedError') toastAction(t('pdfReady') + note, t('pdfShareNow'), doShare);
+        else if(e && e.name !== 'AbortError') toast(t('pdfFailed'));
+      });
+      await doShare();
+      if(note) toast(note.trim());
+    }else{
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = file.name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 8000);
+      toast((mode === 'share' ? t('pdfShareNo') : t('pdfSaved')) + note);
+    }
+  }catch(e){
+    console.error(e);
+    toastHide();
+    toast(t('pdfFailed'));
+  }finally{ _pdfBusy = false; }
+}
+function openPdfSheet(list){
+  const n = list.reduce((s, i)=>s + (i.type === 'image' ? pageCount(i) : 0), 0);
+  openActionSheet(t('pdfTitle', {n}), [
+    {icon:'📤', label:t('pdfShare'), onClick:()=>exportPdf(list, 'share')},
+    {icon:'📥', label:t('pdfSave'), onClick:()=>exportPdf(list, 'save')}
+  ]);
+}
+
+/* ---------- Traka izbora: „Više“ ---------- */
+function openMoreSheet(){
+  const chosen = Array.from(selectedIds).map(id=>items.find(i=>i.id === id)).filter(Boolean);
+  if(!chosen.length) return;
+  const allImg = chosen.every(i=>i.type === 'image');
+  const rows = [];
+  if(chosen.length >= 2){
+    rows.push({icon:'🗂️', label:t('mergeRow'), hint: allImg ? t('mergeHint') : t('mergeOnlyImages'), disabled:!allImg, onClick:mergeSelected});
+  }
+  rows.push({icon:'📤', label:t('pdfShare'), onClick:()=>{ const l = chosen.slice(); exitSelection(); exportPdf(l, 'share'); }});
+  rows.push({icon:'📥', label:t('pdfSave'), onClick:()=>{ const l = chosen.slice(); exitSelection(); exportPdf(l, 'save'); }});
+  openActionSheet(t('moreTitle', {n:chosen.length}), rows);
+}
+document.getElementById('btnMore').onclick = openMoreSheet;
+document.getElementById('btnMoreLbl').textContent = t('selMore');
+
+/* ---------- Pregled: dugmad Stranice i PDF ---------- */
+document.getElementById('modalPages').onclick = (e)=>{
+  e.stopPropagation();
+  const it = items.find(i=>i.id === modalItemId);
+  if(it) openPageEditor(it);
+};
+document.getElementById('modalPdf').onclick = (e)=>{
+  e.stopPropagation();
+  const it = items.find(i=>i.id === modalItemId);
+  if(it) openPdfSheet([it]);
+};
+document.getElementById('modalPages').setAttribute('aria-label', t('pgEditTitle'));
+document.getElementById('modalPdf').setAttribute('aria-label', 'PDF');
+
+/* ---------- Meni za dodavanje: dokument od više stranica ---------- */
+document.getElementById('addMultiLbl').textContent = t('addMulti');
+document.getElementById('addMultiSub').textContent = t('addMultiSub');
+document.getElementById('addMulti').onclick = ()=>requestCloseThen(()=>openPageEditor(null));
+
+/* =====================================================================
+   2e  KORISNIČKO UPUTSTVO (Podešavanja -> uputstvo)
+   ===================================================================== */
+function guideHtml(){
+  const secs = tl('guide') || [];
+  return '<p class="mig-p guide-intro">'+escapeHtml(t('guideIntro'))+'</p>'+
+    '<div class="guide-list">'+secs.map(s=>'<details class="guide-item"><summary><span>'+escapeHtml(s[0])+'</span><i class="guide-chev">›</i></summary>'+
+      s.slice(1).map(p=>'<p>'+escapeHtml(p)+'</p>').join('')+'</details>').join('')+'</div>';
+}
+document.getElementById('pgNameLbl').textContent = t('pgNameLbl');
+document.getElementById('pgCameraLbl').textContent = t('pgCamera');
+document.getElementById('pgGalleryLbl').textContent = t('pgGallery');
 
 function checkDeepLink(){
   const hashMatch = location.hash.match(/^#p=(.+)$/);
