@@ -1734,7 +1734,7 @@ const I18N = {
     fileShareErr: 'Deljenje nije uspelo.',
     moreTitle: 'Izabrano: {n}',
     mergeRow: 'Spoji u jedan dokument',
-    mergeHint: 'redom kojim si označavao; originali idu u korpu',
+    mergeHint: 'redom kojim si označavao; originali ostaju u albumu',
     mergeOnlyImages: 'spajaju se samo slike (ne PDF i drugi fajlovi)',
     mergeBusy: 'Spajam: {n} / {total}…',
     merged: 'Napravljen je dokument „{name}“ ({n} str.). Originali su ostali u albumu.',
@@ -2025,7 +2025,7 @@ const I18N = {
     fileShareErr: 'Sharing failed.',
     moreTitle: 'Selected: {n}',
     mergeRow: 'Merge into one document',
-    mergeHint: 'in the order you selected them; originals go to the trash',
+    mergeHint: 'in the order you selected them; originals stay in the album',
     mergeOnlyImages: 'only images can be merged (not PDFs or other files)',
     mergeBusy: 'Merging: {n} / {total}…',
     merged: 'Created “{name}” ({n} pp.). The originals stayed in the album.',
@@ -6209,7 +6209,7 @@ function refreshModalAfterEdit(item){
 
 /* =====================================================================
    2c  SPAJANJE: 2+ slike -> jedan dokument (redosled = redosled dodira)
-   Pre spajanja se traži potvrda; originali idu u korpu, odakle mogu da se vrate.
+   Pre spajanja se traži potvrda; originali ostaju u albumu (od verzije 63).
    ===================================================================== */
 async function mergeSelected(){
   const chosen = Array.from(selectedIds).map(id=>items.find(i=>i.id === id)).filter(Boolean);
