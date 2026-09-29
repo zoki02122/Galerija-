@@ -1051,6 +1051,11 @@ html[data-theme="ponoc"]{
 .modal-ren:active{ border-color:var(--brass-soft); }
 [data-theme="ponoc"] .modal-ren{ background:#000; }
 .modal-bg.ui-hidden .modal-ren{ pointer-events:none; }
+/* verzija 65: olovka pored oznake roka u pregledu (dodir na oznaku radi isto) */
+.modal-exp-row{ display:flex; align-items:center; justify-content:center; gap:8px; margin:6px auto 0; max-width:100%; }
+.modal-exp-row.empty{ display:none; }
+.modal-exp-row .modal-exp-line{ display:block; margin:0; min-width:0; pointer-events:auto; cursor:pointer; overflow-wrap:anywhere; }
+.modal-bg.ui-hidden .modal-exp-row .modal-exp-line{ pointer-events:none; }
 .modal-exp-note{ max-width:92%; margin:6px auto 0; font-family:var(--font-ui); font-size:13px; line-height:1.35; color:var(--ink); overflow-wrap:anywhere; }
 .modal-exp-note:empty{ display:none; }
 .crumb-ren{ flex:none; width:34px; height:34px; padding:0; border-radius:50%; cursor:pointer; display:none; align-items:center; justify-content:center;
@@ -1188,7 +1193,7 @@ html[data-theme="ponoc"]{
     <div class="modal-info">
       <div class="modal-cap-row"><div class="modal-caption" id="modalCaption"></div><button class="modal-ren" id="modalRename" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg></button></div>
       <span class="modal-page-no" id="modalPageNo"></span>
-      <span class="modal-exp-line" id="modalExpLine"></span>
+      <div class="modal-exp-row empty" id="modalExpRow"><span class="modal-exp-line" id="modalExpLine" role="button"></span><button class="modal-ren modal-exp-edit" id="modalExpEdit" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg></button></div>
       <div class="modal-exp-note" id="modalExpNote"></div>
       <div class="modal-position" id="modalPosition"></div>
     </div>
@@ -1648,7 +1653,7 @@ const I18N = {
       ['Pregled i listanje', 'Dodir na sliku otvara pregled. Prevlačenjem levo i desno listaš stranice, a posle poslednje stranice prelaziš na sledeću stavku. Jedan dodir sakriva ili vraća dugmad.', 'Dugme sa stranicama u pregledu dodaje nove stranice u dokument ili menja njihov redosled.', 'Olovka pored naziva ispod slike menja naziv. Naziv bilo koje stavke, i PDF-a ili Word dokumenta, menjaš i ovako: označi je (dugi pritisak), pa „Više“ → „Preimenuj“.'],
       ['Spajanje i izdvajanje', 'Označi dve ili više slika (dugi pritisak), pa u traci dodirni „Više“ i „Spoji u jedan dokument“. Stranice idu redom kojim si ih označio, a naziv, album i rok važenja uzimaju se od prve (rok prelazi na nov dokument). Pre spajanja Arhiva pita za potvrdu. Originali ostaju u albumu; ako ti ne trebaju, označi ih i obriši.', 'Pojedinačnu stranicu izdvajaš na ekranu sa stranicama: dodir na stranicu, pa „Izdvoji kao posebnu sliku“.'],
       ['PDF', 'Dokument ili više označenih slika pretvaraš u jedan PDF: u pregledu dugmetom PDF, a kod izbora preko „Više“. Zatim biraš da li ga deliš (Viber, e-pošta…) ili čuvaš na telefon.', 'Stranice idu u PDF bez gubitka kvaliteta.'],
-      ['Rok važenja', 'Dokumentu koji ističe (registracija, pasoš, osiguranje, garancija) upiši rok: u pregledu dodirni dugme sa kalendarom, zatim polje za datum, izaberi datum i dodirni „Sačuvaj“. Za PDF i druge fajlove označi stavku (dugi pritisak), pa „Više“ i „Rok važenja“. Rok se vidi i menja i na ekranu sa stranicama. Ispod datuma možeš da upišeš i šta treba uraditi (npr. „obnoviti kod agenta“); ta napomena se vidi u obaveštenju, u rokovima i u pregledu.', 'Kad se rok približi, Arhiva te obavesti jednom, a zatim još po jednom 7 dana pre i kad dokument istekne. Na početnom ekranu se tada pojavi zvonce sa brojem (crveno ako nešto je isteklo). Dodir na zvonce otvara spisak svih rokova: isteklo, uskoro ističe i kasnije.', 'Koliko dana ranije da te upozori biraš u Podešavanja → rok važenja (podrazumevano 30). Obaveštenje vidiš kad otvoriš Arhivu. Kad obnoviš dokument, upiši nov datum; ako rok više nije potreban, dodirni „Ukloni rok“. Rok se čuva u rezervnoj kopiji.'],
+      ['Rok važenja', 'Dokumentu koji ističe (registracija, pasoš, osiguranje, garancija) upiši rok: u pregledu dodirni dugme sa kalendarom, zatim polje za datum, izaberi datum i dodirni „Sačuvaj“. Za PDF i druge fajlove označi stavku (dugi pritisak), pa „Više“ i „Rok važenja“. Upisan rok menjaš i dodirom na oznaku roka ispod naziva ili na olovku pored nje. Rok se vidi i menja i na ekranu sa stranicama. Ispod datuma možeš da upišeš i šta treba uraditi (npr. „obnoviti kod agenta“); ta napomena se vidi u obaveštenju, u rokovima i u pregledu.', 'Kad se rok približi, Arhiva te obavesti jednom, a zatim još po jednom 7 dana pre i kad dokument istekne. Na početnom ekranu se tada pojavi zvonce sa brojem (crveno ako je nešto isteklo). Dodir na zvonce otvara spisak svih rokova: isteklo, uskoro ističe i kasnije.', 'Koliko dana ranije da te upozori biraš u Podešavanja → rok važenja (podrazumevano 30). Obaveštenje vidiš kad otvoriš Arhivu. Kad obnoviš dokument, upiši nov datum; ako rok više nije potreban, dodirni „Ukloni rok“. Rok se čuva u rezervnoj kopiji.'],
       ['Pretraga', 'Lupa pretražuje nazive albuma, slika i dokumenata. „Detaljno“ traži i reči unutar PDF, Word i Excel dokumenata.', 'U albumu pretraga obuhvata i njegove podalbume.'],
       ['Prečica na početnom ekranu', 'Označi jednu stavku i dodirni „Prečica“. Stavka se otvara u Chrome-u, a iz Chrome menija biraš „Dodaj na početni ekran“. Prečica dokumenta od više stranica lista sve stranice.'],
       ['Korpa', 'Svako brisanje prvo traži potvrdu. Obrisano ide u korpu (Podešavanja → korpa) i tamo čeka zadati broj dana, a zatim se trajno briše. Iz korpe stavku vraćaš ili je odmah trajno brišeš.', 'Albumi ne idu u korpu: kad obrišeš album, njegove slike i dokumenti ostaju u „Sve slike“.'],
@@ -1830,7 +1835,7 @@ const I18N = {
       ['Viewing and paging', 'Tap an image to open it. Swipe left and right to turn pages; after the last page you move on to the next item. One tap hides or shows the buttons.', 'The pages button in the viewer adds new pages to a document or changes their order.', 'The pencil next to the name under the image renames it. You can rename any item, including PDF and Word documents, like this too: select it (long-press), then “More” → “Rename”.'],
       ['Merging and splitting', 'Select two or more images (long-press), then tap “More” and “Merge into one document”. Pages follow the order you selected them in; the name, album and valid-until date come from the first (the date moves to the new document). Arhiva asks before merging. The originals stay in the album; if you do not need them, select and delete them.', 'To split off a single page, open the pages screen, tap the page and choose “Split off as a separate image”.'],
       ['PDF', 'Turn a document or several selected images into one PDF: with the PDF button in the viewer, or via “More” when selecting. Then share it (Viber, email…) or save it to the phone.', 'Pages go into the PDF without losing quality.'],
-      ['Valid until', 'For a document that expires (registration, passport, insurance, warranty) set the date: in the viewer tap the calendar button, then the date field, pick the date and tap “Save”. For PDFs and other files select the item (long-press), then “More” and “Valid until”. The date is also shown and changed on the pages screen. Under the date you can also write what needs to be done (e.g. “renew with the agent”); the note is shown in the notification, in the dates list and in the viewer.', 'When the date gets close, Arhiva notifies you once, then once more 7 days before and when the document expires. A bell with a number appears on the home screen (red if something has expired). Tap the bell to see all dates: expired, expiring soon and later.', 'How many days in advance you are warned is set in Settings → valid until (30 by default). You see the notification when you open Arhiva. When you renew a document, enter the new date; if the date is no longer needed, tap “Remove date”. The date is saved in the backup.'],
+      ['Valid until', 'For a document that expires (registration, passport, insurance, warranty) set the date: in the viewer tap the calendar button, then the date field, pick the date and tap “Save”. For PDFs and other files select the item (long-press), then “More” and “Valid until”. Once set, you can also change it by tapping the date label under the name or the pencil next to it. The date is also shown and changed on the pages screen. Under the date you can also write what needs to be done (e.g. “renew with the agent”); the note is shown in the notification, in the dates list and in the viewer.', 'When the date gets close, Arhiva notifies you once, then once more 7 days before and when the document expires. A bell with a number appears on the home screen (red if something has expired). Tap the bell to see all dates: expired, expiring soon and later.', 'How many days in advance you are warned is set in Settings → valid until (30 by default). You see the notification when you open Arhiva. When you renew a document, enter the new date; if the date is no longer needed, tap “Remove date”. The date is saved in the backup.'],
       ['Search', 'The magnifier searches the names of albums, images and documents. “Detailed” also searches words inside PDF, Word and Excel documents.', 'Inside an album, search also covers its sub-albums.'],
       ['Home screen shortcut', 'Select one item and tap “Shortcut”. The item opens in Chrome; choose “Add to home screen” from the Chrome menu. The shortcut of a multi-page document shows all pages.'],
       ['Trash', 'Every deletion asks for confirmation first. Deleted items go to the trash (Settings → trash) and wait there for the set number of days, then they are deleted for good. From the trash you can restore an item or delete it right away.', 'Albums do not go to the trash: when you delete an album, its images and documents stay in “All images”.'],
@@ -2293,16 +2298,19 @@ function updateModalExp(item){
   if(!item || !isYmd(item.validUntil)){
     btn.className = 'back-btn modal-exp';
     line.className = 'modal-exp-line'; line.textContent = '';
+    document.getElementById('modalExpRow').classList.add('empty');
     return;
   }
   const lvl = expLevel(expDaysLeft(item.validUntil));
   btn.className = 'back-btn modal-exp has lvl-' + lvl;
   line.className = 'modal-exp-line lvl-' + lvl;
   line.textContent = expPhrase(item.validUntil);
+  document.getElementById('modalExpRow').classList.remove('empty');
 }
 document.getElementById('modalExp').setAttribute('aria-label', t('expTitle'));
-document.getElementById('modalExp').onclick = (e)=>{
-  e.stopPropagation();
+/* isti prozor iz tri mesta: kalendar na vrhu, oznaka roka i olovka pored nje */
+function openModalExpiry(e){
+  if(e) e.stopPropagation();
   const it = items.find(i=>i.id === modalItemId);
   if(!it) return;
   openExpirySheet({name:it.name, value:it.validUntil, note:it.validNote, onDone:(v, note)=>{
@@ -2313,7 +2321,11 @@ document.getElementById('modalExp').onclick = (e)=>{
       if(modalBg.classList.contains('open') && modalItemId === it.id) updateModalExp(it);
     });
   }});
-};
+}
+document.getElementById('modalExp').onclick = openModalExpiry;
+document.getElementById('modalExpEdit').onclick = openModalExpiry;
+document.getElementById('modalExpLine').onclick = openModalExpiry;
+document.getElementById('modalExpEdit').setAttribute('aria-label', t('expTitle'));
 
 /* ---------- Preimenovanje stavke: „Više“ → „Preimenuj“ i olovka u pregledu (verzija 64) ---------- */
 const nameSheet = document.getElementById('nameSheet');
@@ -4740,7 +4752,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 64</div>'+
+    '<div class="settings-hint set-build">verzija 65</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
