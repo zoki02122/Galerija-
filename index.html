@@ -1052,6 +1052,7 @@ html[data-theme="ponoc"]{
 [data-theme="ponoc"] .modal-ren{ background:#000; }
 .modal-bg.ui-hidden .modal-ren{ pointer-events:none; }
 /* verzija 65: olovka pored oznake roka u pregledu (dodir na oznaku radi isto) */
+/* verzija 66: AI obrada (proba) — ključ, model, saglasnost i trošak u Podešavanjima; „Pročitaj dokument“ (✨ u pregledu, Više) */
 .modal-exp-row{ display:flex; align-items:center; justify-content:center; gap:8px; margin:6px auto 0; max-width:100%; }
 .modal-exp-row.empty{ display:none; }
 .modal-exp-row .modal-exp-line{ display:block; margin:0; min-width:0; pointer-events:auto; cursor:pointer; overflow-wrap:anywhere; }
@@ -1065,6 +1066,54 @@ html[data-theme="ponoc"]{
 .en-note{ display:block; font-size:13px; color:var(--ink); margin-top:3px; overflow-wrap:anywhere; }
 .exp-note-input{ margin-bottom:16px; }
 .pg-exp-note{ display:block; font-size:13px; font-weight:500; color:var(--ink); margin-top:4px; overflow-wrap:anywhere; }
+/* ===== KORAK 4 (verzija 66): AI obrada ===== */
+.modal-ai{ position:absolute; top:calc(20px + env(safe-area-inset-top, 0px)); right:228px; z-index:3; color:var(--brass); }
+:where(html[data-theme]:not([data-theme="klasicna"])) .modal-ai{ right:220px; }
+.modal-bg .modal-ai{ transition:opacity .22s ease, border-color .2s, color .2s; }
+.modal-bg.ui-hidden .modal-ai{ opacity:0; pointer-events:none; }
+[data-theme="ponoc"] .modal-ai{ background:#000; border:1px solid var(--line); color:var(--brass); }
+#aiSheet .sheet{ max-height:92vh; max-height:92dvh; overflow-y:auto; overscroll-behavior:contain; box-sizing:border-box; }
+.ai-p{ font-size:14px; line-height:1.55; color:var(--ink); margin:0 2px 16px; }
+.ai-p.ai-err{ color:var(--danger); font-weight:600; }
+.ai-hint{ font-size:12.5px; line-height:1.5; color:var(--ink-dim); margin:-4px 2px 14px; }
+.ai-gap{ margin-top:8px; }
+.ai-wait{ display:flex; flex-direction:column; align-items:center; text-align:center; padding:14px 6px 22px; }
+.ai-spin{ width:34px; height:34px; border-radius:50%; border:3px solid var(--line); border-top-color:var(--brass); animation:aiSpin .9s linear infinite; margin-bottom:14px; }
+@keyframes aiSpin{ to{ transform:rotate(360deg); } }
+.ai-wait-t{ font-size:15.5px; font-weight:700; color:var(--ink); margin-bottom:6px; }
+.ai-wait-s{ font-size:12.5px; color:var(--ink-dim); line-height:1.5; overflow-wrap:anywhere; }
+.ai-row{ border:1px solid var(--line); border-radius:12px; background:var(--surface-2); margin:0 0 10px; overflow:hidden; }
+.ai-row.on{ border-color:var(--brass-soft); }
+.ai-row-head{ display:flex; align-items:center; gap:10px; width:100%; padding:11px 12px; background:none; border:none; cursor:pointer; font-family:inherit; color:var(--ink); text-align:left; }
+.ai-chk{ width:22px; height:22px; flex:none; border-radius:6px; border:1.5px solid var(--line); background:var(--surface); display:flex; align-items:center; justify-content:center; color:transparent; }
+.ai-row.on .ai-chk{ background:var(--brass); border-color:var(--brass); color:var(--on-brass); }
+.ai-row-lbl{ flex:1; font-size:14px; font-weight:700; }
+.ai-row-state{ font-size:11.5px; color:var(--ink-dim); font-weight:600; }
+.ai-row-body{ padding:0 12px 12px; }
+.ai-row:not(.on) .ai-row-body{ opacity:.5; }
+.ai-row .sheet-input{ margin-bottom:8px; background-color:var(--surface); }
+.ai-row .exp-field{ margin-bottom:8px; }
+.ai-row .exp-state{ margin:0 2px 10px; }
+.ai-now{ font-size:12px; color:var(--ink-dim); margin:0 2px; overflow-wrap:anywhere; }
+.ai-miss{ font-size:12px; color:var(--ink-dim); margin:0 2px 8px; font-style:italic; }
+.ai-sel-wrap{ position:relative; }
+.ai-sel-wrap::after{ content:''; position:absolute; right:18px; top:calc(50% - 8px); width:8px; height:8px; border-right:2px solid var(--brass); border-bottom:2px solid var(--brass); transform:rotate(45deg); pointer-events:none; }
+.ai-select{ appearance:none; -webkit-appearance:none; padding-right:44px; width:100%; box-sizing:border-box; text-overflow:ellipsis; }
+.ai-text{ font-size:13px; line-height:1.5; color:var(--ink); background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:10px 12px; white-space:pre-wrap; overflow-wrap:anywhere; max-height:30vh; overflow-y:auto; margin-bottom:8px; }
+.ai-text.full{ max-height:52vh; }
+.ai-link{ background:none; border:none; padding:2px; color:var(--brass); font-family:inherit; font-size:12.5px; font-weight:700; cursor:pointer; }
+.ai-usage{ font-size:11.5px; color:var(--ink-dim); margin:6px 2px 12px; line-height:1.5; }
+.ai-set-lbl{ font-size:12px; color:var(--ink-dim); margin:18px 4px 8px; text-transform:lowercase; }
+.ai-opt .t-name small{ display:block; font-size:12px; font-weight:500; color:var(--ink-dim); margin-top:2px; }
+.ai-use-row{ display:flex; justify-content:space-between; gap:10px; padding:12px 14px; border-bottom:1px solid var(--line); font-size:13px; color:var(--ink); }
+.ai-use-row:last-child{ border-bottom:none; }
+.ai-use-row span{ color:var(--ink-dim); flex:none; }
+.ai-use-row b{ font-weight:600; text-align:right; overflow-wrap:anywhere; }
+.ai-last{ padding:10px 14px; border-bottom:1px solid var(--line); font-size:12.5px; line-height:1.45; color:var(--ink); }
+.ai-last:last-child{ border-bottom:none; }
+.ai-last small{ display:block; color:var(--ink-dim); }
+.ai-key-state.ok{ color:var(--brass); font-weight:600; }
+.ai-key-state.bad{ color:var(--danger); font-weight:600; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -1182,6 +1231,9 @@ html[data-theme="ponoc"]{
   <button class="back-btn modal-exp" id="modalExp" type="button">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"></rect><line x1="3.5" y1="10" x2="20.5" y2="10"></line><line x1="8" y1="3" x2="8" y2="7"></line><line x1="16" y1="3" x2="16" y2="7"></line><polyline points="9 15 11.2 17.2 15.5 12.8"></polyline></svg>
   </button>
+  <button class="back-btn modal-ai" id="modalAi" type="button">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3.5l1.7 5.1 5.1 1.7-5.1 1.7L10 17.1l-1.7-5.1-5.1-1.7 5.1-1.7z"></path><path d="M18 14l.8 2.2 2.2.8-2.2.8L18 20l-.8-2.2-2.2-.8 2.2-.8z"></path></svg>
+  </button>
   <button class="modal-nav prev" id="modalPrev">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
   </button>
@@ -1294,6 +1346,12 @@ html[data-theme="ponoc"]{
     <label class="exp-lbl" for="nameInput" id="nameLbl"></label>
     <input id="nameInput" type="text" class="sheet-input" maxlength="200" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">
     <button type="button" id="nameSave" class="sheet-cta"></button>
+  </div>
+</div>
+<div class="sheet-bg" id="aiSheet">
+  <div class="sheet">
+    <div class="sheet-head"><button class="back-btn" id="aiBack" type="button"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h3 id="aiTitle"></h3></div>
+    <div id="aiBody"></div>
   </div>
 </div>
 <div class="sheet-bg" id="actSheet">
@@ -1643,6 +1701,96 @@ const I18N = {
     pdfShareNo: 'Deljenje nije podržano, PDF je preuzet.',
     pdfReady: 'PDF je spreman.',
     pdfShareNow: 'Podeli',
+    aiTile: 'AI obrada',
+    aiTileSubOn: 'ključ upisan · {m}',
+    aiTileSubOff: 'ključ nije upisan',
+    aiRead: 'Pročitaj (AI)',
+    aiReadHint: 'predlog naziva, albuma, roka i teksta',
+    aiBtnLbl: 'Pročitaj dokument (AI)',
+    aiConsentTitle: 'Slanje dokumenta Google-u',
+    aiConsentText: 'Da bi pročitala dokument, Arhiva šalje njegove stranice (ili tekst) Google-ovom servisu Gemini, preko tvog ključa. Na besplatnom nivou Google taj sadržaj može da koristi za unapređenje svojih proizvoda. Dok je ovo proba, ne šalji lične i poverljive dokumente. Saglasnost možeš da povučeš u Podešavanja → AI obrada.',
+    aiConsentOk: 'Pristajem, pošalji',
+    aiCancel: 'Otkaži',
+    aiReadTitle: 'Čitanje dokumenta',
+    aiReading: 'Čitam dokument…',
+    aiReadingSub: '{name} · {model}',
+    aiReadingWait: 'Obično traje nekoliko sekundi, kod više stranica i duže.',
+    aiResTitle: 'Predlog',
+    aiResHint: 'Označi šta želiš da primeniš i ispravi po potrebi. Ništa se ne menja dok ne dodirneš „Primeni izabrano“.',
+    aiName: 'naziv',
+    aiAlbum: 'album',
+    aiExp: 'rok važenja',
+    aiNote: 'šta treba uraditi (nije obavezno)',
+    aiText: 'tekst za pretragu',
+    aiNow: 'sada: {v}',
+    aiNowNone: 'sada: nema',
+    aiNoAlbum: 'bez albuma (Sve slike)',
+    aiNoAlbumFound: 'AI nije našao odgovarajući album; možeš da izabereš sam.',
+    aiNoExp: 'AI nije našao rok u dokumentu; možeš da ga upišeš sam.',
+    aiNoText: 'AI nije našao tekst u dokumentu.',
+    aiTextCount: 'ukupno {n} znakova',
+    aiTextMore: 'prikaži ceo tekst',
+    aiTextLess: 'prikaži manje',
+    aiTextHasOld: 'dokument već ima tekst za pretragu; označi ako želiš da ga zameniš.',
+    aiApply: 'Primeni izabrano',
+    aiApplied: 'Primenjeno: {list}.',
+    aiNothing: 'Ništa nije označeno.',
+    aiNoChange: 'Nema promena.',
+    aiNameEmpty: 'Naziv ne može biti prazan.',
+    aiExpEmpty: 'Izaberi datum ili skini oznaku sa roka.',
+    aiDoneName: 'naziv',
+    aiDoneAlbum: 'album',
+    aiDoneExp: 'rok',
+    aiDoneText: 'tekst',
+    aiUsageLine: 'tokeni: {inp} ulaz · {out} izlaz · na plaćenom ≈ {usd} ({m})',
+    aiErrTitle: 'Čitanje nije uspelo',
+    aiOpenSettings: 'Otvori podešavanja',
+    aiTryAgain: 'Pokušaj ponovo',
+    aiClose: 'Zatvori',
+    aiErrNoKey: 'Nije upisan Gemini ključ. Upiši ga u Podešavanja → AI obrada.',
+    aiErrKey: 'Google ne prihvata ključ (neispravan je ili nema dozvolu).',
+    aiErrQuota: 'Dostignuto je ograničenje besplatnog nivoa. Pokušaj ponovo za minut; ako se ponavlja, ograničenje za danas je potrošeno.',
+    aiErrNet: 'Nema veze sa Google-om. Proveri internet i pokušaj ponovo.',
+    aiErrServer: 'Google trenutno ne odgovara (greška {code}). Pokušaj ponovo malo kasnije.',
+    aiErrModel: 'Model {m} nije dostupan za ovaj ključ. Izaberi drugi u Podešavanja → AI obrada.',
+    aiErrBlocked: 'Google je odbio da obradi ovaj dokument.',
+    aiErrParse: 'Odgovor nije u očekivanom obliku. Pokušaj ponovo ili izaberi drugi model.',
+    aiErrCut: 'Odgovor je prekinut jer je dokument predugačak. Pokušaj sa drugim modelom ili podeli dokument.',
+    aiErrBig: 'Dokument je prevelik za slanje ({mb} MB, najviše {max} MB).',
+    aiErrNoText: 'Iz ovog fajla ne može da se izvuče tekst (podržani su PDF, Word .docx i Excel).',
+    aiErrFile: 'Fajl dokumenta nedostaje.',
+    aiErrOther: 'Greška {code}: {msg}',
+    aiSetKeyLbl: 'Gemini API ključ',
+    aiSetKeyPh: 'nalepi nov ključ',
+    aiSetKeyNow: 'upisan ključ: …{k}',
+    aiSetKeyNone: 'ključ nije upisan.',
+    aiSetSave: 'Sačuvaj ključ',
+    aiSetUseShared: 'Koristi ključ iz Troškova',
+    aiSetCheck: 'Proveri ključ',
+    aiSetDelete: 'Obriši ključ iz Arhive',
+    aiSetChecking: 'proveravam…',
+    aiSetOk: 'ključ radi ({m}).',
+    aiSetBadKey: 'upiši ključ bez razmaka.',
+    aiSaved: 'Ključ je sačuvan.',
+    aiDeleted: 'Ključ je obrisan iz Arhive.',
+    aiSetKeyHint: 'ključ ostaje samo na ovom telefonu i ne ulazi u rezervnu kopiju. Arhiva čuva svoju kopiju, pa brisanje ovde ne dira druge aplikacije.',
+    aiSetModel: 'model',
+    aiModelLite: 'najjeftiniji i brz',
+    aiModelFlash: 'jači i skuplji',
+    aiSetModelHint: 'isti dokument možeš da pročitaš sa oba modela i uporediš tačnost i trošak.',
+    aiSetConsent: 'saglasnost za slanje',
+    aiSetConsentYes: 'data: Arhiva više ne pita pre slanja.',
+    aiSetConsentNo: 'nije data: Arhiva pita pre prvog slanja.',
+    aiSetConsentRevoke: 'Povuci saglasnost',
+    aiSetConsentRevoked: 'Saglasnost je povučena.',
+    aiSetUsage: 'trošak',
+    aiSetMonth: 'ovaj mesec',
+    aiSetTotal: 'ukupno',
+    aiSetUsageRow: '{n} obrada · {tok} tokena · ≈ {usd}',
+    aiSetLast: 'poslednje obrade',
+    aiSetLastRow: '{tin} ulaz · {tout} izlaz · ≈ {usd}',
+    aiSetUsageEmpty: 'još nema obrada.',
+    aiSetFreeHint: 'na besplatnom nivou obrada ništa ne košta. iznos pokazuje koliko bi koštalo na plaćenom nivou, po Google-ovim cenama (izlaz uključuje i „razmišljanje“ modela). tačna ograničenja besplatnog nivoa za tvoj ključ vide se u Google AI Studio.',
     guideTile: 'uputstvo',
     guideTileSub: 'kako se koristi Arhiva',
     guideIntro: 'Dodirni naslov da otvoriš objašnjenje.',
@@ -1654,6 +1802,7 @@ const I18N = {
       ['Spajanje i izdvajanje', 'Označi dve ili više slika (dugi pritisak), pa u traci dodirni „Više“ i „Spoji u jedan dokument“. Stranice idu redom kojim si ih označio, a naziv, album i rok važenja uzimaju se od prve (rok prelazi na nov dokument). Pre spajanja Arhiva pita za potvrdu. Originali ostaju u albumu; ako ti ne trebaju, označi ih i obriši.', 'Pojedinačnu stranicu izdvajaš na ekranu sa stranicama: dodir na stranicu, pa „Izdvoji kao posebnu sliku“.'],
       ['PDF', 'Dokument ili više označenih slika pretvaraš u jedan PDF: u pregledu dugmetom PDF, a kod izbora preko „Više“. Zatim biraš da li ga deliš (Viber, e-pošta…) ili čuvaš na telefon.', 'Stranice idu u PDF bez gubitka kvaliteta.'],
       ['Rok važenja', 'Dokumentu koji ističe (registracija, pasoš, osiguranje, garancija) upiši rok: u pregledu dodirni dugme sa kalendarom, zatim polje za datum, izaberi datum i dodirni „Sačuvaj“. Za PDF i druge fajlove označi stavku (dugi pritisak), pa „Više“ i „Rok važenja“. Upisan rok menjaš i dodirom na oznaku roka ispod naziva ili na olovku pored nje. Rok se vidi i menja i na ekranu sa stranicama. Ispod datuma možeš da upišeš i šta treba uraditi (npr. „obnoviti kod agenta“); ta napomena se vidi u obaveštenju, u rokovima i u pregledu.', 'Kad se rok približi, Arhiva te obavesti jednom, a zatim još po jednom 7 dana pre i kad dokument istekne. Na početnom ekranu se tada pojavi zvonce sa brojem (crveno ako je nešto isteklo). Dodir na zvonce otvara spisak svih rokova: isteklo, uskoro ističe i kasnije.', 'Koliko dana ranije da te upozori biraš u Podešavanja → rok važenja (podrazumevano 30). Obaveštenje vidiš kad otvoriš Arhivu. Kad obnoviš dokument, upiši nov datum; ako rok više nije potreban, dodirni „Ukloni rok“. Rok se čuva u rezervnoj kopiji.'],
+      ['AI obrada (proba)', 'Arhiva može da pročita dokument i predloži naziv, album, rok važenja sa napomenom i tekst za pretragu. U pregledu slike dodirni dugme sa zvezdicama ✨. Za PDF, Word i Excel označi stavku (dugi pritisak), pa „Više“ i „Pročitaj (AI)“.', 'Predlog se prvo prikaže: označi šta želiš, ispravi po potrebi i dodirni „Primeni izabrano“. Ništa se ne menja samo. Kad sačuvaš tekst, „Detaljno“ u pretrazi nalazi i reči iz tog dokumenta, pa i iz slike.', 'Ključ, model i trošak su u Podešavanja → AI obrada. Pre prvog slanja Arhiva traži saglasnost, jer dokument ide Google-ovom servisu Gemini. Dok je ovo proba, ne šalji lične i poverljive dokumente.'],
       ['Pretraga', 'Lupa pretražuje nazive albuma, slika i dokumenata. „Detaljno“ traži i reči unutar PDF, Word i Excel dokumenata.', 'U albumu pretraga obuhvata i njegove podalbume.'],
       ['Prečica na početnom ekranu', 'Označi jednu stavku i dodirni „Prečica“. Stavka se otvara u Chrome-u, a iz Chrome menija biraš „Dodaj na početni ekran“. Prečica dokumenta od više stranica lista sve stranice.'],
       ['Korpa', 'Svako brisanje prvo traži potvrdu. Obrisano ide u korpu (Podešavanja → korpa) i tamo čeka zadati broj dana, a zatim se trajno briše. Iz korpe stavku vraćaš ili je odmah trajno brišeš.', 'Albumi ne idu u korpu: kad obrišeš album, njegove slike i dokumenti ostaju u „Sve slike“.'],
@@ -1825,6 +1974,96 @@ const I18N = {
     pdfShareNo: 'Sharing is not supported, the PDF was downloaded.',
     pdfReady: 'The PDF is ready.',
     pdfShareNow: 'Share',
+    aiTile: 'AI processing',
+    aiTileSubOn: 'key saved · {m}',
+    aiTileSubOff: 'no key saved',
+    aiRead: 'Read (AI)',
+    aiReadHint: 'suggests name, album, date and text',
+    aiBtnLbl: 'Read document (AI)',
+    aiConsentTitle: 'Sending the document to Google',
+    aiConsentText: 'To read a document, Arhiva sends its pages (or text) to the Google Gemini service using your key. On the free tier Google may use this content to improve its products. While this is a trial, do not send personal or confidential documents. You can withdraw consent in Settings → AI processing.',
+    aiConsentOk: 'I agree, send',
+    aiCancel: 'Cancel',
+    aiReadTitle: 'Reading the document',
+    aiReading: 'Reading the document…',
+    aiReadingSub: '{name} · {model}',
+    aiReadingWait: 'Usually takes a few seconds, longer for many pages.',
+    aiResTitle: 'Suggestion',
+    aiResHint: 'Tick what you want to apply and correct it if needed. Nothing changes until you tap “Apply selected”.',
+    aiName: 'name',
+    aiAlbum: 'album',
+    aiExp: 'valid until',
+    aiNote: 'what needs to be done (optional)',
+    aiText: 'text for search',
+    aiNow: 'now: {v}',
+    aiNowNone: 'now: none',
+    aiNoAlbum: 'no album (All images)',
+    aiNoAlbumFound: 'AI found no matching album; you can pick one yourself.',
+    aiNoExp: 'AI found no date in the document; you can enter one yourself.',
+    aiNoText: 'AI found no text in the document.',
+    aiTextCount: '{n} characters in total',
+    aiTextMore: 'show all text',
+    aiTextLess: 'show less',
+    aiTextHasOld: 'the document already has search text; tick this to replace it.',
+    aiApply: 'Apply selected',
+    aiApplied: 'Applied: {list}.',
+    aiNothing: 'Nothing is ticked.',
+    aiNoChange: 'No changes.',
+    aiNameEmpty: 'The name cannot be empty.',
+    aiExpEmpty: 'Pick a date or untick the date.',
+    aiDoneName: 'name',
+    aiDoneAlbum: 'album',
+    aiDoneExp: 'date',
+    aiDoneText: 'text',
+    aiUsageLine: 'tokens: {inp} in · {out} out · on the paid tier ≈ {usd} ({m})',
+    aiErrTitle: 'Reading failed',
+    aiOpenSettings: 'Open settings',
+    aiTryAgain: 'Try again',
+    aiClose: 'Close',
+    aiErrNoKey: 'No Gemini key is saved. Enter it in Settings → AI processing.',
+    aiErrKey: 'Google does not accept the key (it is invalid or not allowed).',
+    aiErrQuota: 'The free tier limit has been reached. Try again in a minute; if it keeps happening, the limit for today is used up.',
+    aiErrNet: 'No connection to Google. Check the internet and try again.',
+    aiErrServer: 'Google is not responding right now (error {code}). Try again a bit later.',
+    aiErrModel: 'Model {m} is not available for this key. Choose another in Settings → AI processing.',
+    aiErrBlocked: 'Google refused to process this document.',
+    aiErrParse: 'The answer is not in the expected form. Try again or choose another model.',
+    aiErrCut: 'The answer was cut off because the document is too long. Try another model or split the document.',
+    aiErrBig: 'The document is too large to send ({mb} MB, at most {max} MB).',
+    aiErrNoText: 'No text can be taken from this file (PDF, Word .docx and Excel are supported).',
+    aiErrFile: 'The document file is missing.',
+    aiErrOther: 'Error {code}: {msg}',
+    aiSetKeyLbl: 'Gemini API key',
+    aiSetKeyPh: 'paste a new key',
+    aiSetKeyNow: 'saved key: …{k}',
+    aiSetKeyNone: 'no key saved.',
+    aiSetSave: 'Save key',
+    aiSetUseShared: 'Use the key from Troškovi',
+    aiSetCheck: 'Check key',
+    aiSetDelete: 'Delete key from Arhiva',
+    aiSetChecking: 'checking…',
+    aiSetOk: 'the key works ({m}).',
+    aiSetBadKey: 'enter the key without spaces.',
+    aiSaved: 'The key is saved.',
+    aiDeleted: 'The key is deleted from Arhiva.',
+    aiSetKeyHint: 'the key stays only on this phone and is not part of the backup. Arhiva keeps its own copy, so deleting it here does not affect other apps.',
+    aiSetModel: 'model',
+    aiModelLite: 'cheapest and fast',
+    aiModelFlash: 'stronger and more expensive',
+    aiSetModelHint: 'you can read the same document with both models and compare accuracy and cost.',
+    aiSetConsent: 'consent to send',
+    aiSetConsentYes: 'given: Arhiva no longer asks before sending.',
+    aiSetConsentNo: 'not given: Arhiva asks before the first send.',
+    aiSetConsentRevoke: 'Withdraw consent',
+    aiSetConsentRevoked: 'Consent withdrawn.',
+    aiSetUsage: 'cost',
+    aiSetMonth: 'this month',
+    aiSetTotal: 'total',
+    aiSetUsageRow: '{n} runs · {tok} tokens · ≈ {usd}',
+    aiSetLast: 'recent runs',
+    aiSetLastRow: '{tin} in · {tout} out · ≈ {usd}',
+    aiSetUsageEmpty: 'no runs yet.',
+    aiSetFreeHint: 'on the free tier processing costs nothing. the amount shows what it would cost on the paid tier, at Google prices (output includes the model thinking). the exact free tier limits for your key are shown in Google AI Studio.',
     guideTile: 'guide',
     guideTileSub: 'how to use Arhiva',
     guideIntro: 'Tap a title to open the explanation.',
@@ -1836,6 +2075,7 @@ const I18N = {
       ['Merging and splitting', 'Select two or more images (long-press), then tap “More” and “Merge into one document”. Pages follow the order you selected them in; the name, album and valid-until date come from the first (the date moves to the new document). Arhiva asks before merging. The originals stay in the album; if you do not need them, select and delete them.', 'To split off a single page, open the pages screen, tap the page and choose “Split off as a separate image”.'],
       ['PDF', 'Turn a document or several selected images into one PDF: with the PDF button in the viewer, or via “More” when selecting. Then share it (Viber, email…) or save it to the phone.', 'Pages go into the PDF without losing quality.'],
       ['Valid until', 'For a document that expires (registration, passport, insurance, warranty) set the date: in the viewer tap the calendar button, then the date field, pick the date and tap “Save”. For PDFs and other files select the item (long-press), then “More” and “Valid until”. Once set, you can also change it by tapping the date label under the name or the pencil next to it. The date is also shown and changed on the pages screen. Under the date you can also write what needs to be done (e.g. “renew with the agent”); the note is shown in the notification, in the dates list and in the viewer.', 'When the date gets close, Arhiva notifies you once, then once more 7 days before and when the document expires. A bell with a number appears on the home screen (red if something has expired). Tap the bell to see all dates: expired, expiring soon and later.', 'How many days in advance you are warned is set in Settings → valid until (30 by default). You see the notification when you open Arhiva. When you renew a document, enter the new date; if the date is no longer needed, tap “Remove date”. The date is saved in the backup.'],
+      ['AI processing (trial)', 'Arhiva can read a document and suggest a name, an album, a valid-until date with a note, and text for search. In the image viewer tap the button with the stars ✨. For PDF, Word and Excel select the item (long-press), then “More” and “Read (AI)”.', 'The suggestion is shown first: tick what you want, correct it if needed and tap “Apply selected”. Nothing changes on its own. Once you save the text, “Detailed” search also finds words from that document, even from an image.', 'Key, model and cost are in Settings → AI processing. Before the first send Arhiva asks for consent, because the document goes to the Google Gemini service. While this is a trial, do not send personal or confidential documents.'],
       ['Search', 'The magnifier searches the names of albums, images and documents. “Detailed” also searches words inside PDF, Word and Excel documents.', 'Inside an album, search also covers its sub-albums.'],
       ['Home screen shortcut', 'Select one item and tap “Shortcut”. The item opens in Chrome; choose “Add to home screen” from the Chrome menu. The shortcut of a multi-page document shows all pages.'],
       ['Trash', 'Every deletion asks for confirmation first. Deleted items go to the trash (Settings → trash) and wait there for the set number of days, then they are deleted for good. From the trash you can restore an item or delete it right away.', 'Albums do not go to the trash: when you delete an album, its images and documents stay in “All images”.'],
@@ -4747,12 +4987,13 @@ function renderSettingsTiles(){
     settingsTile('💾', 'rezervna kopija', lastBackupDisplay(), "openSettingsSub('backup')")+
     settingsTile('♻️', 'korpa', trashTileSub(), "openSettingsSub('trash')")+
     settingsTile('📅', t('expSetTile'), t('expSetSub', {n:getExpiryDays(), d:dayWord(getExpiryDays())}), "openSettingsSub('expiry')")+
+    settingsTile('✨', t('aiTile'), aiTileSub(), "openSettingsSub('ai')")+
     settingsTile('📖', t('guideTile'), t('guideTileSub'), "openSettingsSub('guide')")+
     (_oldDbPresent ? settingsTile('🗄️', t('oldTile'), t('oldTileSub'), "openSettingsSub('old')") : '')+
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 65</div>'+
+    '<div class="settings-hint set-build">verzija 66</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -4819,6 +5060,9 @@ function openSettingsSub(which){
       '</div>'+
       '<div class="settings-hint">'+escapeHtml(t('expSetHint1'))+'</div>'+
       '<div class="settings-hint">'+escapeHtml(t('expSetHint2'))+'</div>';
+  }else if(which === 'ai'){
+    title = t('aiTile');
+    body = aiSettingsHtml();
   }else if(which === 'guide'){
     title = t('guideTile');
     body = guideHtml();
@@ -4827,6 +5071,7 @@ function openSettingsSub(which){
     (which === 'trash' ? '<div class="trash-bar" id="trashBar"><button type="button" class="trash-btn" id="trashRestoreBtn" onclick="trashRestoreSelected()">Vrati</button><button type="button" class="trash-btn danger" id="trashPurgeBtn" onclick="trashPurgeSelected()">Obriši trajno</button></div>' : '');
   if(which === 'trash') renderTrashList();
   if(which === 'backup') refreshBackupDirRow();
+  if(which === 'ai') aiWireSettings();
   if(which === 'old') oldDataCount().then(n=>{ const el = document.getElementById('oldCountHint'); if(el) el.textContent = t('oldCount', {n}); });
   settingsScreen.scrollTop = 0;
   if(!settingsSubOpen){
@@ -6000,6 +6245,10 @@ function openMoreSheet(){
     rows.push({icon:'✏️', label:t('renRow'), hint:it.name, onClick:()=>{
       openNameSheet(it, (ok)=>{ if(ok && selectionMode) exitSelection(); });
     }});
+    rows.push({icon:'✨', label:t('aiRead'), hint:t('aiReadHint'), onClick:()=>{
+      if(selectionMode) exitSelection();
+      aiStartRead(it);
+    }});
   }
   if(chosen.length >= 2){
     rows.push({icon:'🗂️', label:t('mergeRow'), hint: allImg ? t('mergeHint') : t('mergeOnlyImages'), disabled:!allImg, onClick:mergeSelected});
@@ -6024,6 +6273,544 @@ document.getElementById('modalPdf').onclick = (e)=>{
 };
 document.getElementById('modalPages').setAttribute('aria-label', t('pgEditTitle'));
 document.getElementById('modalPdf').setAttribute('aria-label', 'PDF');
+
+
+/* =====================================================================
+   KORAK 4a/4b (verzija 66): probna AI obrada — Google Gemini, Zoranov lični ključ.
+   - Ključ je samo u localStorage ovog telefona (galerija:geminiKey), ne ide u rezervnu kopiju.
+     Troškovi (isti domen) čuvaju ključ pod 'app:apiKey'; Arhiva ga samo ČITA na zahtev („Koristi ključ iz Troškova“).
+   - „Pročitaj dokument“: jedan zahtev vraća predlog naziva, albuma, roka, napomene, jezika i ceo tekst.
+     Ništa se ne upisuje bez korisnikove potvrde („Primeni izabrano“).
+   - Nema novih polja u zapisu dokumenta: koriste se name, albumId, validUntil, validNote, lang i skladište texts
+     (tekst se čuva normalizovan, isto kao tekst iz PDF/Word/Excel), zato photo.html, arhiva-slika i kopija ostaju isti.
+   - Trošak: iz usageMetadata svakog odgovora (promptTokenCount, candidatesTokenCount, thoughtsTokenCount).
+   ===================================================================== */
+const AI_LS_KEY = LS_PREFIX + 'geminiKey';
+const AI_LS_MODEL = LS_PREFIX + 'aiModel';
+const AI_LS_CONSENT = LS_PREFIX + 'aiConsent';
+const AI_LS_USAGE = LS_PREFIX + 'aiUsage';
+const AI_SHARED_KEY = 'app:apiKey';
+const AI_MAX_MB = 40;
+const AI_TEXT_MAX = 60000;
+/* Cene po 1M tokena (USD), plaćeni nivo, Standard. Izvor: ai.google.dev/gemini-api/docs/pricing (provereno 29.09.2026.) */
+const AI_MODELS = [
+  {id:'gemini-3.1-flash-lite', name:'Gemini 3.1 Flash-Lite', sub:'aiModelLite', prices:[{to:'', inp:0.25, out:1.50}]},
+  {id:'gemini-3.8-flash', name:'Gemini 3.8 Flash', sub:'aiModelFlash', prices:[{to:'2026-12-31', inp:0.75, out:3.75}, {to:'', inp:1.50, out:7.50}]}
+];
+function aiLsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function aiLsSet(k, v){ try{ if(v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); }catch(e){} }
+function aiGetKey(){ return (aiLsGet(AI_LS_KEY) || '').trim(); }
+function aiSharedKey(){ return (aiLsGet(AI_SHARED_KEY) || '').trim(); }
+function aiModel(){ const m = aiLsGet(AI_LS_MODEL); return AI_MODELS.find(x=>x.id === m) || AI_MODELS[0]; }
+function aiModelById(id){ return AI_MODELS.find(x=>x.id === id) || null; }
+function aiHasConsent(){ return aiLsGet(AI_LS_CONSENT) === '1'; }
+function aiPrice(model){ const d = todayYmd(); return model.prices.find(p=>!p.to || d <= p.to); }
+function aiCostUsd(model, u){ const p = aiPrice(model); return ((u.inp || 0) * p.inp + ((u.out || 0) + (u.think || 0)) * p.out) / 1e6; }
+function aiLocale(){ return appLang() === 'sr' ? 'sr-Latn-RS' : 'en-US'; }
+function fmtInt(n){ try{ return Number(n || 0).toLocaleString(aiLocale()); }catch(e){ return String(n || 0); } }
+function fmtUsd(v){
+  v = Number(v) || 0;
+  const d = v === 0 ? 0 : (v < 0.01 ? 4 : (v < 1 ? 3 : 2));
+  let s;
+  try{ s = v.toLocaleString(aiLocale(), {minimumFractionDigits:d, maximumFractionDigits:d}); }catch(e){ s = v.toFixed(d); }
+  return s + ' $';
+}
+function aiUsageLoad(){
+  const empty = ()=>({n:0, inp:0, out:0, usd:0});
+  try{
+    const o = JSON.parse(aiLsGet(AI_LS_USAGE) || 'null');
+    if(o && typeof o === 'object') return {months:(o.months && typeof o.months === 'object') ? o.months : {}, total:o.total || empty(), last:Array.isArray(o.last) ? o.last : []};
+  }catch(e){}
+  return {months:{}, total:empty(), last:[]};
+}
+function aiUsageAdd(e){
+  const u = aiUsageLoad();
+  const mk = todayYmd().slice(0, 7);
+  const out = (e.out || 0) + (e.think || 0);
+  const add = (o)=>{ o = o || {}; o.n = (o.n || 0) + 1; o.inp = (o.inp || 0) + (e.inp || 0); o.out = (o.out || 0) + out; o.usd = (o.usd || 0) + (e.usd || 0); return o; };
+  u.months[mk] = add(u.months[mk]);
+  u.total = add(u.total);
+  u.last.unshift({ts:Date.now(), model:e.model, name:e.name || '', inp:e.inp || 0, out, usd:e.usd || 0});
+  u.last = u.last.slice(0, 10);
+  Object.keys(u.months).sort().slice(0, -12).forEach(k=>{ delete u.months[k]; });
+  aiLsSet(AI_LS_USAGE, JSON.stringify(u));
+}
+function aiError(code, vars){ const e = new Error(code); e.aiCode = code; e.aiVars = vars || {}; return e; }
+function aiErrText(e){
+  if(e && e.aiCode) return t(e.aiCode, e.aiVars);
+  return t('aiErrOther', {code:'?', msg:String((e && e.message) || e).slice(0, 160)});
+}
+
+/* Jedan poziv Gemini API-ja (generateContent). Sa šemom prvo ide zvanični oblik responseFormat;
+   ako ga server odbije kao nepoznato polje, ponavlja se jednom sa responseMimeType (oblik koji koriste Troškovi). */
+async function aiRequest(parts, o){
+  o = o || {};
+  const key = aiGetKey();
+  if(!key) throw aiError('aiErrNoKey');
+  const model = o.model || aiModel();
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + model.id + ':generateContent?key=' + encodeURIComponent(key);
+  const contents = [{role:'user', parts}];
+  const bodies = o.schema
+    ? [{contents, generationConfig:{responseFormat:{text:{mimeType:'application/json', schema:o.schema}}}},
+       {contents, generationConfig:{responseMimeType:'application/json'}}]
+    : [{contents}];
+  let data = null;
+  for(let i = 0; i < bodies.length; i++){
+    let res;
+    try{ res = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(bodies[i]), signal:o.signal}); }
+    catch(e){ if(e && e.name === 'AbortError') throw e; throw aiError('aiErrNet'); }
+    let j = null;
+    try{ j = await res.json(); }catch(e){ if(e && e.name === 'AbortError') throw e; }
+    if(res.ok){ data = j; break; }
+    const err = (j && j.error) || {};
+    const msg = String(err.message || '');
+    const det = JSON.stringify(err.details || '');
+    if(res.status === 400 && /API_KEY_INVALID|API key/i.test(msg + det)) throw aiError('aiErrKey');
+    if(res.status === 400 && i < bodies.length - 1 && /response_?format|unknown name|invalid json payload|schema/i.test(msg)) continue;
+    if(res.status === 401 || res.status === 403) throw aiError('aiErrKey');
+    if(res.status === 404) throw aiError('aiErrModel', {m:model.name});
+    if(res.status === 429) throw aiError('aiErrQuota');
+    if(res.status >= 500) throw aiError('aiErrServer', {code:res.status});
+    throw aiError('aiErrOther', {code:res.status, msg:(msg || res.statusText || '').slice(0, 160)});
+  }
+  if(!data) throw aiError('aiErrParse');
+  if(data.promptFeedback && data.promptFeedback.blockReason) throw aiError('aiErrBlocked');
+  const cand = (data.candidates || [])[0] || null;
+  const um = data.usageMetadata || {};
+  const usage = {inp:um.promptTokenCount || 0, out:um.candidatesTokenCount || 0, think:um.thoughtsTokenCount || 0};
+  usage.usd = aiCostUsd(model, usage);
+  const cparts = (cand && cand.content && Array.isArray(cand.content.parts)) ? cand.content.parts : [];
+  const text = cparts.filter(p=>typeof p.text === 'string' && !p.thought).map(p=>p.text).join('');
+  return {text, usage, model, finish:(cand && cand.finishReason) || ''};
+}
+function aiParseJson(s){
+  const x = String(s || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+  try{ return JSON.parse(x); }catch(e){}
+  const a = x.indexOf('{'), b = x.lastIndexOf('}');
+  if(a >= 0 && b > a){ try{ return JSON.parse(x.slice(a, b + 1)); }catch(e){} }
+  return null;
+}
+function blobToB64(blob){
+  return new Promise((res, rej)=>{
+    const r = new FileReader();
+    r.onload = ()=>{ const s = String(r.result); res(s.slice(s.indexOf(',') + 1)); };
+    r.onerror = ()=>rej(r.error);
+    r.readAsDataURL(blob);
+  });
+}
+/* Šta se šalje: slike (sve stranice), PDF kao PDF, Word/Excel kao izvučen tekst */
+async function aiDocParts(item){
+  if(item.type === 'doc'){
+    const txt = await extractContentForItem(item);
+    if(!txt || !txt.trim()) throw aiError('aiErrNoText');
+    return [{text:'DOCUMENT TEXT:\n' + txt}];
+  }
+  const parts = [];
+  let total = 0;
+  for(let i = 0; i < (item.pages || []).length; i++){
+    let blob;
+    try{ blob = await getFileBlob(item, i); }catch(e){ throw aiError('aiErrFile'); }
+    total += blob.size;
+    if(total > AI_MAX_MB * 1048576) throw aiError('aiErrBig', {mb:(total / 1048576).toFixed(1), max:AI_MAX_MB});
+    const mime = item.type === 'pdf' ? 'application/pdf' : (blob.type || item.pages[i].mime || 'image/jpeg');
+    parts.push({inlineData:{mimeType:mime, data:await blobToB64(blob)}});
+  }
+  if(!parts.length) throw aiError('aiErrFile');
+  return parts;
+}
+function aiAlbumList(){
+  const out = [];
+  const byOrder = (a, b)=>(a.order || 0) - (b.order || 0);
+  categories.filter(c=>!c.parent).slice().sort(byOrder).forEach(c=>{
+    out.push({id:c.id, path:c.name});
+    childrenOf(c.id).slice().sort(byOrder).forEach(ch=>out.push({id:ch.id, path:c.name + ' / ' + ch.name}));
+  });
+  return out;
+}
+const AI_READ_SCHEMA = {
+  type:'object',
+  properties:{
+    name:{type:'string', description:'Short clear document name'},
+    albumId:{type:'string', description:'Album id from the given list, or empty string'},
+    validUntil:{type:'string', description:'YYYY-MM-DD or empty string'},
+    validNote:{type:'string', description:'What to do before validUntil, or empty string'},
+    lang:{type:'string', description:'ISO 639-1 language code of the document'},
+    text:{type:'string', description:'Full text of the document'}
+  },
+  required:['name', 'albumId', 'validUntil', 'validNote', 'lang', 'text']
+};
+function aiReadPrompt(albums){
+  const L = appLang() === 'en' ? 'English' : 'Serbian (Latin script)';
+  const list = albums.length ? albums.map(a=>a.id + ': ' + a.path).join('\n') : '(no albums)';
+  return [
+    'You are the filing assistant of a personal document archive app. Read the attached document (all pages) and return only JSON that matches the schema.',
+    `name: a short, clear name for the document in ${L}, at most 60 characters, for example "Polisa osiguranja – Golf 7" or "Račun za struju – avgust 2026". Use the terms from the document. No file extension.`,
+    'albumId: the id of the album from the list below that fits this document best, or "" if none fits well. Use only ids from the list.',
+    'validUntil: the last day the document is valid (expiry date, end of registration or insurance, end of warranty, passport or ID card expiry) as YYYY-MM-DD. If there is no validity end but there is a clear deadline to act (for example a payment due date), use that deadline. Otherwise "". Never use the issue date.',
+    `validNote: only if validUntil is set, a short note in ${L} (at most 100 characters) saying what to do before that date, for example "Obnoviti registraciju" or "Platiti račun". Otherwise "".`,
+    'lang: the ISO 639-1 code of the document language, for example "sr", "en", "de".',
+    'text: the full text of the document, all pages in order, in the original language and script, as plain text. Write table rows as lines with cells separated by " | ". Use "" if the document has no text.',
+    'Today is ' + todayYmd() + '.',
+    'Albums (id: name):\n' + list
+  ].join('\n\n');
+}
+function aiValidYmd(s){
+  if(!isYmd(s)) return false;
+  const [y, m, d] = ymdParts(s);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d && y >= 1990 && y <= 2100;
+}
+function aiCleanRead(o, albums){
+  if(!o || typeof o !== 'object' || Array.isArray(o)) return null;
+  const s = (v)=>typeof v === 'string' ? v : '';
+  const name = s(o.name).replace(/\s+/g, ' ').trim().slice(0, 120);
+  const albumId = albums.some(a=>a.id === s(o.albumId).trim()) ? s(o.albumId).trim() : '';
+  const vu0 = s(o.validUntil).trim();
+  const vu = aiValidYmd(vu0) ? vu0 : '';
+  const note = vu ? (cleanNote(s(o.validNote)) || '') : '';
+  const lg = s(o.lang).trim().toLowerCase();
+  const lang = /^[a-z]{2}$/.test(lg) ? lg : '';
+  const text = s(o.text).trim().slice(0, AI_TEXT_MAX);
+  if(!name && !albumId && !vu && !text) return null;
+  return {name, albumId, vu, note, lang, text};
+}
+
+/* ---------- Donji prozor „AI“: saglasnost → čekanje → predlog (ili greška), sve u istom prozoru ---------- */
+const aiSheet = document.getElementById('aiSheet');
+const aiBody = document.getElementById('aiBody');
+let _ai = null;       /* {item, ctrl} */
+let _aiReq = 0;       /* odgovor koji stigne posle zatvaranja se odbacuje */
+function aiOpenSheet(){
+  if(aiSheet.classList.contains('open')) return;
+  aiSheet.classList.add('open');
+  pushBack(closeAiSheet);
+}
+const closeAiSheet = ()=>{
+  aiSheet.classList.remove('open');
+  if(_ai && _ai.ctrl){ try{ _ai.ctrl.abort(); }catch(e){} }
+  _ai = null;
+  _aiReq++;
+  try{ if(document.activeElement && aiSheet.contains(document.activeElement)) document.activeElement.blur(); }catch(e){}
+};
+document.getElementById('aiBack').onclick = ()=>requestClose();
+aiSheet.onclick = (e)=>{ if(e.target === aiSheet) requestClose(); };
+function aiSetTitle(s){ document.getElementById('aiTitle').textContent = s; }
+function aiStartRead(item){
+  if(!item) return;
+  _ai = {item, ctrl:null};
+  aiOpenSheet();
+  aiSheet.querySelector('.sheet').scrollTop = 0;
+  if(!aiGetKey()){ aiShowError(aiError('aiErrNoKey'), item); return; }
+  if(!aiHasConsent()){ aiShowConsent(item); return; }
+  aiRunRead(item);
+}
+function aiShowConsent(item){
+  aiSetTitle(t('aiConsentTitle'));
+  aiBody.innerHTML = '<div class="exp-doc">' + escapeHtml(item.name) + '</div>' +
+    '<p class="ai-p">' + escapeHtml(t('aiConsentText')) + '</p>' +
+    '<button type="button" class="sheet-cta" id="aiConsentOk">' + escapeHtml(t('aiConsentOk')) + '</button>' +
+    '<button type="button" class="sheet-cta secondary ai-gap" id="aiConsentNo">' + escapeHtml(t('aiCancel')) + '</button>';
+  document.getElementById('aiConsentOk').onclick = ()=>{ aiLsSet(AI_LS_CONSENT, '1'); aiRunRead(item); };
+  document.getElementById('aiConsentNo').onclick = ()=>requestClose();
+}
+async function aiRunRead(item){
+  const req = ++_aiReq;
+  const ctrl = new AbortController();
+  if(_ai) _ai.ctrl = ctrl;
+  const model = aiModel();
+  aiSetTitle(t('aiReadTitle'));
+  aiBody.innerHTML = '<div class="ai-wait"><span class="ai-spin"></span>' +
+    '<div class="ai-wait-t">' + escapeHtml(t('aiReading')) + '</div>' +
+    '<div class="ai-wait-s">' + escapeHtml(t('aiReadingSub', {name:item.name, model:model.name})) + '</div>' +
+    '<div class="ai-wait-s">' + escapeHtml(t('aiReadingWait')) + '</div></div>' +
+    '<button type="button" class="sheet-cta secondary" id="aiStop">' + escapeHtml(t('aiCancel')) + '</button>';
+  document.getElementById('aiStop').onclick = ()=>requestClose();
+  try{
+    const albums = aiAlbumList();
+    const docParts = await aiDocParts(item);
+    if(req !== _aiReq) return;
+    const r = await aiRequest([{text:aiReadPrompt(albums)}].concat(docParts), {schema:AI_READ_SCHEMA, signal:ctrl.signal, model});
+    if(req !== _aiReq) return;
+    aiUsageAdd({model:model.id, name:item.name, inp:r.usage.inp, out:r.usage.out, think:r.usage.think, usd:r.usage.usd});
+    if(/SAFETY|PROHIBITED|BLOCKLIST|SPII|RECITATION/.test(r.finish)) throw aiError('aiErrBlocked');
+    const res = aiCleanRead(aiParseJson(r.text), albums);
+    if(!res) throw aiError(r.finish === 'MAX_TOKENS' ? 'aiErrCut' : 'aiErrParse');
+    aiShowResult(item, res, r);
+  }catch(e){
+    if(req !== _aiReq || (e && e.name === 'AbortError')) return;
+    console.error(e);
+    aiShowError(e, item);
+  }
+}
+function aiShowError(e, item){
+  aiSetTitle(t('aiErrTitle'));
+  const code = e && e.aiCode;
+  const toSettings = code === 'aiErrNoKey' || code === 'aiErrKey' || code === 'aiErrModel';
+  const retry = !toSettings && ['aiErrBig', 'aiErrNoText', 'aiErrFile', 'aiErrBlocked'].indexOf(code) < 0;
+  aiBody.innerHTML = '<div class="exp-doc">' + escapeHtml(item.name) + '</div>' +
+    '<p class="ai-p ai-err">' + escapeHtml(aiErrText(e)) + '</p>' +
+    (toSettings ? '<button type="button" class="sheet-cta" id="aiErrSet">' + escapeHtml(t('aiOpenSettings')) + '</button>' : '') +
+    (retry ? '<button type="button" class="sheet-cta" id="aiErrRetry">' + escapeHtml(t('aiTryAgain')) + '</button>' : '') +
+    '<button type="button" class="sheet-cta secondary ai-gap" id="aiErrClose">' + escapeHtml(t('aiClose')) + '</button>';
+  const set = document.getElementById('aiErrSet');
+  if(set) set.onclick = ()=>requestCloseThen(()=>{ openSettings(); openSettingsSub('ai'); });
+  const rt = document.getElementById('aiErrRetry');
+  if(rt) rt.onclick = ()=>aiRunRead(item);
+  document.getElementById('aiErrClose').onclick = ()=>requestClose();
+}
+const AI_CHECK_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12.5 10 17.5 19 7"></polyline></svg>';
+function aiRowHtml(id, label, on, body){
+  return '<div class="ai-row' + (on ? ' on' : '') + '" id="' + id + '">' +
+    '<button type="button" class="ai-row-head" data-row="' + id + '" aria-pressed="' + (on ? 'true' : 'false') + '">' +
+    '<span class="ai-chk">' + AI_CHECK_SVG + '</span><span class="ai-row-lbl">' + escapeHtml(label) + '</span></button>' +
+    '<div class="ai-row-body">' + body + '</div></div>';
+}
+function aiShowResult(item, res, r){
+  aiSetTitle(t('aiResTitle'));
+  const albums = aiAlbumList();
+  const cur = item.category || '';
+  const onName = !!res.name && res.name !== item.name;
+  const onAlb = !!res.albumId && res.albumId !== cur && !cur;
+  const onExp = !!res.vu && !isYmd(item.validUntil);
+  const onText = !!res.text && !item.hasText;
+  const expIcon = '<svg class="exp-field-ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"></rect><line x1="3.5" y1="10" x2="20.5" y2="10"></line><line x1="8" y1="3" x2="8" y2="7"></line><line x1="16" y1="3" x2="16" y2="7"></line></svg>';
+  const tx = inp => '<input ' + inp + ' autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">';
+  let h = '<div class="exp-doc">' + escapeHtml(item.name) + '</div><p class="ai-hint">' + escapeHtml(t('aiResHint')) + '</p>';
+  h += aiRowHtml('aiRowName', t('aiName'), onName,
+    tx('id="aiNameIn" type="text" class="sheet-input" maxlength="200"') +
+    '<div class="ai-now">' + escapeHtml(t('aiNow', {v:item.name})) + '</div>');
+  h += aiRowHtml('aiRowAlb', t('aiAlbum'), onAlb,
+    (res.albumId ? '' : '<div class="ai-miss">' + escapeHtml(t('aiNoAlbumFound')) + '</div>') +
+    '<div class="ai-sel-wrap"><select id="aiAlbSel" class="sheet-input ai-select"><option value="">' + escapeHtml(t('aiNoAlbum')) + '</option>' +
+    albums.map(a=>'<option value="' + escapeHtml(a.id) + '">' + escapeHtml(a.path) + '</option>').join('') + '</select></div>' +
+    '<div class="ai-now">' + escapeHtml(t('aiNow', {v:cur ? (albums.find(a=>a.id === cur) || {path:catLabel(cur)}).path : t('aiNoAlbum')})) + '</div>');
+  h += aiRowHtml('aiRowExp', t('aiExp'), onExp,
+    (res.vu ? '' : '<div class="ai-miss">' + escapeHtml(t('aiNoExp')) + '</div>') +
+    '<div class="exp-field">' + tx('id="aiExpIn" type="date" class="sheet-input exp-input"') +
+    '<span class="exp-field-txt" id="aiExpTxt"></span>' + expIcon + '</div>' +
+    '<div class="exp-state" id="aiExpState"></div>' +
+    '<label class="exp-lbl" for="aiNoteIn">' + escapeHtml(t('aiNote')) + '</label>' +
+    tx('id="aiNoteIn" type="text" class="sheet-input" maxlength="140"') +
+    '<div class="ai-now">' + escapeHtml(isYmd(item.validUntil) ? t('aiNow', {v:fmtExpField(item.validUntil) + (item.validNote ? ' · ' + item.validNote : '')}) : t('aiNowNone')) + '</div>');
+  if(res.text){
+    const short = res.text.length > 600;
+    h += aiRowHtml('aiRowText', t('aiText'), onText,
+      (item.hasText ? '<div class="ai-miss">' + escapeHtml(t('aiTextHasOld')) + '</div>' : '') +
+      '<div class="ai-text" id="aiTextBox"></div>' +
+      '<div class="ai-now">' + escapeHtml(t('aiTextCount', {n:fmtInt(res.text.length)})) +
+      (short ? ' · <button type="button" class="ai-link" id="aiTextMore">' + escapeHtml(t('aiTextMore')) + '</button>' : '') + '</div>');
+  }else{
+    h += '<div class="ai-miss">' + escapeHtml(t('aiNoText')) + '</div>';
+  }
+  h += '<div class="ai-usage">' + escapeHtml(t('aiUsageLine', {inp:fmtInt(r.usage.inp), out:fmtInt(r.usage.out + r.usage.think), usd:fmtUsd(r.usage.usd), m:r.model.name})) + '</div>' +
+    '<button type="button" class="sheet-cta" id="aiApplyBtn">' + escapeHtml(t('aiApply')) + '</button>' +
+    '<button type="button" class="sheet-cta secondary ai-gap" id="aiResCancel">' + escapeHtml(t('aiCancel')) + '</button>';
+  aiBody.innerHTML = h;
+  aiSheet.querySelector('.sheet').scrollTop = 0;
+  /* vrednosti se upisuju kroz DOM (bez ubacivanja u HTML) */
+  const nameIn = document.getElementById('aiNameIn');
+  const albSel = document.getElementById('aiAlbSel');
+  const expIn = document.getElementById('aiExpIn');
+  const noteIn = document.getElementById('aiNoteIn');
+  nameIn.value = res.name || item.name;
+  albSel.value = res.albumId || cur;
+  if(albSel.value !== (res.albumId || cur)) albSel.value = '';
+  expIn.value = res.vu || (isYmd(item.validUntil) ? item.validUntil : '');
+  noteIn.value = res.vu ? (res.note || '') : (item.validNote || '');
+  const box = document.getElementById('aiTextBox');
+  if(box){
+    box.textContent = res.text.length > 600 ? res.text.slice(0, 600) + '…' : res.text;
+    const more = document.getElementById('aiTextMore');
+    if(more) more.onclick = (e)=>{
+      e.stopPropagation();
+      const full = !box.classList.contains('full');
+      box.classList.toggle('full', full);
+      box.textContent = full ? res.text : res.text.slice(0, 600) + '…';
+      more.textContent = t(full ? 'aiTextLess' : 'aiTextMore');
+    };
+  }
+  const setOn = (id, on)=>{
+    const row = document.getElementById(id);
+    if(!row) return;
+    row.classList.toggle('on', on);
+    row.querySelector('.ai-row-head').setAttribute('aria-pressed', on ? 'true' : 'false');
+  };
+  aiBody.querySelectorAll('.ai-row-head').forEach(b=>{ b.onclick = ()=>setOn(b.dataset.row, !document.getElementById(b.dataset.row).classList.contains('on')); });
+  /* izmena polja znači da korisnik to želi: red se sam označi */
+  nameIn.addEventListener('input', ()=>setOn('aiRowName', true));
+  albSel.addEventListener('change', ()=>setOn('aiRowAlb', true));
+  noteIn.addEventListener('input', ()=>setOn('aiRowExp', true));
+  const expRefresh = ()=>{
+    const v = expIn.value, ok = isYmd(v);
+    const st = document.getElementById('aiExpState');
+    st.className = 'exp-state' + (ok ? ' lvl-' + expLevel(expDaysLeft(v)) : '');
+    st.textContent = ok ? expPhrase(v) : '';
+    const ft = document.getElementById('aiExpTxt');
+    ft.className = 'exp-field-txt' + (ok ? '' : ' empty');
+    ft.textContent = ok ? fmtExpField(v) : t('expPickDate');
+  };
+  expRefresh();
+  expIn.addEventListener('input', ()=>{ expRefresh(); setOn('aiRowExp', true); });
+  expIn.addEventListener('change', ()=>{ expRefresh(); setOn('aiRowExp', true); });
+  wireBackspace(nameIn);
+  wireBackspace(noteIn);
+  [nameIn, noteIn].forEach(el=>el.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ e.preventDefault(); el.blur(); } }));
+  const isOn = (id)=>{ const row = document.getElementById(id); return !!(row && row.classList.contains('on')); };
+  document.getElementById('aiResCancel').onclick = ()=>requestClose();
+  document.getElementById('aiApplyBtn').onclick = ()=>{
+    const ch = {};
+    if(isOn('aiRowName')){
+      const v = nameIn.value.replace(/\s+/g, ' ').trim();
+      if(!v){ toast(t('aiNameEmpty')); return; }
+      ch.name = v;
+    }
+    if(isOn('aiRowAlb')) ch.albumId = albSel.value || null;
+    if(isOn('aiRowExp')){
+      if(!isYmd(expIn.value)){ toast(t('aiExpEmpty')); return; }
+      ch.vu = expIn.value;
+      ch.note = cleanNote(noteIn.value);
+    }
+    if(isOn('aiRowText') && res.text){ ch.text = res.text; ch.lang = res.lang || null; }
+    if(!Object.keys(ch).length){ toast(t('aiNothing')); return; }
+    requestCloseThen(()=>{ aiApply(item, ch); });
+  };
+}
+/* Upis prihvaćenog predloga: jedan zapis dokumenta (+ tekst) u JEDNOJ transakciji */
+async function aiApply(item, ch){
+  if(items.indexOf(item) < 0){ toast(t('saveErr')); return; }
+  const old = {name:item.name, category:item.category, validUntil:item.validUntil, validNote:item.validNote, lang:item.lang, content:item.content, hasText:item.hasText, updatedAt:item.updatedAt};
+  const done = [];
+  if('name' in ch && ch.name !== item.name){ item.name = ch.name; done.push(t('aiDoneName')); }
+  if('albumId' in ch && (ch.albumId || null) !== (item.category || null)){ item.category = ch.albumId || null; done.push(t('aiDoneAlbum')); }
+  let expChanged = false;
+  if('vu' in ch && (ch.vu !== (item.validUntil || null) || (ch.note || null) !== (item.validNote || null))){
+    item.validUntil = ch.vu; item.validNote = ch.note || null; expChanged = true; done.push(t('aiDoneExp'));
+  }
+  let textNorm = null;
+  if('text' in ch && ch.text){
+    textNorm = normalizeSr(ch.text);
+    item.content = textNorm; item.hasText = true;
+    if(ch.lang) item.lang = ch.lang;
+    done.push(t('aiDoneText'));
+  }
+  if(!done.length){ toast(t('aiNoChange')); return; }
+  item.updatedAt = Date.now();
+  try{
+    await db2Run(textNorm ? ['docs', 'texts'] : ['docs'], 'readwrite', (st)=>{
+      if(textNorm) st('texts').put({id:item.id, text:textNorm});
+      st('docs').put(docRecord(item));
+    });
+  }catch(e){
+    Object.assign(item, old);
+    console.error(e);
+    toast(t('saveErr'));
+    return;
+  }
+  if(expChanged) markExpSeen(item);
+  if(item.category && item.category !== old.category) maybeAutoCover(item.category, item);
+  render();
+  currentGalleryIndex = currentGalleryItems.findIndex(i=>i.id === item.id);
+  if(modalBg.classList.contains('open') && modalItemId === item.id){
+    modalCaption.textContent = item.name;
+    updateModalExp(item);
+  }
+  toast(t('aiApplied', {list:done.join(', ')}));
+}
+/* dugme ✨ u pregledu */
+document.getElementById('modalAi').onclick = (e)=>{
+  e.stopPropagation();
+  const it = items.find(i=>i.id === modalItemId);
+  if(it) aiStartRead(it);
+};
+document.getElementById('modalAi').setAttribute('aria-label', t('aiBtnLbl'));
+
+/* ---------- Podešavanja → AI obrada ---------- */
+function aiTileSub(){ return aiGetKey() ? t('aiTileSubOn', {m:aiModel().name}) : t('aiTileSubOff'); }
+function aiSetRow(id, icon, label, danger){
+  return '<button type="button" class="settings-row" id="' + id + '"><span class="row-icon">' + icon + '</span><span class="row-label"' +
+    (danger ? ' style="color:var(--danger);"' : '') + '>' + escapeHtml(label) + '</span><span class="chevron">›</span></button>';
+}
+function aiSettingsHtml(){
+  const k = aiGetKey(), sh = aiSharedKey(), m = aiModel();
+  const u = aiUsageLoad();
+  const cm = u.months[todayYmd().slice(0, 7)] || {n:0, inp:0, out:0, usd:0};
+  const useRow = (o)=>t('aiSetUsageRow', {n:fmtInt(o.n || 0), tok:fmtInt((o.inp || 0) + (o.out || 0)), usd:fmtUsd(o.usd || 0)});
+  let h = '<div class="settings-card">' +
+    '<div class="settings-field"><label for="aiKeyInput">' + escapeHtml(t('aiSetKeyLbl')) + '</label>' +
+    '<input type="text" id="aiKeyInput" placeholder="' + escapeHtml(t('aiSetKeyPh')) + '" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done"></div>' +
+    aiSetRow('aiKeySave', '💾', t('aiSetSave')) +
+    (sh && sh !== k ? aiSetRow('aiKeyShared', '🔗', t('aiSetUseShared')) : '') +
+    (k ? aiSetRow('aiKeyCheck', '✔️', t('aiSetCheck')) + aiSetRow('aiKeyDel', '🗑️', t('aiSetDelete'), true) : '') +
+    '</div>' +
+    '<div class="settings-hint ai-key-state" id="aiKeyState">' + escapeHtml(k ? t('aiSetKeyNow', {k:k.slice(-4)}) : t('aiSetKeyNone')) + '</div>' +
+    '<div class="settings-hint">' + escapeHtml(t('aiSetKeyHint')) + '</div>' +
+    '<div class="ai-set-lbl">' + escapeHtml(t('aiSetModel')) + '</div>' +
+    AI_MODELS.map(x=>'<button type="button" class="theme-opt ai-opt' + (x.id === m.id ? ' on' : '') + '" data-model="' + x.id + '">' +
+      '<span class="t-name">' + escapeHtml(x.name) + '<small>' + escapeHtml(t(x.sub)) + '</small></span>' +
+      '<span class="t-check">' + (x.id === m.id ? '✓' : '') + '</span></button>').join('') +
+    '<div class="settings-hint" style="padding-top:0;">' + escapeHtml(t('aiSetModelHint')) + '</div>' +
+    '<div class="ai-set-lbl">' + escapeHtml(t('aiSetConsent')) + '</div>' +
+    '<div class="settings-card"><div class="ai-use-row"><b style="text-align:left;">' + escapeHtml(aiHasConsent() ? t('aiSetConsentYes') : t('aiSetConsentNo')) + '</b></div>' +
+    (aiHasConsent() ? aiSetRow('aiConsentRevoke', '↩️', t('aiSetConsentRevoke')) : '') + '</div>' +
+    '<div class="ai-set-lbl">' + escapeHtml(t('aiSetUsage')) + '</div>' +
+    '<div class="settings-card">' +
+    '<div class="ai-use-row"><span>' + escapeHtml(t('aiSetMonth')) + '</span><b>' + escapeHtml(useRow(cm)) + '</b></div>' +
+    '<div class="ai-use-row"><span>' + escapeHtml(t('aiSetTotal')) + '</span><b>' + escapeHtml(useRow(u.total)) + '</b></div></div>' +
+    '<div class="ai-set-lbl">' + escapeHtml(t('aiSetLast')) + '</div>' +
+    '<div class="settings-card">' +
+    (u.last.length ? u.last.map(x=>{
+      const d = new Date(x.ts || 0);
+      const when = d.getDate() + '.' + (d.getMonth() + 1) + '. ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+      const mm = aiModelById(x.model);
+      return '<div class="ai-last">' + escapeHtml(x.name || '') + '<small>' + escapeHtml(when + ' · ' + (mm ? mm.name : (x.model || ''))) + '</small>' +
+        '<small>' + escapeHtml(t('aiSetLastRow', {tin:fmtInt(x.inp), tout:fmtInt(x.out), usd:fmtUsd(x.usd)})) + '</small></div>';
+    }).join('') : '<div class="ai-use-row"><span>' + escapeHtml(t('aiSetUsageEmpty')) + '</span></div>') +
+    '</div>' +
+    '<div class="settings-hint">' + escapeHtml(t('aiSetFreeHint')) + '</div>';
+  return h;
+}
+function aiRefreshSettings(){
+  const body = settingsPanel.querySelector('.set-body');
+  if(!body) return;
+  body.innerHTML = aiSettingsHtml();
+  aiWireSettings();
+}
+function aiWireSettings(){
+  const inp = document.getElementById('aiKeyInput');
+  if(!inp) return;
+  wireBackspace(inp);
+  inp.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ e.preventDefault(); inp.blur(); } });
+  const state = document.getElementById('aiKeyState');
+  document.getElementById('aiKeySave').onclick = ()=>{
+    const v = inp.value.trim();
+    if(!v || /\s/.test(v)){ state.className = 'settings-hint ai-key-state bad'; state.textContent = t('aiSetBadKey'); return; }
+    aiLsSet(AI_LS_KEY, v);
+    toast(t('aiSaved'));
+    aiRefreshSettings();
+  };
+  const shared = document.getElementById('aiKeyShared');
+  if(shared) shared.onclick = ()=>{ const v = aiSharedKey(); if(!v) return; aiLsSet(AI_LS_KEY, v); toast(t('aiSaved')); aiRefreshSettings(); };
+  const del = document.getElementById('aiKeyDel');
+  if(del) del.onclick = ()=>{ aiLsSet(AI_LS_KEY, null); toast(t('aiDeleted')); aiRefreshSettings(); };
+  const chk = document.getElementById('aiKeyCheck');
+  if(chk) chk.onclick = async ()=>{
+    if(chk.dataset.busy) return;
+    chk.dataset.busy = '1';
+    state.className = 'settings-hint ai-key-state';
+    state.textContent = t('aiSetChecking');
+    try{
+      const r = await aiRequest([{text:'Reply with the single word OK.'}], {});
+      state.className = 'settings-hint ai-key-state ok';
+      state.textContent = t('aiSetOk', {m:r.model.name});
+    }catch(e){
+      state.className = 'settings-hint ai-key-state bad';
+      state.textContent = aiErrText(e);
+    }finally{ delete chk.dataset.busy; }
+  };
+  settingsPanel.querySelectorAll('.ai-opt').forEach(b=>{ b.onclick = ()=>{ aiLsSet(AI_LS_MODEL, b.dataset.model); aiRefreshSettings(); }; });
+  const rv = document.getElementById('aiConsentRevoke');
+  if(rv) rv.onclick = ()=>{ aiLsSet(AI_LS_CONSENT, null); toast(t('aiSetConsentRevoked')); aiRefreshSettings(); };
+}
 
 /* ---------- Meni za dodavanje: dokument od više stranica ---------- */
 document.getElementById('addMultiLbl').textContent = t('addMulti');
