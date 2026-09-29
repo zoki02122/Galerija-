@@ -467,7 +467,9 @@
     opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;z-index:80; /* iznad Podesavanja (70), ispod potvrde izlaska (90) */
     display:flex;align-items:center;gap:10px;width:max-content;max-width:94vw;box-sizing:border-box;
   }
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  /* verzija 66: tekst poruke propušta dodir (ne sme da zakloni olovku ili dugme ispod); dugme u poruci ga hvata */
+  .toast.show .toast-undo{pointer-events:auto;}
   .toast-msg{
     background:var(--surface);border:1px solid var(--line);color:var(--ink);
     padding:11px 16px;border-radius:8px;
@@ -2752,7 +2754,8 @@ async function idbPut(item){
 /* Nov dokument: podaci, fajlovi, sličice i tekst u JEDNOJ transakciji (sve ili ništa). */
 async function db2AddDoc(item, pages, text, opts){
   item.pages = pages.map(p=>({file:newFileId(), mime:(p.blob && p.blob.type) || '', size:p.blob ? p.blob.size : 0, w:p.w||0, h:p.h||0, thumb:!!p.thumbBlob}));
-  item.updatedAt = Date.now();
+  /* vraćanje kopije zadržava vreme izmene iz kopije (inače bi novija kopija izgledala starije) */
+  item.updatedAt = (opts && opts.updatedAt > 0) ? opts.updatedAt : Date.now();
   if(text){ item.content = text; item.hasText = true; }
   await db2Run(['docs','files','thumbs','texts'], 'readwrite', (st)=>{
     pages.forEach((p, i)=>{
@@ -5395,6 +5398,25 @@ async function exportBackup(){
 /* ================= VRAĆANJE IZ KOPIJE =================
    ID-jevi se čuvaju (prečice i kasnija sinhronizacija). Vraća se ono što nedostaje;
    ono što već postoji ostaje, osim ako je u kopiji novija izmena (tada se osveže podaci). */
+/* Vraćanje kopije u dokument koji već postoji (aktivan ili iz korpe): naziv, album, rok i napomena,
+   a tekst i jezik samo ako ih kopija ima (tekst slike koji je pročitao AI ne može ponovo da se izvuče).
+   Zapis dokumenta i tekst idu u JEDNOJ transakciji; vreme izmene ostaje ono iz kopije. */
+async function bkRefreshDoc(it, d, catId){
+  const old = {name:it.name, category:it.category, validUntil:it.validUntil, validNote:it.validNote, lang:it.lang,
+    content:it.content, hasText:it.hasText, updatedAt:it.updatedAt};
+  it.name = d.name || it.name;
+  it.category = (catId && catById(catId)) ? catId : null;
+  if(d.validUntil !== undefined){ it.validUntil = d.validUntil || null; it.validNote = d.validUntil ? (d.validNote || null) : null; }
+  const text = d.text || null;
+  if(text){ it.content = text; it.hasText = true; if(d.lang) it.lang = d.lang; }
+  it.updatedAt = (d.updatedAt > 0) ? d.updatedAt : Date.now();
+  try{
+    await db2Run(text ? ['docs', 'texts'] : ['docs'], 'readwrite', (st)=>{
+      if(text) st('texts').put({id:it.id, text});
+      st('docs').put(docRecord(it));
+    });
+  }catch(e){ Object.assign(it, old); throw e; }
+}
 async function mergeBackup(src){
   /* src: {albums:[{key, id?, name, parentKey, pinned, cover, updatedAt}], docs:[{id?, name, albumKey, kind, ext, createdAt, updatedAt,
      validUntil, lang, derivedFrom, sourceSig, text, pages:[{mime, w, h, getBlob}]}], coverOf:{albumKey: docId}} */
@@ -5427,19 +5449,21 @@ async function mergeBackup(src){
     const active = d.id ? items.find(i=>i.id === d.id) : null;
     if(active){
       if((d.updatedAt || 0) > (active.updatedAt || 0)){
-        active.name = d.name; active.category = catId;
-        if(d.validUntil !== undefined){ active.validUntil = d.validUntil || null; active.validNote = d.validNote || null; }
-        await idbPut(active);
-        updated++;
+        try{ await bkRefreshDoc(active, d, catId); updated++; }
+        catch(e){ console.error(e); skipped++; }
       }else skipped++;
       continue;
     }
     const inTrash = d.id ? trash.find(i=>i.id === d.id) : null;
     if(inTrash && inTrash.pages.length){
-      inTrash.name = d.name; inTrash.category = catId;
-      if(d.validUntil !== undefined){ inTrash.validUntil = d.validUntil || null; inTrash.validNote = d.validNote || null; }
-      restoreFromTrash([inTrash]);
-      added++;
+      const delAt = inTrash.deletedAt;
+      delete inTrash.deletedAt;
+      try{
+        await bkRefreshDoc(inTrash, d, catId);
+        trash = trash.filter(x=>x !== inTrash);
+        if(!items.includes(inTrash)) items.push(inTrash);
+        added++;
+      }catch(e){ inTrash.deletedAt = delAt; console.error(e); }
       continue;
     }
     try{
@@ -5458,7 +5482,7 @@ async function mergeBackup(src){
         ts: d.createdAt || Date.now(), sourceSig: d.sourceSig || null, validUntil: d.validUntil || null, validNote: d.validNote || null,
         lang: d.lang || null, derivedFrom: d.derivedFrom || null};
       if(d.ext) item.ext = d.ext;
-      await db2AddDoc(item, pages, d.text || null);
+      await db2AddDoc(item, pages, d.text || null, {updatedAt: d.updatedAt || 0});
       items.push(item);
       added++;
     }catch(e){
