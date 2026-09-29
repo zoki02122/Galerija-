@@ -916,6 +916,84 @@ html[data-theme="ponoc"]{
 .guide-item p{ margin:0; padding:0 14px 12px; font-size:14px; line-height:1.55; color:var(--ink); }
 .guide-item p:last-child{ padding-bottom:16px; }
 [data-theme="ponoc"] .guide-list{ background:var(--card-shine), var(--surface); }
+
+/* =========================================================
+   KORAK 3: rok važenja i traka „Uskoro ističe“
+   nivoi: ok (daleko) · warn (u okviru upozorenja) · soon (7 dana ili manje) · expired (isteklo)
+   ========================================================= */
+/* traka na početnom ekranu */
+.exp-bar{ margin:0 0 18px; background:var(--surface); border:1px solid var(--line); }
+.exp-bar.has-expired{ border-color:var(--danger-line); }
+:where(html[data-theme]:not([data-theme="klasicna"])) .exp-bar{ border-radius:16px; overflow:hidden; }
+[data-theme="ponoc"] .exp-bar{ background:var(--card-shine), var(--surface); }
+[data-theme="ponoc"] .exp-bar.has-expired{ border-color:#5A2A24; }
+[data-theme="banka"] .exp-bar, [data-theme="koza"] .exp-bar{ box-shadow:0 1px 0 rgba(0,0,0,.03), 0 6px 18px -10px rgba(0,0,0,.25); }
+.exp-head{ display:flex; align-items:center; gap:10px; padding:12px 14px 9px; }
+.exp-head svg{ flex:none; color:var(--brass); }
+.exp-bar.has-expired .exp-head svg{ color:var(--danger); }
+.exp-title{ flex:1; min-width:0; font-family:var(--font-title); font-size:17px; font-weight:600; color:var(--title-color); }
+.exp-count{ flex:none; min-width:24px; height:24px; padding:0 8px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center;
+  background:var(--surface-2); border:1px solid var(--line); color:var(--ink); font-size:12.5px; font-weight:700; font-family:var(--font-ui); }
+.exp-row{ display:flex; align-items:center; gap:11px; width:100%; min-height:54px; padding:9px 14px; border:none; border-top:1px solid var(--line-soft);
+  background:none; color:var(--ink); text-align:left; font-family:var(--font-ui); cursor:pointer; }
+.exp-row:active{ background:var(--surface-2); }
+.exp-dot{ flex:none; width:9px; height:9px; border-radius:50%; background:var(--ink-faint); }
+.exp-row.lvl-warn .exp-dot{ background:var(--brass-soft); }
+.exp-row.lvl-soon .exp-dot{ background:var(--brass); box-shadow:0 0 0 3px var(--brass-glow); }
+.exp-row.lvl-expired .exp-dot{ background:var(--danger); box-shadow:0 0 0 3px var(--danger-soft); }
+.exp-main{ flex:1; min-width:0; }
+.exp-name{ display:block; font-size:15px; font-weight:600; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.exp-album{ display:block; font-size:12px; color:var(--ink-dim); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.exp-when{ flex:none; display:flex; flex-direction:column; align-items:flex-end; gap:3px; max-width:46%; }
+.exp-when b{ font-size:13px; font-weight:700; line-height:1.2; white-space:nowrap; color:var(--ink); }
+.exp-when small{ font-size:11.5px; color:var(--ink-dim); white-space:nowrap; }
+.exp-row.lvl-soon .exp-when b{ background:var(--accent); color:var(--on-accent); padding:3px 9px; border-radius:10px; }
+.exp-row.lvl-expired .exp-when b{ background:var(--danger); color:var(--on-danger); padding:3px 9px; border-radius:10px; }
+[data-theme="ponoc"] .exp-row.lvl-soon .exp-when b{ background:var(--g-grad); }
+.exp-more{ display:block; width:100%; padding:11px 14px; border:none; border-top:1px solid var(--line-soft); background:none;
+  color:var(--brass); font-family:var(--font-ui); font-size:14px; font-weight:600; text-align:center; cursor:pointer; }
+/* oznaka na sličici u mreži */
+.exp-badge{ position:absolute; left:0; right:0; bottom:0; z-index:2; padding:4px 3px 3px; text-align:center; pointer-events:none;
+  font-family:var(--font-ui); font-size:10.5px; font-weight:700; line-height:1.15; letter-spacing:0; white-space:nowrap; overflow:hidden;
+  background:var(--mark-bg); color:var(--ink); border-top:1px solid var(--line); }
+.exp-badge.lvl-warn{ color:var(--brass); }
+.exp-badge.lvl-soon{ background:var(--accent); color:var(--on-accent); border-top-color:transparent; }
+.exp-badge.lvl-expired{ background:var(--danger); color:var(--on-danger); border-top-color:transparent; }
+[data-theme="ponoc"] .exp-badge.lvl-soon{ background:var(--g-grad); }
+.card.has-exp .pages-badge{ bottom:25px; }
+@media (max-width:360px){ .exp-badge{ font-size:9.5px; } }
+/* pregled: dugme sa kalendarom i natpis roka */
+.modal-exp{ position:absolute; top:calc(20px + env(safe-area-inset-top, 0px)); right:176px; z-index:3; }
+:where(html[data-theme]:not([data-theme="klasicna"])) .modal-exp{ right:170px; }
+.modal-bg .modal-exp{ transition:opacity .22s ease, border-color .2s, color .2s; }
+.modal-bg.ui-hidden .modal-exp{ opacity:0; pointer-events:none; }
+[data-theme="ponoc"] .modal-exp{ background:#000; border:1px solid var(--line); color:var(--brass); }
+.modal-exp.has{ color:var(--brass); border-color:var(--brass-soft); }
+.modal-exp.lvl-expired{ color:var(--danger); border-color:var(--danger-line); }
+.modal-exp-line{ display:table; margin:6px auto 0; padding:3px 10px; border-radius:10px; font-family:var(--font-ui); font-size:12.5px; font-weight:600;
+  color:var(--ink); background:var(--surface); border:1px solid var(--line); }
+.modal-exp-line:empty{ display:none; }
+.modal-exp-line.lvl-soon{ background:var(--accent); color:var(--on-accent); border-color:transparent; }
+.modal-exp-line.lvl-expired{ background:var(--danger); color:var(--on-danger); border-color:transparent; }
+[data-theme="ponoc"] .modal-exp-line.lvl-soon{ background:var(--g-grad); }
+/* donji meni za rok */
+.exp-doc{ font-size:14px; color:var(--ink); font-weight:600; margin:-6px 2px 14px; overflow-wrap:anywhere; }
+.exp-lbl{ display:block; font-size:12px; color:var(--ink-dim); margin:0 2px 6px; }
+.exp-input{ color-scheme:dark; min-height:50px; font-weight:600; }
+[data-theme="banka"] .exp-input, [data-theme="koza"] .exp-input{ color-scheme:light; }
+.exp-state{ font-size:13px; color:var(--ink-dim); margin:-4px 2px 14px; min-height:18px; }
+.exp-state.lvl-soon{ color:var(--brass); font-weight:600; }
+.exp-state.lvl-expired{ color:var(--danger); font-weight:600; }
+.sheet-cta:disabled{ opacity:.45; cursor:default; }
+#expClear{ color:var(--danger); }
+/* ekran stranica: polje roka */
+.pg-exp-field{ cursor:pointer; }
+.pg-exp-field:active{ background:var(--surface-2); }
+.pg-exp-val{ display:flex; align-items:center; gap:9px; font-size:15px; font-weight:600; color:var(--ink); }
+.pg-exp-val svg{ flex:none; color:var(--brass); }
+.pg-exp-val.none{ color:var(--ink-dim); font-weight:500; }
+.pg-exp-val.lvl-soon{ color:var(--brass); }
+.pg-exp-val.lvl-expired, .pg-exp-val.lvl-expired svg{ color:var(--danger); }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -1026,6 +1104,9 @@ html[data-theme="ponoc"]{
   <button class="back-btn modal-pdf" id="modalPdf" type="button">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2.5H6.5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V8z"></path><polyline points="14 2.5 14 8 19.5 8"></polyline><text x="12" y="17.6" text-anchor="middle" fill="currentColor" stroke="none" class="modal-pdf-txt">PDF</text></svg>
   </button>
+  <button class="back-btn modal-exp" id="modalExp" type="button">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"></rect><line x1="3.5" y1="10" x2="20.5" y2="10"></line><line x1="8" y1="3" x2="8" y2="7"></line><line x1="16" y1="3" x2="16" y2="7"></line><polyline points="9 15 11.2 17.2 15.5 12.8"></polyline></svg>
+  </button>
   <button class="modal-nav prev" id="modalPrev">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
   </button>
@@ -1037,6 +1118,7 @@ html[data-theme="ponoc"]{
     <div class="modal-info">
       <div class="modal-caption" id="modalCaption"></div>
       <span class="modal-page-no" id="modalPageNo"></span>
+      <span class="modal-exp-line" id="modalExpLine"></span>
       <div class="modal-position" id="modalPosition"></div>
     </div>
   </div>
@@ -1099,7 +1181,8 @@ html[data-theme="ponoc"]{
 <div class="pg-screen" id="pageEditor">
   <div class="set-header"><button type="button" class="set-back" id="pgBack" aria-label="nazad"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h2 class="set-title" id="pgTitle"></h2></div>
   <div class="pg-body"><div class="pg-inner">
-    <div class="settings-card"><div class="settings-field"><label for="pgName" id="pgNameLbl"></label><input id="pgName" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done"></div></div>
+    <div class="settings-card"><div class="settings-field"><label for="pgName" id="pgNameLbl"></label><input id="pgName" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done"></div>
+      <div class="settings-field pg-exp-field" id="pgExpField" role="button" tabindex="0"><label id="pgExpLbl"></label><div class="pg-exp-val" id="pgExpVal"></div></div></div>
     <div class="pg-meta"><span class="pg-count" id="pgCount"></span></div>
     <div class="pg-hint" id="pgHint"></div>
     <div class="pg-grid" id="pgGrid"></div>
@@ -1111,6 +1194,17 @@ html[data-theme="ponoc"]{
   </div>
   <input id="pgCamInput" type="file" accept="image/*" capture="environment" hidden>
   <input id="pgGalInput" type="file" accept="image/*" multiple hidden>
+</div>
+<div class="sheet-bg" id="expSheet">
+  <div class="sheet">
+    <div class="sheet-head"><button class="back-btn" id="expBack" type="button"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h3 id="expTitle"></h3></div>
+    <div class="exp-doc" id="expDoc"></div>
+    <label class="exp-lbl" for="expInput" id="expLbl"></label>
+    <input id="expInput" type="date" class="sheet-input exp-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    <div class="exp-state" id="expState"></div>
+    <button type="button" id="expSave" class="sheet-cta"></button>
+    <button type="button" id="expClear" class="sheet-cta secondary exp-clear"></button>
+  </div>
 </div>
 <div class="sheet-bg" id="actSheet">
   <div class="sheet">
@@ -1425,7 +1519,7 @@ const I18N = {
     delAlbumItems: 'Slike i dokumenti iz njega ({n}) ostaju u „Sve slike“.',
     delAlbumEmpty: 'U njemu nema slika ni dokumenata.',
     delAlbumOk: 'Obriši',
-    mergeConfirmText: 'Stranice idu redom kojim si označavao, ukupno {p}. Naziv i album uzimaju se od „{name}“. Originali idu u korpu, odakle mogu da se vrate.',
+    mergeConfirmText: 'Stranice idu redom kojim si označavao, ukupno {p}. Naziv, album i rok važenja uzimaju se od „{name}“. Originali idu u korpu, odakle mogu da se vrate.',
     mergeOk: 'Spoji',
     delModalTrash: 'Ide u korpu, gde čeka {days} dana i može se vratiti.',
     moreTitle: 'Izabrano: {n}',
@@ -1455,6 +1549,7 @@ const I18N = {
       ['Pregled i listanje', 'Dodir na sliku otvara pregled. Prevlačenjem levo i desno listaš stranice, a posle poslednje stranice prelaziš na sledeću stavku. Jedan dodir sakriva ili vraća dugmad.', 'Dugme sa stranicama u pregledu dodaje nove stranice u dokument ili menja njihov redosled.'],
       ['Spajanje i izdvajanje', 'Označi dve ili više slika (dugi pritisak), pa u traci dodirni „Više“ i „Spoji u jedan dokument“. Stranice idu redom kojim si ih označio, a naziv i album uzimaju se od prve. Pre spajanja Arhiva pita za potvrdu; originali idu u korpu, odakle mogu da se vrate.', 'Pojedinačnu stranicu izdvajaš na ekranu sa stranicama: dodir na stranicu, pa „Izdvoji kao posebnu sliku“.'],
       ['PDF', 'Dokument ili više označenih slika pretvaraš u jedan PDF: u pregledu dugmetom PDF, a kod izbora preko „Više“. Zatim biraš da li ga deliš (Viber, e-pošta…) ili čuvaš na telefon.', 'Stranice idu u PDF bez gubitka kvaliteta.'],
+      ['Rok važenja', 'Dokumentu koji ističe (registracija, pasoš, osiguranje, garancija) upiši rok: u pregledu dodirni dugme sa kalendarom, izaberi datum i dodirni „Sačuvaj“. Za PDF i druge fajlove označi stavku (dugi pritisak), pa „Više“ i „Rok važenja“. Rok se vidi i menja i na ekranu sa stranicama.', 'Kad se rok približi, na početnom ekranu se pojavi traka „Uskoro ističe“. Isteklo je crveno, a 7 dana ili manje je naglašeno. Dodir na red otvara dokument. Koliko dana ranije da te upozori biraš u Podešavanja → rok važenja (podrazumevano 30).', 'Upozorenje vidiš kad otvoriš Arhivu. Kad obnoviš dokument, upiši nov datum; ako rok više nije potreban, dodirni „Ukloni rok“. Rok se čuva u rezervnoj kopiji.'],
       ['Pretraga', 'Lupa pretražuje nazive albuma, slika i dokumenata. „Detaljno“ traži i reči unutar PDF, Word i Excel dokumenata.', 'U albumu pretraga obuhvata i njegove podalbume.'],
       ['Prečica na početnom ekranu', 'Označi jednu stavku i dodirni „Prečica“. Stavka se otvara u Chrome-u, a iz Chrome menija biraš „Dodaj na početni ekran“. Prečica dokumenta od više stranica lista sve stranice.'],
       ['Korpa', 'Svako brisanje prvo traži potvrdu. Obrisano ide u korpu (Podešavanja → korpa) i tamo čeka zadati broj dana, a zatim se trajno briše. Iz korpe stavku vraćaš ili je odmah trajno brišeš.', 'Albumi ne idu u korpu: kad obrišeš album, njegove slike i dokumenti ostaju u „Sve slike“.'],
@@ -1509,6 +1604,36 @@ const I18N = {
     oldConfirmText: 'Trajno obrisati stare podatke (od pre prelaska)? Tvoji trenutni dokumenti i albumi ostaju.',
     oldDeleted: 'Stari podaci su obrisani.',
     oldBlocked: 'Zatvori druge otvorene prozore Arhive pa pokušaj ponovo.',
+    expTitle: 'Rok važenja',
+    expLbl: 'važi do (poslednji dan važenja)',
+    expSave: 'Sačuvaj',
+    expOk: 'U redu',
+    expClear: 'Ukloni rok',
+    expNone: 'nije upisan',
+    expNoneTap: 'nije upisan, dodirni da upišeš',
+    expSaved: 'Rok je sačuvan: {date}',
+    expRemoved: 'Rok je uklonjen.',
+    expRow: 'Rok važenja',
+    expBarTitle: 'Uskoro ističe',
+    expMore: 'prikaži još {n}',
+    expLess: 'prikaži manje',
+    expBadge: 'ističe {date}',
+    expBadgeGone: 'isteklo {date}',
+    expGone: 'isteklo',
+    expToday: 'danas',
+    expTomorrow: 'sutra',
+    expInShort: 'za {n} {d}',
+    expPhraseGone: 'isteklo pre {n} {d} ({date})',
+    expPhraseGone1: 'isteklo juče ({date})',
+    expPhraseToday: 'ističe danas ({date})',
+    expPhraseTomorrow: 'ističe sutra ({date})',
+    expPhraseIn: 'ističe za {n} {d} ({date})',
+    expAlbumNone: 'Sve slike',
+    expSetTile: 'rok važenja',
+    expSetSub: 'upozori {n} {d} pre isteka',
+    expSetField: 'upozori me (dana pre isteka)',
+    expSetHint1: 'kad dokumentu ostane ovoliko dana ili manje, na početnom ekranu se pojavi traka „Uskoro ističe“. isteklo je crveno, a 7 dana ili manje je naglašeno.',
+    expSetHint2: 'upozorenje vidiš kad otvoriš Arhivu. obaveštenja dok je aplikacija zatvorena za sada ne postoje.',
     bkHintZip: 'rezervna kopija je jedan ZIP fajl: u njemu su tvoji dokumenti kao obične slike i PDF-ovi, složeni po albumima, pa se mogu otvoriti i bez Arhive. uvoz prima i stare .json kopije. vraćanje dodaje samo ono što nedostaje, bez duplikata.'
   },
   en: {
@@ -1557,7 +1682,7 @@ const I18N = {
     delAlbumItems: 'Its images and documents ({n}) stay in “All images”.',
     delAlbumEmpty: 'It has no images or documents.',
     delAlbumOk: 'Delete',
-    mergeConfirmText: 'Pages follow the order you selected them in, {p} in total. The name and album come from “{name}”. The originals go to the trash, from where they can be restored.',
+    mergeConfirmText: 'Pages follow the order you selected them in, {p} in total. The name, album and valid-until date come from “{name}”. The originals go to the trash, from where they can be restored.',
     mergeOk: 'Merge',
     delModalTrash: 'It goes to the trash, where it waits {days} days and can be restored.',
     moreTitle: 'Selected: {n}',
@@ -1587,6 +1712,7 @@ const I18N = {
       ['Viewing and paging', 'Tap an image to open it. Swipe left and right to turn pages; after the last page you move on to the next item. One tap hides or shows the buttons.', 'The pages button in the viewer adds new pages to a document or changes their order.'],
       ['Merging and splitting', 'Select two or more images (long-press), then tap “More” and “Merge into one document”. Pages follow the order you selected them in; the name and album come from the first. Arhiva asks before merging; the originals go to the trash, from where they can be restored.', 'To split off a single page, open the pages screen, tap the page and choose “Split off as a separate image”.'],
       ['PDF', 'Turn a document or several selected images into one PDF: with the PDF button in the viewer, or via “More” when selecting. Then share it (Viber, email…) or save it to the phone.', 'Pages go into the PDF without losing quality.'],
+      ['Valid until', 'For a document that expires (registration, passport, insurance, warranty) set the date: in the viewer tap the calendar button, pick the date and tap “Save”. For PDFs and other files select the item (long-press), then “More” and “Valid until”. The date is also shown and changed on the pages screen.', 'When the date gets close, an “Expiring soon” bar appears on the home screen. Expired is red, 7 days or fewer is highlighted. Tap a row to open the document. How many days in advance you are warned is set in Settings → valid until (30 by default).', 'You see the warning when you open Arhiva. When you renew a document, enter the new date; if the date is no longer needed, tap “Remove date”. The date is saved in the backup.'],
       ['Search', 'The magnifier searches the names of albums, images and documents. “Detailed” also searches words inside PDF, Word and Excel documents.', 'Inside an album, search also covers its sub-albums.'],
       ['Home screen shortcut', 'Select one item and tap “Shortcut”. The item opens in Chrome; choose “Add to home screen” from the Chrome menu. The shortcut of a multi-page document shows all pages.'],
       ['Trash', 'Every deletion asks for confirmation first. Deleted items go to the trash (Settings → trash) and wait there for the set number of days, then they are deleted for good. From the trash you can restore an item or delete it right away.', 'Albums do not go to the trash: when you delete an album, its images and documents stay in “All images”.'],
@@ -1641,6 +1767,36 @@ const I18N = {
     oldConfirmText: 'Permanently delete the old data (from before the move)? Your current documents and albums stay.',
     oldDeleted: 'Old data deleted.',
     oldBlocked: 'Close other open Arhiva windows and try again.',
+    expTitle: 'Valid until',
+    expLbl: 'valid until (last valid day)',
+    expSave: 'Save',
+    expOk: 'OK',
+    expClear: 'Remove date',
+    expNone: 'not set',
+    expNoneTap: 'not set, tap to add',
+    expSaved: 'Saved: valid until {date}',
+    expRemoved: 'Date removed.',
+    expRow: 'Valid until',
+    expBarTitle: 'Expiring soon',
+    expMore: 'show {n} more',
+    expLess: 'show less',
+    expBadge: 'exp. {date}',
+    expBadgeGone: 'expired {date}',
+    expGone: 'expired',
+    expToday: 'today',
+    expTomorrow: 'tomorrow',
+    expInShort: 'in {n} {d}',
+    expPhraseGone: 'expired {n} {d} ago ({date})',
+    expPhraseGone1: 'expired yesterday ({date})',
+    expPhraseToday: 'expires today ({date})',
+    expPhraseTomorrow: 'expires tomorrow ({date})',
+    expPhraseIn: 'expires in {n} {d} ({date})',
+    expAlbumNone: 'All images',
+    expSetTile: 'valid until',
+    expSetSub: 'warn {n} {d} before expiry',
+    expSetField: 'warn me (days before expiry)',
+    expSetHint1: 'when a document has this many days left or fewer, an “Expiring soon” bar appears on the home screen. Expired is red, 7 days or fewer is highlighted.',
+    expSetHint2: 'you see the warning when you open Arhiva. Notifications while the app is closed are not available yet.',
     bkHintZip: 'the backup is one ZIP file: your documents are inside as ordinary images and PDFs, sorted by album, so they open even without Arhiva. import also accepts old .json backups. restoring adds only what is missing, without duplicates.'
   }
 };
@@ -1655,6 +1811,262 @@ function t(key, vars){
   if(vars) s = s.replace(/\{(\w+)\}/g, (m, k)=> (k in vars) ? String(vars[k]) : m);
   return s;
 }
+
+/* =====================================================================
+   KORAK 3  ROK VAŽENJA (polje validUntil, oblik 'GGGG-MM-DD', samo datum, bez sata)
+   Rok je poslednji dan važenja: isteklo je tek od sledećeg dana.
+   Poređenje ide po kalendarskim danima (Date.UTC), pa letnje računanje vremena ne pomera rok.
+   ===================================================================== */
+var EXP_SOON = 7;                 /* 7 dana ili manje = naglašeno */
+var expExpanded = false;          /* traka na početnom ekranu: prikazano sve ili prve 3 */
+var _expRenderDay = '';
+function getExpiryDays(){
+  let v = 0;
+  try{ v = parseInt(localStorage.getItem(LS_PREFIX+'expiryDays')); }catch(e){}
+  return (v && v > 0) ? v : 30;
+}
+function saveExpiryDays(v){
+  const n = parseInt(v);
+  if(!(n > 0 && n <= 3650)) return;
+  try{ localStorage.setItem(LS_PREFIX+'expiryDays', String(n)); }catch(e){}
+  render();
+}
+function isYmd(s){ return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s); }
+function ymdParts(s){ return s.split('-').map(Number); }
+function todayYmd(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function expDaysLeft(ymd){
+  if(!isYmd(ymd)) return null;
+  const [y, m, d] = ymdParts(ymd);
+  const n = new Date();
+  return Math.round((Date.UTC(y, m-1, d) - Date.UTC(n.getFullYear(), n.getMonth(), n.getDate())) / 86400000);
+}
+function expLevel(days){
+  if(days === null || days === undefined) return '';
+  if(days < 0) return 'expired';
+  if(days <= EXP_SOON) return 'soon';
+  if(days <= getExpiryDays()) return 'warn';
+  return 'ok';
+}
+/* reč „dan/dana“: 1, 21, 31… dan; ostalo dana (11 je izuzetak) */
+function dayWord(n){
+  n = Math.abs(n);
+  if(appLang() === 'en') return n === 1 ? 'day' : 'days';
+  return (n % 10 === 1 && n % 100 !== 11) ? 'dan' : 'dana';
+}
+/* long: ceo datum; inače kratko (tekuća godina bez godine) */
+function fmtExpDate(ymd, long){
+  if(!isYmd(ymd)) return '';
+  const [y, m, d] = ymdParts(ymd);
+  const cur = new Date().getFullYear();
+  if(appLang() === 'en'){
+    const dt = new Date(y, m-1, d);
+    if(long) return dt.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+    return y === cur ? dt.toLocaleDateString('en-US', {month:'short', day:'numeric'}) : dt.toLocaleDateString('en-US', {month:'short', year:'numeric'});
+  }
+  const base = d + '.' + m + '.';
+  if(long) return base + y + '.';
+  return y === cur ? base : base + String(y).slice(-2) + '.';
+}
+/* cela rečenica: „ističe za 13 dana (12.10.2026.)“ */
+function expPhrase(ymd){
+  const days = expDaysLeft(ymd);
+  if(days === null) return '';
+  const date = fmtExpDate(ymd, true);
+  if(days < -1) return t('expPhraseGone', {n:-days, d:dayWord(days), date});
+  if(days === -1) return t('expPhraseGone1', {date});
+  if(days === 0) return t('expPhraseToday', {date});
+  if(days === 1) return t('expPhraseTomorrow', {date});
+  return t('expPhraseIn', {n:days, d:dayWord(days), date});
+}
+/* kratko za desnu stranu reda u traci */
+function expShort(days){
+  if(days < 0) return t('expGone');
+  if(days === 0) return t('expToday');
+  if(days === 1) return t('expTomorrow');
+  return t('expInShort', {n:days, d:dayWord(days)});
+}
+
+/* ---------- Donji meni: izbor roka ---------- */
+const expSheet = document.getElementById('expSheet');
+const expInput = document.getElementById('expInput');
+let _expCtx = null;   /* {name, value, okLabel, onDone(v)} */
+function openExpirySheet(o){
+  _expCtx = o;
+  document.getElementById('expTitle').textContent = t('expTitle');
+  document.getElementById('expDoc').textContent = o.name || '';
+  document.getElementById('expLbl').textContent = t('expLbl');
+  document.getElementById('expSave').textContent = o.okLabel || t('expSave');
+  document.getElementById('expClear').textContent = t('expClear');
+  document.getElementById('expClear').style.display = isYmd(o.value) ? '' : 'none';
+  expInput.value = isYmd(o.value) ? o.value : '';
+  expUpdateState();
+  expSheet.classList.add('open');
+  pushBack(closeExpSheet);
+  /* bez upisanog roka kalendar se otvara odmah (jedan dodir manje); ako Chrome ne dozvoli, ostaje polje */
+  if(!expInput.value){ try{ if(expInput.showPicker) expInput.showPicker(); }catch(e){} }
+}
+const closeExpSheet = ()=>{ expSheet.classList.remove('open'); try{ expInput.blur(); }catch(e){} };
+function expUpdateState(){
+  const v = expInput.value;
+  const st = document.getElementById('expState');
+  const ok = isYmd(v);
+  st.className = 'exp-state' + (ok ? ' lvl-' + expLevel(expDaysLeft(v)) : '');
+  st.textContent = ok ? expPhrase(v) : '';
+  document.getElementById('expSave').disabled = !ok;
+}
+expInput.addEventListener('input', expUpdateState);
+expInput.addEventListener('change', expUpdateState);
+document.getElementById('expBack').onclick = ()=>requestClose();
+expSheet.onclick = (e)=>{ if(e.target === expSheet) requestClose(); };
+document.getElementById('expSave').onclick = ()=>{
+  const v = expInput.value;
+  if(!isYmd(v) || !_expCtx) return;
+  const cb = _expCtx.onDone; _expCtx = null;
+  requestCloseThen(()=>cb(v));
+};
+document.getElementById('expClear').onclick = ()=>{
+  if(!_expCtx) return;
+  const cb = _expCtx.onDone; _expCtx = null;
+  requestCloseThen(()=>cb(null));
+};
+
+/* Upis roka jednog dokumenta (pregled i „Više“) */
+async function setItemExpiry(item, v){
+  const old = item.validUntil || null;
+  item.validUntil = v || null;
+  try{ await idbPut(item); }
+  catch(e){ item.validUntil = old; console.error(e); toast(t('saveErr')); return false; }
+  toast(v ? t('expSaved', {date:fmtExpDate(v, true)}) : t('expRemoved'));
+  return true;
+}
+
+/* ---------- Traka „Uskoro ističe“ na početnom ekranu ---------- */
+function expiringItems(){
+  const N = getExpiryDays();
+  return items.filter(i=>isYmd(i.validUntil))
+    .map(i=>({it:i, days:expDaysLeft(i.validUntil)}))
+    .filter(x=>x.days <= N)
+    .sort((a,b)=>(a.days - b.days) || normalizeSr(a.it.name).localeCompare(normalizeSr(b.it.name)));
+}
+function buildExpiryBar(){
+  const list = expiringItems();
+  if(!list.length) return null;
+  const box = document.createElement('div');
+  box.className = 'exp-bar' + (list.some(x=>x.days < 0) ? ' has-expired' : '');
+  box.id = 'expBar';
+  const head = document.createElement('div');
+  head.className = 'exp-head';
+  head.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"></circle><polyline points="12 9 12 13 14.8 14.8"></polyline><line x1="9.5" y1="2.5" x2="14.5" y2="2.5"></line></svg>'+
+    '<span class="exp-title">'+escapeHtml(t('expBarTitle'))+'</span><span class="exp-count">'+list.length+'</span>';
+  box.appendChild(head);
+  const LIMIT = 3;
+  const shown = (expExpanded || list.length <= LIMIT) ? list : list.slice(0, LIMIT);
+  shown.forEach(x=>{
+    const row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'exp-row lvl-' + expLevel(x.days);
+    const album = x.it.category ? catLabel(x.it.category) : t('expAlbumNone');
+    row.innerHTML = '<span class="exp-dot"></span><span class="exp-main"><span class="exp-name">'+escapeHtml(x.it.name)+'</span>'+
+      '<span class="exp-album">'+escapeHtml(album || t('expAlbumNone'))+'</span></span>'+
+      '<span class="exp-when"><b>'+escapeHtml(expShort(x.days))+'</b><small>'+escapeHtml(fmtExpDate(x.it.validUntil, false))+'</small></span>';
+    row.onclick = ()=>openFromExpiry(x.it);
+    box.appendChild(row);
+  });
+  if(list.length > LIMIT){
+    const more = document.createElement('button');
+    more.type = 'button';
+    more.className = 'exp-more';
+    more.textContent = expExpanded ? t('expLess') : t('expMore', {n:list.length - LIMIT});
+    more.onclick = ()=>{ expExpanded = !expExpanded; render(); };
+    box.appendChild(more);
+  }
+  return box;
+}
+/* Dodir na red: slika/dokument od više stranica -> pregled u svom albumu (nazad vodi na početni ekran);
+   PDF i drugi fajlovi se otvaraju kao i iz mreže. */
+function openFromExpiry(item){
+  if(item.type === 'pdf' || item.type === 'doc'){ openPdf(item); return; }
+  const closer = ()=>{ currentFolder = null; searchEl.value = ''; render(); };
+  closer.isAlbumCloser = true;
+  currentFolder = item.category || INBOX;
+  searchEl.value = '';
+  pushBack(closer);
+  render();
+  openModal(item);
+}
+/* posle ponoći (aplikacija ostala otvorena) brojevi dana se osvežavaju pri povratku */
+document.addEventListener('visibilitychange', ()=>{
+  if(!document.hidden && _expRenderDay && _expRenderDay !== todayYmd()) render();
+});
+
+/* ---------- Oznaka roka na sličici ---------- */
+function addExpiryBadge(card, thumbBox, item){
+  if(!isYmd(item.validUntil)) return;
+  const days = expDaysLeft(item.validUntil);
+  const b = document.createElement('span');
+  b.className = 'exp-badge lvl-' + expLevel(days);
+  b.textContent = t(days < 0 ? 'expBadgeGone' : 'expBadge', {date:fmtExpDate(item.validUntil, false)});
+  thumbBox.appendChild(b);
+  card.classList.add('has-exp');
+}
+
+/* ---------- Pregled: dugme sa kalendarom i natpis ---------- */
+function updateModalExp(item){
+  const btn = document.getElementById('modalExp');
+  const line = document.getElementById('modalExpLine');
+  if(!item || !isYmd(item.validUntil)){
+    btn.className = 'back-btn modal-exp';
+    line.className = 'modal-exp-line'; line.textContent = '';
+    return;
+  }
+  const lvl = expLevel(expDaysLeft(item.validUntil));
+  btn.className = 'back-btn modal-exp has lvl-' + lvl;
+  line.className = 'modal-exp-line lvl-' + lvl;
+  line.textContent = expPhrase(item.validUntil);
+}
+document.getElementById('modalExp').setAttribute('aria-label', t('expTitle'));
+document.getElementById('modalExp').onclick = (e)=>{
+  e.stopPropagation();
+  const it = items.find(i=>i.id === modalItemId);
+  if(!it) return;
+  openExpirySheet({name:it.name, value:it.validUntil, onDone:(v)=>{
+    setItemExpiry(it, v).then(ok=>{
+      if(!ok) return;
+      render();
+      currentGalleryIndex = currentGalleryItems.findIndex(i=>i.id === it.id);
+      if(modalBg.classList.contains('open') && modalItemId === it.id) updateModalExp(it);
+    });
+  }});
+};
+
+/* ---------- Ekran sa stranicama: polje roka ---------- */
+function renderPageEditorExp(){
+  const val = document.getElementById('pgExpVal');
+  if(!val || !ed) return;
+  const icon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"></rect><line x1="3.5" y1="10" x2="20.5" y2="10"></line><line x1="8" y1="3" x2="8" y2="7"></line><line x1="16" y1="3" x2="16" y2="7"></line></svg>';
+  if(isYmd(ed.validUntil)){
+    val.className = 'pg-exp-val lvl-' + expLevel(expDaysLeft(ed.validUntil));
+    val.innerHTML = icon + '<span>' + escapeHtml(expPhrase(ed.validUntil)) + '</span>';
+  }else{
+    val.className = 'pg-exp-val none';
+    val.innerHTML = icon + '<span>' + escapeHtml(t('expNoneTap')) + '</span>';
+  }
+}
+function pgOpenExpiry(){
+  if(!ed || ed.busy) return;
+  const nm = (document.getElementById('pgName').value || '').trim() || t('pgDefaultName');
+  openExpirySheet({name:nm, value:ed.validUntil, okLabel:t('expOk'), onDone:(v)=>{
+    if(!ed) return;
+    if((v || null) !== (ed.validUntil || null)){ ed.validUntil = v || null; ed.dirty = true; }
+    renderPageEditorExp();
+  }});
+}
+document.getElementById('pgExpLbl').textContent = t('expTitle').toLowerCase();
+document.getElementById('pgExpField').onclick = pgOpenExpiry;
+document.getElementById('pgExpField').addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); pgOpenExpiry(); } });
 
 /* ================= SKLADIŠTE: baza arhivaDB =================
    Stara baza galerijaDB (verzija 1) se NE menja: otvaraju je photo.html i arhiva-slika.
@@ -2735,6 +3147,11 @@ function render(){
   };
   setupViewToggleBtn();
 
+  /* Traka „Uskoro ističe“: samo kad nešto ističe u narednih N dana ili je već isteklo */
+  _expRenderDay = todayYmd();
+  const expBar = buildExpiryBar();
+  if(expBar) contentArea.appendChild(expBar);
+
   /* Pocetni ekran: samo albumi prvog nivoa (podalbumi su unutar svog albuma) */
   appendAlbumGroups(contentArea, categories.filter(c=>!c.parent), cat=>{
     currentFolder = cat.id; searchEl.value=''; pushBack(closeAlbumView); render();
@@ -2920,6 +3337,7 @@ function buildCard(item, indexNumber){
     badge.textContent = t('pgCount', {n:nPages});
     thumbBox.appendChild(badge);
   }
+  addExpiryBadge(card, thumbBox, item);
   card.appendChild(thumbBox);
 
   const mark = document.createElement('div');
@@ -3137,6 +3555,7 @@ function showModalItem(item, page){
   document.getElementById('modalPosition').textContent = total > 1 && currentGalleryIndex >= 0
     ? (currentGalleryIndex+1) + ' / ' + total : '';
   document.getElementById('modalPageNo').textContent = n > 1 ? t('pgPageNo', {n:pg+1, total:n}) : '';
+  updateModalExp(item);
 }
 /* Listanje: prvo stranice dokumenta, posle poslednje sledeća stavka (unazad: poslednja stranica prethodne) */
 function modalNav(dir){
@@ -3299,7 +3718,7 @@ async function copyDoc(orig, catId){
   }
   let text = orig.content || null;
   if(!text && orig.hasText){ const tr = await db2Get('texts', orig.id); text = tr ? tr.text : null; }
-  const clone = { id:newItemId(), name:orig.name, ts:Date.now(), category:catId || null, type: orig.type };
+  const clone = { id:newItemId(), name:orig.name, ts:Date.now(), category:catId || null, type: orig.type, validUntil: orig.validUntil || null };
   if(orig.ext) clone.ext = orig.ext;
   await db2AddDoc(clone, pages, text);
   return clone;
@@ -4006,12 +4425,13 @@ function renderSettingsTiles(){
     settingsTile('🎨', 'tema', themeName(getTheme()), "openSettingsSub('theme')")+
     settingsTile('💾', 'rezervna kopija', lastBackupDisplay(), "openSettingsSub('backup')")+
     settingsTile('♻️', 'korpa', trashTileSub(), "openSettingsSub('trash')")+
+    settingsTile('📅', t('expSetTile'), t('expSetSub', {n:getExpiryDays(), d:dayWord(getExpiryDays())}), "openSettingsSub('expiry')")+
     settingsTile('📖', t('guideTile'), t('guideTileSub'), "openSettingsSub('guide')")+
     (_oldDbPresent ? settingsTile('🗄️', t('oldTile'), t('oldTileSub'), "openSettingsSub('old')") : '')+
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 61</div>'+
+    '<div class="settings-hint set-build">verzija 62</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -4070,6 +4490,14 @@ function openSettingsSub(which){
       '</div>'+
       '<div class="settings-hint">obrisane slike i dokumenti čekaju ovde. kad prođe ovoliko dana, trajno se brišu pri otvaranju aplikacije. korpa se ne čuva u rezervnoj kopiji.</div>'+
       '<div id="trashList"></div>';
+  }else if(which === 'expiry'){
+    title = t('expSetTile');
+    body =
+      '<div class="settings-card">'+
+      '<div class="settings-field"><label for="expiryDaysInput">'+escapeHtml(t('expSetField'))+'</label><input type="number" inputmode="numeric" min="1" max="3650" id="expiryDaysInput" value="'+getExpiryDays()+'" oninput="saveExpiryDays(this.value)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>'+
+      '</div>'+
+      '<div class="settings-hint">'+escapeHtml(t('expSetHint1'))+'</div>'+
+      '<div class="settings-hint">'+escapeHtml(t('expSetHint2'))+'</div>';
   }else if(which === 'guide'){
     title = t('guideTile');
     body = guideHtml();
@@ -4382,7 +4810,7 @@ async function exportBackup(){
       return rec;
     });
     const albums = categories.map((c, i)=>Object.assign(albumRecord(c, i), {createdAt:c.createdAt || 0, updatedAt:c.updatedAt || 0}));
-    const manifest = {app:'Arhiva', format:3, exportedAt:new Date().toISOString(), settings:{theme:getTheme()}, albums, docs:docOut};
+    const manifest = {app:'Arhiva', format:3, exportedAt:new Date().toISOString(), settings:{theme:getTheme(), expiryDays:getExpiryDays()}, albums, docs:docOut};
     const entries = [{name:'arhiva.json', blob:new Blob([JSON.stringify(manifest)], {type:'application/json'}), ts:Date.now()}];
     for(const fe of fileEntries){
       entries.push({name:fe.path, blob:await getFileBlob(fe.it, fe.i), ts:fe.it.ts});
@@ -4443,6 +4871,7 @@ async function mergeBackup(src){
     const inTrash = d.id ? trash.find(i=>i.id === d.id) : null;
     if(inTrash && inTrash.pages.length){
       inTrash.name = d.name; inTrash.category = catId;
+      if(d.validUntil !== undefined) inTrash.validUntil = d.validUntil || null;
       restoreFromTrash([inTrash]);
       added++;
       continue;
@@ -4492,6 +4921,7 @@ async function importZipBackup(file){
   const data = JSON.parse(await (await man.read('application/json')).text());
   if(!data || data.format !== 3 || !Array.isArray(data.docs)) throw new Error('NOT_BACKUP');
   if(data.settings && data.settings.theme) setTheme(data.settings.theme);
+  if(data.settings && parseInt(data.settings.expiryDays) > 0){ try{ localStorage.setItem(LS_PREFIX+'expiryDays', String(parseInt(data.settings.expiryDays))); }catch(e){} }
   const coverOf = {};
   const albums = (data.albums || []).filter(a=>a && a.id && a.name && !a.deletedAt).map(a=>{
     if(a.cover) coverOf[a.id] = a.cover;
@@ -4699,7 +5129,7 @@ async function pageThumbUrl(item, i){
    detach:   [{file, name, deleted}] postojeće stranice koje postaju posebne slike.
    Postojeća stranica koja nije ni u newPages ni u detach ide u korpu kao posebna slika
    (ništa ne ostaje bez vlasnika i ništa se ne briše trajno bez korpe). */
-async function db2UpdatePages(item, newPages, name, detach){
+async function db2UpdatePages(item, newPages, name, detach, extra){
   const now = Date.now();
   const oldByFile = new Map(item.pages.map((p, i)=>[p.file, {p, i}]));
   const meta = newPages.map(p=>{
@@ -4726,7 +5156,7 @@ async function db2UpdatePages(item, newPages, name, detach){
     if(d.deleted) it.deletedAt = now;
     return it;
   });
-  const upd = Object.assign({}, item, {pages:meta, name, updatedAt:now});
+  const upd = Object.assign({}, item, extra || {}, {pages:meta, name, updatedAt:now});
   await db2Run(['docs','files','thumbs'], 'readwrite', (st)=>{
     newPages.forEach((p, i)=>{
       if(p.file) return;
@@ -4744,6 +5174,7 @@ async function db2UpdatePages(item, newPages, name, detach){
   /* upisano: uskladi prikaz */
   const oldFirst = item.pages[0] && item.pages[0].file;
   item.pages = meta; item.name = name; item.updatedAt = now;
+  if(extra) Object.assign(item, extra);
   if(meta[0].file !== oldFirst){
     const nb = newPages[0].thumbBlob || ((await db2Get('thumbs', meta[0].file)) || {}).blob || null;
     setThumbUrl(item, nb);
@@ -4767,7 +5198,8 @@ const pgGalInput = document.getElementById('pgGalInput');
 
 function openPageEditor(item){
   const cat = item ? item.category : (currentFolder && currentFolder !== INBOX ? currentFolder : null);
-  ed = {item: item || null, category: cat, name: item ? item.name : t('pgDefaultName'), pages: [], dirty: false, busy: false};
+  ed = {item: item || null, category: cat, name: item ? item.name : t('pgDefaultName'), pages: [], dirty: false, busy: false,
+    validUntil: (item && isYmd(item.validUntil)) ? item.validUntil : null};
   if(item){
     item.pages.forEach((p, i)=>{
       const pg = {key: ++_edKey, file: p.file, url: '', w: p.w, h: p.h, pending: false, own: false};
@@ -4810,6 +5242,7 @@ function renderPageEditor(){
   const grid = document.getElementById('pgGrid');
   const n = ed.pages.length;
   const pending = ed.pages.some(p=>p.pending);
+  renderPageEditorExp();
   document.getElementById('pgCount').textContent = n ? t('pgCountLong', {n}) : '';
   document.getElementById('pgHint').textContent = n > 1 ? t('pgHint') : '';
   const saveBtn = document.getElementById('pgSave');
@@ -4999,7 +5432,7 @@ document.getElementById('pgSave').onclick = async ()=>{
   renderPageEditor();
   try{
     if(!ed.item){
-      const item = {id:newItemId(), name, ts:Date.now(), category:ed.category || null, type:'image'};
+      const item = {id:newItemId(), name, ts:Date.now(), category:ed.category || null, type:'image', validUntil: ed.validUntil || null};
       await db2AddDoc(item, ed.pages.map(p=>({blob:p.blob, thumbBlob:p.thumbBlob, w:p.w, h:p.h})), null);
       items.push(item);
       maybeAutoCover(item.category, item);
@@ -5009,7 +5442,7 @@ document.getElementById('pgSave').onclick = async ()=>{
       toast(t('pgSaved', {n:item.pages.length}));
     }else{
       const item = ed.item;
-      const det = await db2UpdatePages(item, ed.pages.map(p=>p.file ? {file:p.file} : {blob:p.blob, thumbBlob:p.thumbBlob, w:p.w, h:p.h}), name, []);
+      const det = await db2UpdatePages(item, ed.pages.map(p=>p.file ? {file:p.file} : {blob:p.blob, thumbBlob:p.thumbBlob, w:p.w, h:p.h}), name, [], {validUntil: ed.validUntil || null});
       ed.dirty = false;
       requestClose();
       render();
@@ -5055,7 +5488,7 @@ async function mergeSelected(){
         toastPersist(t('mergeBusy', {n:pages.length, total}));
       }
     }
-    const doc = {id:newItemId(), name:first.name, ts:Date.now(), category:first.category || null, type:'image'};
+    const doc = {id:newItemId(), name:first.name, ts:Date.now(), category:first.category || null, type:'image', validUntil: first.validUntil || null};
     await db2AddDoc(doc, pages, null);
     items.push(doc);
     const ids = new Set(chosen.map(i=>i.id));
@@ -5229,6 +5662,14 @@ function openMoreSheet(){
   if(!chosen.length) return;
   const allImg = chosen.every(i=>i.type === 'image');
   const rows = [];
+  if(chosen.length === 1){
+    const it = chosen[0];
+    rows.push({icon:'📅', label:t('expRow'), hint: isYmd(it.validUntil) ? expPhrase(it.validUntil) : t('expNone'), onClick:()=>{
+      openExpirySheet({name:it.name, value:it.validUntil, onDone:(v)=>{
+        setItemExpiry(it, v).then(ok=>{ if(ok){ if(selectionMode) exitSelection(); else render(); } });
+      }});
+    }});
+  }
   if(chosen.length >= 2){
     rows.push({icon:'🗂️', label:t('mergeRow'), hint: allImg ? t('mergeHint') : t('mergeOnlyImages'), disabled:!allImg, onClick:mergeSelected});
   }
