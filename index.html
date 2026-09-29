@@ -1039,7 +1039,8 @@ html[data-theme="ponoc"]{
 .exp-field .exp-input::-webkit-calendar-picker-indicator{ position:absolute; inset:0; width:auto; height:auto; margin:0; padding:0; opacity:0; cursor:pointer; }
 .exp-field-txt{ position:absolute; left:16px; right:48px; top:50%; transform:translateY(-50%); pointer-events:none;
   font-size:16px; font-weight:700; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.exp-field-txt.empty{ font-weight:500; color:var(--ink-dim); }
+/* verzija 67: stanje „prazno“ je is-empty — opšta klasa .empty crta okvir praznog albuma */
+.exp-field-txt.is-empty{ font-weight:500; color:var(--ink-dim); }
 .exp-field-ic{ position:absolute; right:15px; top:50%; transform:translateY(-50%); pointer-events:none; color:var(--brass); }
 
 /* =========================================================
@@ -1056,7 +1057,7 @@ html[data-theme="ponoc"]{
 /* verzija 65: olovka pored oznake roka u pregledu (dodir na oznaku radi isto) */
 /* verzija 66: AI obrada (proba) — ključ, model, saglasnost i trošak u Podešavanjima; „Pročitaj dokument“ (✨ u pregledu, Više) */
 .modal-exp-row{ display:flex; align-items:center; justify-content:center; gap:8px; margin:6px auto 0; max-width:100%; }
-.modal-exp-row.empty{ display:none; }
+.modal-exp-row.is-empty{ display:none; }
 .modal-exp-row .modal-exp-line{ display:block; margin:0; min-width:0; pointer-events:auto; cursor:pointer; overflow-wrap:anywhere; }
 .modal-bg.ui-hidden .modal-exp-row .modal-exp-line{ pointer-events:none; }
 .modal-exp-note{ max-width:92%; margin:6px auto 0; font-family:var(--font-ui); font-size:13px; line-height:1.35; color:var(--ink); overflow-wrap:anywhere; }
@@ -1247,7 +1248,7 @@ html[data-theme="ponoc"]{
     <div class="modal-info">
       <div class="modal-cap-row"><div class="modal-caption" id="modalCaption"></div><button class="modal-ren" id="modalRename" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg></button></div>
       <span class="modal-page-no" id="modalPageNo"></span>
-      <div class="modal-exp-row empty" id="modalExpRow"><span class="modal-exp-line" id="modalExpLine" role="button"></span><button class="modal-ren modal-exp-edit" id="modalExpEdit" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg></button></div>
+      <div class="modal-exp-row is-empty" id="modalExpRow"><span class="modal-exp-line" id="modalExpLine" role="button"></span><button class="modal-ren modal-exp-edit" id="modalExpEdit" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg></button></div>
       <div class="modal-exp-note" id="modalExpNote"></div>
       <div class="modal-position" id="modalPosition"></div>
     </div>
@@ -2311,7 +2312,7 @@ function expUpdateState(){
   st.className = 'exp-state' + (ok ? ' lvl-' + expLevel(expDaysLeft(v)) : '');
   st.textContent = ok ? expPhrase(v) : '';
   const ft = document.getElementById('expFieldTxt');
-  ft.className = 'exp-field-txt' + (ok ? '' : ' empty');
+  ft.className = 'exp-field-txt' + (ok ? '' : ' is-empty');
   ft.textContent = ok ? fmtExpField(v) : t('expPickDate');
   document.getElementById('expSave').disabled = !ok;
 }
@@ -2540,14 +2541,14 @@ function updateModalExp(item){
   if(!item || !isYmd(item.validUntil)){
     btn.className = 'back-btn modal-exp';
     line.className = 'modal-exp-line'; line.textContent = '';
-    document.getElementById('modalExpRow').classList.add('empty');
+    document.getElementById('modalExpRow').classList.add('is-empty');
     return;
   }
   const lvl = expLevel(expDaysLeft(item.validUntil));
   btn.className = 'back-btn modal-exp has lvl-' + lvl;
   line.className = 'modal-exp-line lvl-' + lvl;
   line.textContent = expPhrase(item.validUntil);
-  document.getElementById('modalExpRow').classList.remove('empty');
+  document.getElementById('modalExpRow').classList.remove('is-empty');
 }
 document.getElementById('modalExp').setAttribute('aria-label', t('expTitle'));
 /* isti prozor iz tri mesta: kalendar na vrhu, oznaka roka i olovka pored nje */
@@ -4996,7 +4997,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 66</div>'+
+    '<div class="settings-hint set-build">verzija 67</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -6672,7 +6673,7 @@ function aiShowResult(item, res, r){
     st.className = 'exp-state' + (ok ? ' lvl-' + expLevel(expDaysLeft(v)) : '');
     st.textContent = ok ? expPhrase(v) : '';
     const ft = document.getElementById('aiExpTxt');
-    ft.className = 'exp-field-txt' + (ok ? '' : ' empty');
+    ft.className = 'exp-field-txt' + (ok ? '' : ' is-empty');
     ft.textContent = ok ? fmtExpField(v) : t('expPickDate');
   };
   expRefresh();
