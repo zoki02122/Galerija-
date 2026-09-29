@@ -1075,6 +1075,32 @@ html[data-theme="ponoc"]{
 .modal-bg .modal-ai{ transition:opacity .22s ease, border-color .2s, color .2s; }
 .modal-bg.ui-hidden .modal-ai{ opacity:0; pointer-events:none; }
 [data-theme="ponoc"] .modal-ai{ background:#000; border:1px solid var(--line); color:var(--brass); }
+/* verzija 68a: PDF, Word, Excel i ostali fajlovi u istom pregledu — kartica fajla umesto slike */
+.modal-pdf .mp-share{ display:none; }
+.modal-bg.is-file .modal-pdf .mp-pdf{ display:none; }
+.modal-bg.is-file .modal-pdf .mp-share{ display:block; }
+.modal-bg.is-file .modal-pages{ display:none; }
+.modal-bg.is-file .modal-pdf{ right:72px; }
+.modal-bg.is-file .modal-exp{ right:124px; }
+.modal-bg.is-file .modal-ai{ right:176px; }
+:where(html[data-theme]:not([data-theme="klasicna"])) .modal-bg.is-file .modal-pdf{ right:70px; }
+:where(html[data-theme]:not([data-theme="klasicna"])) .modal-bg.is-file .modal-exp{ right:120px; }
+:where(html[data-theme]:not([data-theme="klasicna"])) .modal-bg.is-file .modal-ai{ right:170px; }
+.modal-bg.is-file #modalImg{ display:none; }
+.modal-file{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:calc(96px + env(safe-area-inset-top, 0px)) 24px calc(150px + env(safe-area-inset-bottom, 0px)); box-sizing:border-box; text-align:center; }
+.modal-file[hidden]{ display:none; }
+.mf-ico{ position:relative; width:112px; height:132px; border-radius:18px; background:var(--surface); border:1px solid var(--line);
+  display:flex; align-items:center; justify-content:center; color:var(--brass); box-shadow:0 10px 30px rgba(0,0,0,.12); }
+.mf-ico svg{ width:62px; height:62px; }
+.mf-ico .mf-ext{ position:absolute; left:50%; bottom:14px; transform:translateX(-50%); font-family:var(--font-ui); font-size:12px; font-weight:800;
+  letter-spacing:.6px; color:var(--on-accent); background:var(--accent); border-radius:6px; padding:2px 7px; max-width:90px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.mf-kind{ margin-top:18px; font-family:var(--font-ui); font-size:17px; font-weight:700; color:var(--ink); }
+.mf-meta{ margin-top:4px; font-family:var(--font-num); font-size:13px; color:var(--ink-faint); letter-spacing:.3px; }
+.mf-meta:empty{ display:none; }
+.mf-open{ margin-top:20px; min-width:170px; height:48px; padding:0 26px; border-radius:14px; border:none; background:var(--accent); color:var(--on-accent);
+  font-family:var(--font-ui); font-size:16px; font-weight:700; cursor:pointer; }
+.mf-open:active{ transform:scale(.97); }
 #aiSheet .sheet{ max-height:92vh; max-height:92dvh; overflow-y:auto; overscroll-behavior:contain; box-sizing:border-box; }
 .ai-p{ font-size:14px; line-height:1.55; color:var(--ink); margin:0 2px 16px; }
 .ai-p.ai-err{ color:var(--danger); font-weight:600; }
@@ -1229,7 +1255,8 @@ html[data-theme="ponoc"]{
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="12" height="15" rx="1.8"></rect><path d="M4.5 7v11.5A2.5 2.5 0 0 0 7 21h9"></path><line x1="13" y1="7.5" x2="13" y2="13.5"></line><line x1="10" y1="10.5" x2="16" y2="10.5"></line></svg>
   </button>
   <button class="back-btn modal-pdf" id="modalPdf" type="button">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2.5H6.5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V8z"></path><polyline points="14 2.5 14 8 19.5 8"></polyline><text x="12" y="17.6" text-anchor="middle" fill="currentColor" stroke="none" class="modal-pdf-txt">PDF</text></svg>
+    <svg class="mp-share" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3.5"></path><polyline points="7.5 8 12 3.5 16.5 8"></polyline><path d="M5 12.5V19a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6.5"></path></svg>
+    <svg class="mp-pdf" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2.5H6.5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V8z"></path><polyline points="14 2.5 14 8 19.5 8"></polyline><text x="12" y="17.6" text-anchor="middle" fill="currentColor" stroke="none" class="modal-pdf-txt">PDF</text></svg>
   </button>
   <button class="back-btn modal-exp" id="modalExp" type="button">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"></rect><line x1="3.5" y1="10" x2="20.5" y2="10"></line><line x1="8" y1="3" x2="8" y2="7"></line><line x1="16" y1="3" x2="16" y2="7"></line><polyline points="9 15 11.2 17.2 15.5 12.8"></polyline></svg>
@@ -1244,7 +1271,7 @@ html[data-theme="ponoc"]{
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
   </button>
   <div class="modal-inner">
-    <div class="modal-frame" id="modalFrame"><img id="modalImg" src=""></div>
+    <div class="modal-frame" id="modalFrame"><img id="modalImg" src=""><div class="modal-file" id="modalFile" hidden><div class="mf-ico" id="mfIco"></div><div class="mf-kind" id="mfKind"></div><div class="mf-meta" id="mfMeta"></div><button class="mf-open" id="mfOpen" type="button"></button></div></div>
     <div class="modal-info">
       <div class="modal-cap-row"><div class="modal-caption" id="modalCaption"></div><button class="modal-ren" id="modalRename" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg></button></div>
       <span class="modal-page-no" id="modalPageNo"></span>
@@ -1687,6 +1714,24 @@ const I18N = {
     mergeConfirmText: 'Stranice idu redom kojim si označavao, ukupno {p}. Naziv, album i rok važenja uzimaju se od „{name}“ (rok prelazi na nov dokument). Originali ostaju u albumu; ako ti ne trebaju, označi ih i obriši.',
     mergeOk: 'Spoji',
     delModalTrash: 'Ide u korpu, gde čeka {days} dana i može se vratiti.',
+    delImgTitle: 'Brisanje slike',
+    delImgSub: 'Slika „{name}“ biće obrisana.',
+    delFileSub: 'Dokument „{name}“ biće obrisan.',
+    delImgLbl: 'Obriši sliku',
+    delFileLbl: 'Obriši dokument',
+    fileOpen: 'Otvori',
+    fileKindPdf: 'PDF dokument',
+    fileKindWord: 'Word dokument',
+    fileKindExcel: 'Excel tabela',
+    fileKindOther: 'Fajl',
+    fileShareLbl: 'Podeli fajl',
+    fileShare: 'Podeli',
+    fileShareHint: 'pošalji originalni fajl drugoj aplikaciji',
+    fileSave: 'Sačuvaj na telefon',
+    fileSaveHint: 'u fasciklu Preuzimanja',
+    fileSaved: 'Sačuvano na telefon.',
+    fileShareNo: 'Chrome ne može da podeli ovu vrstu fajla, pa je sačuvan na telefon.',
+    fileShareErr: 'Deljenje nije uspelo.',
     moreTitle: 'Izabrano: {n}',
     mergeRow: 'Spoji u jedan dokument',
     mergeHint: 'redom kojim si označavao; originali idu u korpu',
@@ -1960,6 +2005,24 @@ const I18N = {
     mergeConfirmText: 'Pages follow the order you selected them in, {p} in total. The name, album and valid-until date come from “{name}” (the date moves to the new document). The originals stay in the album; if you do not need them, select and delete them.',
     mergeOk: 'Merge',
     delModalTrash: 'It goes to the trash, where it waits {days} days and can be restored.',
+    delImgTitle: 'Delete image',
+    delImgSub: 'Image “{name}” will be deleted.',
+    delFileSub: 'Document “{name}” will be deleted.',
+    delImgLbl: 'Delete image',
+    delFileLbl: 'Delete document',
+    fileOpen: 'Open',
+    fileKindPdf: 'PDF document',
+    fileKindWord: 'Word document',
+    fileKindExcel: 'Excel spreadsheet',
+    fileKindOther: 'File',
+    fileShareLbl: 'Share file',
+    fileShare: 'Share',
+    fileShareHint: 'send the original file to another app',
+    fileSave: 'Save to phone',
+    fileSaveHint: 'to the Downloads folder',
+    fileSaved: 'Saved to phone.',
+    fileShareNo: 'Chrome cannot share this type of file, so it was saved to the phone.',
+    fileShareErr: 'Sharing failed.',
     moreTitle: 'Selected: {n}',
     mergeRow: 'Merge into one document',
     mergeHint: 'in the order you selected them; originals go to the trash',
@@ -2502,10 +2565,9 @@ function showExpNotice(due){
     pushBack(closer);
   });
 }
-/* Dodir na red: slika/dokument od više stranica -> pregled u svom albumu (nazad vodi na početni ekran);
-   PDF i drugi fajlovi se otvaraju kao i iz mreže. */
+/* Dodir na red: svaka stavka (slika, dokument od više stranica, PDF, Word, Excel…) -> pregled u svom albumu
+   (nazad vodi na početni ekran). Od verzije 68a i fajlovi idu u isti pregled. */
 function openFromExpiry(item){
-  if(item.type === 'pdf' || item.type === 'doc'){ openPdf(item); return; }
   const closer = ()=>{ currentFolder = null; searchEl.value = ''; render(); };
   closer.isAlbumCloser = true;
   currentFolder = item.category || INBOX;
@@ -3935,7 +3997,6 @@ function buildCard(item, indexNumber){
 
   card.onclick = (e)=>{
     if(selectionMode){ toggleSelect(item.id); }
-    else if(isPdf || isDoc){ openPdf(item); }
     else{ openModal(item); }
   };
 
@@ -4098,6 +4159,10 @@ let _modalReq = 0;        /* poslednji zahtev za prikaz (stariji odgovori se odb
 function setModalSrc(u){ if(u) modalImg.src = u; else modalImg.removeAttribute('src'); }
 function showModalItem(item, page){
   modalItemId = item.id;
+  if(item.type !== 'image'){ showModalFile(item); return; }
+  modalBg.classList.remove('is-file');
+  document.getElementById('modalFile').hidden = true;
+  document.getElementById('modalDelete').setAttribute('aria-label', t('delImgLbl'));
   const n = pageCount(item);
   modalPage = Math.max(0, Math.min(page || 0, n - 1));
   const pg = modalPage;
@@ -4121,6 +4186,88 @@ function showModalItem(item, page){
   document.getElementById('modalPageNo').textContent = n > 1 ? t('pgPageNo', {n:pg+1, total:n}) : '';
   updateModalExp(item);
 }
+/* verzija 68a: PDF, Word, Excel i ostali fajlovi — kartica fajla u istom pregledu */
+function isFileItem(it){ return !!it && it.type !== 'image'; }
+function fileExtOf(it){ return String(it.ext || (it.type === 'pdf' ? 'pdf' : '')).toLowerCase().replace(/^\./, ''); }
+function fileKindKey(ext){
+  if(ext === 'pdf') return 'fileKindPdf';
+  if(ext === 'docx' || ext === 'doc') return 'fileKindWord';
+  if(ext === 'xlsx' || ext === 'xls') return 'fileKindExcel';
+  return 'fileKindOther';
+}
+/* „Otvori“: ove vrste zasad prikazuje posebna stranica (photo.html); ostale se dele ili čuvaju */
+function fileOpensInReader(it){ const e = fileExtOf(it); return e === 'pdf' || e === 'docx' || e === 'xlsx' || e === 'xls'; }
+function fmtFileSize(b){
+  if(!(b > 0)) return '';
+  if(b < 1024) return b + ' B';
+  if(b < 1024*1024) return Math.max(1, Math.round(b/1024)) + ' KB';
+  return (b/1048576).toFixed(b < 10*1048576 ? 1 : 0).replace('.', appLang() === 'sr' ? ',' : '.') + ' MB';
+}
+function showModalFile(item){
+  ++_modalReq;                       /* odbaci zakasneo prikaz prethodne slike */
+  modalPage = 0;
+  modalBg.classList.add('is-file');
+  modalBg.classList.remove('ui-hidden');
+  setModalSrc('');
+  const ext = fileExtOf(item);
+  document.getElementById('mfIco').innerHTML = pdfIconSvg() + (ext ? '<span class="mf-ext">' + escapeHtml(ext.toUpperCase()) + '</span>' : '');
+  document.getElementById('mfKind').textContent = t(fileKindKey(ext));
+  const p = (item.pages || [])[0];
+  document.getElementById('mfMeta').textContent = fmtFileSize(p && p.size);   /* vrsta je već na ikonici */
+  document.getElementById('mfOpen').textContent = t('fileOpen');
+  document.getElementById('modalFile').hidden = false;
+  document.getElementById('modalDelete').setAttribute('aria-label', t('delFileLbl'));
+  modalCaption.textContent = item.name;
+  document.getElementById('modalPrev').hidden = true;
+  document.getElementById('modalNext').hidden = true;
+  document.getElementById('modalPosition').textContent = '';
+  document.getElementById('modalPageNo').textContent = '';
+  updateModalExp(item);
+}
+async function fileAsFile(it){
+  const blob = await getFileBlob(it, 0);
+  const ext = pageExt(it, it.pages && it.pages[0]);
+  const type = blob.type || (ext === 'pdf' ? 'application/pdf' : 'application/octet-stream');
+  return new File([blob], safeName(it.name || 'dokument') + '.' + ext, {type});
+}
+function fileDownload(file){
+  const url = URL.createObjectURL(file);
+  const a = document.createElement('a');
+  a.href = url; a.download = file.name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 8000);
+}
+async function fileShareOriginal(it){
+  let file;
+  try{ file = await fileAsFile(it); }catch(e){ console.error(e); toast(t('fileMissing')); return; }
+  if(navigator.canShare && navigator.share && navigator.canShare({files:[file]})){
+    try{ await navigator.share({files:[file]}); }
+    catch(e){
+      if(e && e.name === 'NotAllowedError') toastAction(t('pdfReady'), t('pdfShareNow'), ()=>navigator.share({files:[file]}).catch(()=>{}));
+      else if(e && e.name !== 'AbortError') toast(t('fileShareErr'));
+    }
+  }else{
+    fileDownload(file);
+    toast(t('fileShareNo'));
+  }
+}
+async function fileSaveOriginal(it){
+  try{ fileDownload(await fileAsFile(it)); toast(t('fileSaved')); }
+  catch(e){ console.error(e); toast(t('fileMissing')); }
+}
+function openFileShareSheet(it){
+  openActionSheet(it.name || t('fileKindOther'), [
+    {icon:'📤', label:t('fileShare'), hint:t('fileShareHint'), onClick:()=>fileShareOriginal(it)},
+    {icon:'📥', label:t('fileSave'), hint:t('fileSaveHint'), onClick:()=>fileSaveOriginal(it)}
+  ]);
+}
+document.getElementById('mfOpen').onclick = (e)=>{
+  e.stopPropagation();
+  const it = items.find(i=>i.id === modalItemId);
+  if(!it) return;
+  if(fileOpensInReader(it)) openPdf(it);
+  else openFileShareSheet(it);
+};
 /* Listanje: prvo stranice dokumenta, posle poslednje sledeća stavka (unazad: poslednja stranica prethodne) */
 function modalNav(dir){
   const cur = currentGalleryIndex >= 0 ? currentGalleryItems[currentGalleryIndex] : items.find(i=>i.id === modalItemId);
@@ -4151,6 +4298,7 @@ modalFrame.addEventListener('touchend', (e)=>{
   if(Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)*1.4){
     modalNav(dx < 0 ? 1 : -1);
   }else if(Math.abs(dx) < 10 && Math.abs(dy) < 10){
+    if(modalBg.classList.contains('is-file')) return;   /* kartica fajla: dugmad ostaju */
     // obican dodir (bez pomeranja prsta) = sakrij / vrati dugmad i natpise
     modalBg.classList.toggle('ui-hidden');
   }
@@ -4172,9 +4320,10 @@ document.getElementById('modalDelete').onclick = (e)=>{
   if(!item) return;
   pendingModalDeleteId = item.id;
   const np = pageCount(item);
-  document.querySelector('#delBackdrop h2').textContent = np > 1 ? t('delDocTitle') : 'Brisanje slike';
-  document.getElementById('delSub').textContent = np > 1 ? t('delDocSub', {name:item.name, n:np})
-    : 'Slika \u201E' + item.name + '\u201C biće obrisana.';
+  const isFile = isFileItem(item);
+  document.querySelector('#delBackdrop h2').textContent = (isFile || np > 1) ? t('delDocTitle') : t('delImgTitle');
+  document.getElementById('delSub').textContent = isFile ? t('delFileSub', {name:item.name})
+    : (np > 1 ? t('delDocSub', {name:item.name, n:np}) : t('delImgSub', {name:item.name}));
   document.getElementById('delSub').textContent += ' ' + t('delModalTrash', {days:getTrashDays()});
   delBackdrop.classList.add('open');
   pushBack(closeDeleteConfirm);
@@ -4997,7 +5146,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 67</div>'+
+    '<div class="settings-hint set-build">verzija 68</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -6296,7 +6445,9 @@ document.getElementById('modalPages').onclick = (e)=>{
 document.getElementById('modalPdf').onclick = (e)=>{
   e.stopPropagation();
   const it = items.find(i=>i.id === modalItemId);
-  if(it) openPdfSheet([it]);
+  if(!it) return;
+  if(isFileItem(it)) openFileShareSheet(it);
+  else openPdfSheet([it]);
 };
 document.getElementById('modalPages').setAttribute('aria-label', t('pgEditTitle'));
 document.getElementById('modalPdf').setAttribute('aria-label', 'PDF');
@@ -6867,8 +7018,7 @@ function checkDeepLink(){
     if(!item && trash.some(t=>t.id === id)){ toast('Ova slika je u korpi (Podešavanja \u2192 korpa).'); }
     if(item){
       document.title = item.name;
-      if(item.type === 'pdf' || item.type === 'doc'){ openPdf(item); }
-      else{ openModal(item); }
+      openModal(item);
     }
   }
 }
