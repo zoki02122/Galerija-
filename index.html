@@ -6246,8 +6246,10 @@ function openMoreSheet(){
       openNameSheet(it, (ok)=>{ if(ok && selectionMode) exitSelection(); });
     }});
     rows.push({icon:'✨', label:t('aiRead'), hint:t('aiReadHint'), onClick:()=>{
-      if(selectionMode) exitSelection();
-      aiStartRead(it);
+      /* izlaz iz izbora je korak „nazad“ (asinhron): AI prozor se otvara tek POSLE njega,
+         inače bi taj korak zatvorio AI prozor umesto izbora */
+      if(selectionMode) requestCloseThen(()=>aiStartRead(it));
+      else aiStartRead(it);
     }});
   }
   if(chosen.length >= 2){
