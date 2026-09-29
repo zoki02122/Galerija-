@@ -950,8 +950,6 @@ html[data-theme="ponoc"]{
 .exp-row.lvl-soon .exp-when b{ background:var(--accent); color:var(--on-accent); padding:3px 9px; border-radius:10px; }
 .exp-row.lvl-expired .exp-when b{ background:var(--danger); color:var(--on-danger); padding:3px 9px; border-radius:10px; }
 [data-theme="ponoc"] .exp-row.lvl-soon .exp-when b{ background:var(--g-grad); }
-.exp-more{ display:block; width:100%; padding:11px 14px; border:none; border-top:1px solid var(--line-soft); background:none;
-  color:var(--brass); font-family:var(--font-ui); font-size:14px; font-weight:600; text-align:center; cursor:pointer; }
 /* oznaka na sličici u mreži */
 .exp-badge{ position:absolute; left:0; right:0; bottom:0; z-index:2; padding:4px 3px 3px; text-align:center; pointer-events:none;
   font-family:var(--font-ui); font-size:10.5px; font-weight:700; line-height:1.15; letter-spacing:0; white-space:nowrap; overflow:hidden;
@@ -994,6 +992,53 @@ html[data-theme="ponoc"]{
 .pg-exp-val.none{ color:var(--ink-dim); font-weight:500; }
 .pg-exp-val.lvl-soon{ color:var(--brass); }
 .pg-exp-val.lvl-expired, .pg-exp-val.lvl-expired svg{ color:var(--danger); }
+/* verzija 63: zvonce u zaglavlju umesto trake */
+/* kad se pojavi peta ikonica (zvonce), ikonice i naslov se malo smanjuju da sve stane u jedan red */
+@media (max-width:420px){ .header-actions.five{ gap:6px; } .header-actions.five .icon-btn{ width:38px; height:38px; } }
+@media (max-width:400px){ body.hdr-five .mark-row h1{ font-size:22px; letter-spacing:1px; } }
+@media (max-width:380px){ .header-actions.five{ gap:4px; } .header-actions.five .icon-btn{ width:36px; height:36px; }
+  body.hdr-five .mark-row h1{ font-size:19px; letter-spacing:.5px; } body.hdr-five .mark-title{ gap:7px; } }
+@media (max-width:350px){ .header-actions.five .icon-btn{ width:35px; height:35px; }
+  body.hdr-five .mark-row h1{ font-size:17px; letter-spacing:.3px; } body.hdr-five .mark{ width:12px; height:12px; } }
+.exp-hdr-btn{ position:relative; }
+.exp-hdr-count{ position:absolute; top:-5px; right:-6px; min-width:19px; height:19px; padding:0 5px; border-radius:10px; box-sizing:border-box;
+  display:none; align-items:center; justify-content:center; font-family:var(--font-ui); font-size:11px; font-weight:800; line-height:1;
+  background:var(--accent); color:var(--on-accent); border:2px solid var(--bg); }
+[data-theme="ponoc"] .exp-hdr-count{ background:var(--g-grad); }
+.exp-hdr-btn.alert{ color:var(--brass); border-color:var(--brass-soft); }
+.exp-hdr-btn.alert .exp-hdr-count{ display:inline-flex; }
+.exp-hdr-btn.expired{ color:var(--danger); border-color:var(--danger-line); }
+.exp-hdr-btn.expired .exp-hdr-count{ background:var(--danger); color:var(--on-danger); }
+/* ekran „Rokovi“ */
+.exp-scr-hint{ font-size:13px; color:var(--ink-dim); margin:0 2px 18px; line-height:1.45; }
+.exp-grp-label{ display:flex; align-items:center; gap:8px; margin:0 2px 8px; font-family:var(--font-ui); font-size:12.5px; font-weight:700;
+  letter-spacing:.6px; text-transform:uppercase; color:var(--ink-dim); }
+.exp-grp-label span{ font-weight:600; color:var(--ink-faint); }
+.exp-grp-label.gone{ color:var(--danger); }
+#expPanel .exp-bar .exp-row:first-child{ border-top:none; }
+.exp-empty{ padding:28px 18px; text-align:center; color:var(--ink-dim); font-size:14.5px; line-height:1.5; background:var(--surface); border:1px solid var(--line); border-radius:16px; }
+/* prozor obaveštenja */
+.exp-notice-ic{ font-size:64px; line-height:1; margin-bottom:6px; }
+.exp-notice-list{ text-align:left; margin:4px 0 14px; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface-2); max-height:46vh; overflow-y:auto; }
+.en-row{ padding:10px 12px; border-top:1px solid var(--line-soft); }
+.en-row:first-child{ border-top:none; }
+.en-name{ display:block; font-size:14.5px; font-weight:700; color:var(--ink); overflow-wrap:anywhere; line-height:1.3; }
+.en-when{ display:block; font-size:13px; font-weight:600; margin-top:2px; color:var(--ink-dim); }
+.en-when.lvl-soon{ color:var(--brass); }
+.en-when.lvl-expired{ color:var(--danger); }
+.en-more{ padding:9px 12px; font-size:13px; color:var(--ink-dim); border-top:1px solid var(--line-soft); }
+.exp-notice-hint{ font-size:12.5px !important; margin-bottom:16px !important; }
+.exit-btn.go{ background:var(--accent); color:var(--on-accent); border:1px solid transparent; }
+[data-theme="ponoc"] .exit-btn.go{ background:var(--g-grad); }
+/* polje za datum: naš zapis (30.09.2026.) preko Chrome-ovog polja; dodir bilo gde otvara kalendar */
+.exp-field{ position:relative; margin-bottom:14px; }
+.exp-field .exp-input{ margin:0; width:100%; box-sizing:border-box; color:transparent; -webkit-text-fill-color:transparent; caret-color:transparent; }
+.exp-field .exp-input::-webkit-datetime-edit{ color:transparent; }
+.exp-field .exp-input::-webkit-calendar-picker-indicator{ position:absolute; inset:0; width:auto; height:auto; margin:0; padding:0; opacity:0; cursor:pointer; }
+.exp-field-txt{ position:absolute; left:16px; right:48px; top:50%; transform:translateY(-50%); pointer-events:none;
+  font-size:16px; font-weight:700; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.exp-field-txt.empty{ font-weight:500; color:var(--ink-dim); }
+.exp-field-ic{ position:absolute; right:15px; top:50%; transform:translateY(-50%); pointer-events:none; color:var(--brass); }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -1019,6 +1064,9 @@ html[data-theme="ponoc"]{
         <button class="icon-btn" id="viewToggleBtn" type="button" style="display:none;"></button>
         <button class="icon-btn" id="searchBtn" title="Pretraga">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>
+        </button>
+        <button class="icon-btn exp-hdr-btn" id="expHdrBtn" type="button" style="display:none;">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span class="exp-hdr-count" id="expHdrCount"></span>
         </button>
         <button class="icon-btn" id="settingsBtn" title="Podešavanja">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"></path></svg>
@@ -1200,7 +1248,11 @@ html[data-theme="ponoc"]{
     <div class="sheet-head"><button class="back-btn" id="expBack" type="button"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h3 id="expTitle"></h3></div>
     <div class="exp-doc" id="expDoc"></div>
     <label class="exp-lbl" for="expInput" id="expLbl"></label>
-    <input id="expInput" type="date" class="sheet-input exp-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    <div class="exp-field">
+      <input id="expInput" type="date" class="sheet-input exp-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <span class="exp-field-txt" id="expFieldTxt"></span>
+      <svg class="exp-field-ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"></rect><line x1="3.5" y1="10" x2="20.5" y2="10"></line><line x1="8" y1="3" x2="8" y2="7"></line><line x1="16" y1="3" x2="16" y2="7"></line></svg>
+    </div>
     <div class="exp-state" id="expState"></div>
     <button type="button" id="expSave" class="sheet-cta"></button>
     <button type="button" id="expClear" class="sheet-cta secondary exp-clear"></button>
@@ -1214,6 +1266,7 @@ html[data-theme="ponoc"]{
 </div>
 
 <div class="set-screen" id="settingsScreen"><div id="settingsPanel"></div></div>
+<div class="set-screen" id="expScreen"><div id="expPanel"></div></div>
 <input type="file" id="importInput" accept=".zip,.json,application/zip,application/json" style="display:none">
 <div class="set-screen" id="migrateScreen" style="z-index:75;"><div id="migratePanel"></div></div>
 
@@ -1225,6 +1278,19 @@ html[data-theme="ponoc"]{
     <div class="exit-actions">
       <button class="exit-btn stay" id="delCancelBtn"><span class="ic">↩️</span>Otkaži</button>
       <button class="exit-btn leave" id="delConfirmBtn"><span class="ic">🗑️</span>Obriši</button>
+    </div>
+  </div>
+</div>
+
+<div class="exit-modal-backdrop" id="expNoticeBackdrop" style="z-index:91;">
+  <div class="exit-modal exp-notice" role="alertdialog" aria-modal="true" aria-labelledby="enTitle">
+    <div class="exp-notice-ic">🔔</div>
+    <h2 id="enTitle"></h2>
+    <div class="exp-notice-list" id="enList"></div>
+    <div class="sub exp-notice-hint" id="enHint"></div>
+    <div class="exit-actions">
+      <button type="button" class="exit-btn stay" id="enOk"></button>
+      <button type="button" class="exit-btn go" id="enOpen"></button>
     </div>
   </div>
 </div>
@@ -1519,7 +1585,7 @@ const I18N = {
     delAlbumItems: 'Slike i dokumenti iz njega ({n}) ostaju u „Sve slike“.',
     delAlbumEmpty: 'U njemu nema slika ni dokumenata.',
     delAlbumOk: 'Obriši',
-    mergeConfirmText: 'Stranice idu redom kojim si označavao, ukupno {p}. Naziv, album i rok važenja uzimaju se od „{name}“. Originali idu u korpu, odakle mogu da se vrate.',
+    mergeConfirmText: 'Stranice idu redom kojim si označavao, ukupno {p}. Naziv, album i rok važenja uzimaju se od „{name}“ (rok prelazi na nov dokument). Originali ostaju u albumu; ako ti ne trebaju, označi ih i obriši.',
     mergeOk: 'Spoji',
     delModalTrash: 'Ide u korpu, gde čeka {days} dana i može se vratiti.',
     moreTitle: 'Izabrano: {n}',
@@ -1527,7 +1593,7 @@ const I18N = {
     mergeHint: 'redom kojim si označavao; originali idu u korpu',
     mergeOnlyImages: 'spajaju se samo slike (ne PDF i drugi fajlovi)',
     mergeBusy: 'Spajam: {n} / {total}…',
-    merged: 'Spojeno u „{name}“ ({n} str.).',
+    merged: 'Napravljen je dokument „{name}“ ({n} str.). Originali su ostali u albumu.',
     pdfTitle: 'PDF ({n} str.)',
     pdfShare: 'Podeli kao jedan PDF',
     pdfSave: 'Sačuvaj kao jedan PDF',
@@ -1547,9 +1613,9 @@ const I18N = {
       ['Dodavanje', 'Ikonica slike sa plusom dodaje sa telefona: iz galerije (više slika odjednom), slikanjem ili kao dokument (PDF, Word, Excel…). Svaka izabrana slika postaje posebna stavka.', 'Ono što dodaš dok si u albumu (iz galerije, slikanjem ili kao dokument) ide pravo u taj album.'],
       ['Dokument od više stranica', 'U meniju za dodavanje izaberi „Dokument od više stranica“. Slikaj stranicu po stranicu ili izaberi više slika iz galerije, upiši naziv i dodirni „Sačuvaj“.', 'Redosled menjaš prevlačenjem ručke u uglu stranice, a ✕ uklanja stranicu. U mreži se vidi prva stranica sa oznakom broja stranica.'],
       ['Pregled i listanje', 'Dodir na sliku otvara pregled. Prevlačenjem levo i desno listaš stranice, a posle poslednje stranice prelaziš na sledeću stavku. Jedan dodir sakriva ili vraća dugmad.', 'Dugme sa stranicama u pregledu dodaje nove stranice u dokument ili menja njihov redosled.'],
-      ['Spajanje i izdvajanje', 'Označi dve ili više slika (dugi pritisak), pa u traci dodirni „Više“ i „Spoji u jedan dokument“. Stranice idu redom kojim si ih označio, a naziv i album uzimaju se od prve. Pre spajanja Arhiva pita za potvrdu; originali idu u korpu, odakle mogu da se vrate.', 'Pojedinačnu stranicu izdvajaš na ekranu sa stranicama: dodir na stranicu, pa „Izdvoji kao posebnu sliku“.'],
+      ['Spajanje i izdvajanje', 'Označi dve ili više slika (dugi pritisak), pa u traci dodirni „Više“ i „Spoji u jedan dokument“. Stranice idu redom kojim si ih označio, a naziv, album i rok važenja uzimaju se od prve (rok prelazi na nov dokument). Pre spajanja Arhiva pita za potvrdu. Originali ostaju u albumu; ako ti ne trebaju, označi ih i obriši.', 'Pojedinačnu stranicu izdvajaš na ekranu sa stranicama: dodir na stranicu, pa „Izdvoji kao posebnu sliku“.'],
       ['PDF', 'Dokument ili više označenih slika pretvaraš u jedan PDF: u pregledu dugmetom PDF, a kod izbora preko „Više“. Zatim biraš da li ga deliš (Viber, e-pošta…) ili čuvaš na telefon.', 'Stranice idu u PDF bez gubitka kvaliteta.'],
-      ['Rok važenja', 'Dokumentu koji ističe (registracija, pasoš, osiguranje, garancija) upiši rok: u pregledu dodirni dugme sa kalendarom, izaberi datum i dodirni „Sačuvaj“. Za PDF i druge fajlove označi stavku (dugi pritisak), pa „Više“ i „Rok važenja“. Rok se vidi i menja i na ekranu sa stranicama.', 'Kad se rok približi, na početnom ekranu se pojavi traka „Uskoro ističe“. Isteklo je crveno, a 7 dana ili manje je naglašeno. Dodir na red otvara dokument. Koliko dana ranije da te upozori biraš u Podešavanja → rok važenja (podrazumevano 30).', 'Upozorenje vidiš kad otvoriš Arhivu. Kad obnoviš dokument, upiši nov datum; ako rok više nije potreban, dodirni „Ukloni rok“. Rok se čuva u rezervnoj kopiji.'],
+      ['Rok važenja', 'Dokumentu koji ističe (registracija, pasoš, osiguranje, garancija) upiši rok: u pregledu dodirni dugme sa kalendarom, zatim polje za datum, izaberi datum i dodirni „Sačuvaj“. Za PDF i druge fajlove označi stavku (dugi pritisak), pa „Više“ i „Rok važenja“. Rok se vidi i menja i na ekranu sa stranicama.', 'Kad se rok približi, Arhiva te obavesti jednom, a zatim još po jednom 7 dana pre i kad dokument istekne. Na početnom ekranu se tada pojavi zvonce sa brojem (crveno ako nešto je isteklo). Dodir na zvonce otvara spisak svih rokova: isteklo, uskoro ističe i kasnije.', 'Koliko dana ranije da te upozori biraš u Podešavanja → rok važenja (podrazumevano 30). Obaveštenje vidiš kad otvoriš Arhivu. Kad obnoviš dokument, upiši nov datum; ako rok više nije potreban, dodirni „Ukloni rok“. Rok se čuva u rezervnoj kopiji.'],
       ['Pretraga', 'Lupa pretražuje nazive albuma, slika i dokumenata. „Detaljno“ traži i reči unutar PDF, Word i Excel dokumenata.', 'U albumu pretraga obuhvata i njegove podalbume.'],
       ['Prečica na početnom ekranu', 'Označi jednu stavku i dodirni „Prečica“. Stavka se otvara u Chrome-u, a iz Chrome menija biraš „Dodaj na početni ekran“. Prečica dokumenta od više stranica lista sve stranice.'],
       ['Korpa', 'Svako brisanje prvo traži potvrdu. Obrisano ide u korpu (Podešavanja → korpa) i tamo čeka zadati broj dana, a zatim se trajno briše. Iz korpe stavku vraćaš ili je odmah trajno brišeš.', 'Albumi ne idu u korpu: kad obrišeš album, njegove slike i dokumenti ostaju u „Sve slike“.'],
@@ -1614,9 +1680,20 @@ const I18N = {
     expSaved: 'Rok je sačuvan: {date}',
     expRemoved: 'Rok je uklonjen.',
     expRow: 'Rok važenja',
-    expBarTitle: 'Uskoro ističe',
-    expMore: 'prikaži još {n}',
-    expLess: 'prikaži manje',
+    expHdr: 'Rokovi važenja',
+    expScreenTitle: 'rokovi važenja',
+    expScreenHint: 'Arhiva te obavesti {n} {d} pre isteka, 7 dana pre i kad dokument istekne, svaki put samo jednom. dodir na red otvara dokument.',
+    expGrpGone: 'isteklo',
+    expGrpSoon: 'uskoro ističe',
+    expGrpLater: 'kasnije',
+    expEmpty: 'nijedan dokument nema upisan rok važenja.',
+    expNoticeTitle: 'Podsetnik',
+    expNoticeMore: 'i još {n}',
+    expNoticeHint: 'Sve rokove vidiš na zvoncetu na početnom ekranu.',
+    expNoticeOk: 'U redu',
+    expNoticeOpen: 'Otvori',
+    expNoticeAll: 'Pogledaj',
+    expPickDate: 'dodirni i izaberi datum',
     expBadge: 'ističe {date}',
     expBadgeGone: 'isteklo {date}',
     expGone: 'isteklo',
@@ -1632,8 +1709,8 @@ const I18N = {
     expSetTile: 'rok važenja',
     expSetSub: 'upozori {n} {d} pre isteka',
     expSetField: 'upozori me (dana pre isteka)',
-    expSetHint1: 'kad dokumentu ostane ovoliko dana ili manje, na početnom ekranu se pojavi traka „Uskoro ističe“. isteklo je crveno, a 7 dana ili manje je naglašeno.',
-    expSetHint2: 'upozorenje vidiš kad otvoriš Arhivu. obaveštenja dok je aplikacija zatvorena za sada ne postoje.',
+    expSetHint1: 'kad dokumentu ostane ovoliko dana ili manje, Arhiva te jednom obavesti, a na zvoncetu na početnom ekranu pojavi se broj. još po jednom te obavesti 7 dana pre i kad dokument istekne.',
+    expSetHint2: 'obaveštenje vidiš kad otvoriš Arhivu. obaveštenja dok je aplikacija zatvorena za sada ne postoje.',
     bkHintZip: 'rezervna kopija je jedan ZIP fajl: u njemu su tvoji dokumenti kao obične slike i PDF-ovi, složeni po albumima, pa se mogu otvoriti i bez Arhive. uvoz prima i stare .json kopije. vraćanje dodaje samo ono što nedostaje, bez duplikata.'
   },
   en: {
@@ -1682,7 +1759,7 @@ const I18N = {
     delAlbumItems: 'Its images and documents ({n}) stay in “All images”.',
     delAlbumEmpty: 'It has no images or documents.',
     delAlbumOk: 'Delete',
-    mergeConfirmText: 'Pages follow the order you selected them in, {p} in total. The name, album and valid-until date come from “{name}”. The originals go to the trash, from where they can be restored.',
+    mergeConfirmText: 'Pages follow the order you selected them in, {p} in total. The name, album and valid-until date come from “{name}” (the date moves to the new document). The originals stay in the album; if you do not need them, select and delete them.',
     mergeOk: 'Merge',
     delModalTrash: 'It goes to the trash, where it waits {days} days and can be restored.',
     moreTitle: 'Selected: {n}',
@@ -1690,7 +1767,7 @@ const I18N = {
     mergeHint: 'in the order you selected them; originals go to the trash',
     mergeOnlyImages: 'only images can be merged (not PDFs or other files)',
     mergeBusy: 'Merging: {n} / {total}…',
-    merged: 'Merged into “{name}” ({n} pp.).',
+    merged: 'Created “{name}” ({n} pp.). The originals stayed in the album.',
     pdfTitle: 'PDF ({n} pp.)',
     pdfShare: 'Share as one PDF',
     pdfSave: 'Save as one PDF',
@@ -1710,9 +1787,9 @@ const I18N = {
       ['Adding', 'The image-plus icon adds from the phone: from the gallery (several images at once), by taking a photo, or as a document (PDF, Word, Excel…). Every picked image becomes a separate item.', 'What you add while inside an album (from the gallery, by taking a photo or as a document) goes straight into that album.'],
       ['Multi-page document', 'In the add menu choose “Multi-page document”. Photograph page by page or pick several images from the gallery, type a name and tap “Save”.', 'Drag the handle in the corner of a page to change the order; ✕ removes a page. The grid shows the first page with the page count.'],
       ['Viewing and paging', 'Tap an image to open it. Swipe left and right to turn pages; after the last page you move on to the next item. One tap hides or shows the buttons.', 'The pages button in the viewer adds new pages to a document or changes their order.'],
-      ['Merging and splitting', 'Select two or more images (long-press), then tap “More” and “Merge into one document”. Pages follow the order you selected them in; the name and album come from the first. Arhiva asks before merging; the originals go to the trash, from where they can be restored.', 'To split off a single page, open the pages screen, tap the page and choose “Split off as a separate image”.'],
+      ['Merging and splitting', 'Select two or more images (long-press), then tap “More” and “Merge into one document”. Pages follow the order you selected them in; the name, album and valid-until date come from the first (the date moves to the new document). Arhiva asks before merging. The originals stay in the album; if you do not need them, select and delete them.', 'To split off a single page, open the pages screen, tap the page and choose “Split off as a separate image”.'],
       ['PDF', 'Turn a document or several selected images into one PDF: with the PDF button in the viewer, or via “More” when selecting. Then share it (Viber, email…) or save it to the phone.', 'Pages go into the PDF without losing quality.'],
-      ['Valid until', 'For a document that expires (registration, passport, insurance, warranty) set the date: in the viewer tap the calendar button, pick the date and tap “Save”. For PDFs and other files select the item (long-press), then “More” and “Valid until”. The date is also shown and changed on the pages screen.', 'When the date gets close, an “Expiring soon” bar appears on the home screen. Expired is red, 7 days or fewer is highlighted. Tap a row to open the document. How many days in advance you are warned is set in Settings → valid until (30 by default).', 'You see the warning when you open Arhiva. When you renew a document, enter the new date; if the date is no longer needed, tap “Remove date”. The date is saved in the backup.'],
+      ['Valid until', 'For a document that expires (registration, passport, insurance, warranty) set the date: in the viewer tap the calendar button, then the date field, pick the date and tap “Save”. For PDFs and other files select the item (long-press), then “More” and “Valid until”. The date is also shown and changed on the pages screen.', 'When the date gets close, Arhiva notifies you once, then once more 7 days before and when the document expires. A bell with a number appears on the home screen (red if something has expired). Tap the bell to see all dates: expired, expiring soon and later.', 'How many days in advance you are warned is set in Settings → valid until (30 by default). You see the notification when you open Arhiva. When you renew a document, enter the new date; if the date is no longer needed, tap “Remove date”. The date is saved in the backup.'],
       ['Search', 'The magnifier searches the names of albums, images and documents. “Detailed” also searches words inside PDF, Word and Excel documents.', 'Inside an album, search also covers its sub-albums.'],
       ['Home screen shortcut', 'Select one item and tap “Shortcut”. The item opens in Chrome; choose “Add to home screen” from the Chrome menu. The shortcut of a multi-page document shows all pages.'],
       ['Trash', 'Every deletion asks for confirmation first. Deleted items go to the trash (Settings → trash) and wait there for the set number of days, then they are deleted for good. From the trash you can restore an item or delete it right away.', 'Albums do not go to the trash: when you delete an album, its images and documents stay in “All images”.'],
@@ -1777,9 +1854,20 @@ const I18N = {
     expSaved: 'Saved: valid until {date}',
     expRemoved: 'Date removed.',
     expRow: 'Valid until',
-    expBarTitle: 'Expiring soon',
-    expMore: 'show {n} more',
-    expLess: 'show less',
+    expHdr: 'Expiry dates',
+    expScreenTitle: 'expiry dates',
+    expScreenHint: 'Arhiva notifies you {n} {d} before expiry, 7 days before and when the document expires, each only once. Tap a row to open the document.',
+    expGrpGone: 'expired',
+    expGrpSoon: 'expiring soon',
+    expGrpLater: 'later',
+    expEmpty: 'no document has an expiry date yet.',
+    expNoticeTitle: 'Reminder',
+    expNoticeMore: 'and {n} more',
+    expNoticeHint: 'All dates are under the bell on the home screen.',
+    expNoticeOk: 'OK',
+    expNoticeOpen: 'Open',
+    expNoticeAll: 'View',
+    expPickDate: 'tap to pick a date',
     expBadge: 'exp. {date}',
     expBadgeGone: 'expired {date}',
     expGone: 'expired',
@@ -1795,8 +1883,8 @@ const I18N = {
     expSetTile: 'valid until',
     expSetSub: 'warn {n} {d} before expiry',
     expSetField: 'warn me (days before expiry)',
-    expSetHint1: 'when a document has this many days left or fewer, an “Expiring soon” bar appears on the home screen. Expired is red, 7 days or fewer is highlighted.',
-    expSetHint2: 'you see the warning when you open Arhiva. Notifications while the app is closed are not available yet.',
+    expSetHint1: 'when a document has this many days left or fewer, Arhiva notifies you once and a number appears on the bell on the home screen. You are notified once more 7 days before and when the document expires.',
+    expSetHint2: 'you see the notification when you open Arhiva. Notifications while the app is closed are not available yet.',
     bkHintZip: 'the backup is one ZIP file: your documents are inside as ordinary images and PDFs, sorted by album, so they open even without Arhiva. import also accepts old .json backups. restoring adds only what is missing, without duplicates.'
   }
 };
@@ -1818,7 +1906,6 @@ function t(key, vars){
    Poređenje ide po kalendarskim danima (Date.UTC), pa letnje računanje vremena ne pomera rok.
    ===================================================================== */
 var EXP_SOON = 7;                 /* 7 dana ili manje = naglašeno */
-var expExpanded = false;          /* traka na početnom ekranu: prikazano sve ili prve 3 */
 var _expRenderDay = '';
 function getExpiryDays(){
   let v = 0;
@@ -1870,6 +1957,12 @@ function fmtExpDate(ymd, long){
   if(long) return base + y + '.';
   return y === cur ? base : base + String(y).slice(-2) + '.';
 }
+/* zapis u polju za datum: 30.09.2026. */
+function fmtExpField(ymd){
+  const [y, m, d] = ymdParts(ymd);
+  if(appLang() === 'en') return new Date(y, m-1, d).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+  return String(d).padStart(2,'0') + '.' + String(m).padStart(2,'0') + '.' + y + '.';
+}
 /* cela rečenica: „ističe za 13 dana (12.10.2026.)“ */
 function expPhrase(ymd){
   const days = expDaysLeft(ymd);
@@ -1905,8 +1998,6 @@ function openExpirySheet(o){
   expUpdateState();
   expSheet.classList.add('open');
   pushBack(closeExpSheet);
-  /* bez upisanog roka kalendar se otvara odmah (jedan dodir manje); ako Chrome ne dozvoli, ostaje polje */
-  if(!expInput.value){ try{ if(expInput.showPicker) expInput.showPicker(); }catch(e){} }
 }
 const closeExpSheet = ()=>{ expSheet.classList.remove('open'); try{ expInput.blur(); }catch(e){} };
 function expUpdateState(){
@@ -1915,6 +2006,9 @@ function expUpdateState(){
   const ok = isYmd(v);
   st.className = 'exp-state' + (ok ? ' lvl-' + expLevel(expDaysLeft(v)) : '');
   st.textContent = ok ? expPhrase(v) : '';
+  const ft = document.getElementById('expFieldTxt');
+  ft.className = 'exp-field-txt' + (ok ? '' : ' empty');
+  ft.textContent = ok ? fmtExpField(v) : t('expPickDate');
   document.getElementById('expSave').disabled = !ok;
 }
 expInput.addEventListener('input', expUpdateState);
@@ -1940,10 +2034,11 @@ async function setItemExpiry(item, v){
   try{ await idbPut(item); }
   catch(e){ item.validUntil = old; console.error(e); toast(t('saveErr')); return false; }
   toast(v ? t('expSaved', {date:fmtExpDate(v, true)}) : t('expRemoved'));
+  markExpSeen(item);
   return true;
 }
 
-/* ---------- Traka „Uskoro ističe“ na početnom ekranu ---------- */
+/* ---------- Dokumenti u periodu upozorenja (N dana) ili istekli ---------- */
 function expiringItems(){
   const N = getExpiryDays();
   return items.filter(i=>isYmd(i.validUntil))
@@ -1951,39 +2046,152 @@ function expiringItems(){
     .filter(x=>x.days <= N)
     .sort((a,b)=>(a.days - b.days) || normalizeSr(a.it.name).localeCompare(normalizeSr(b.it.name)));
 }
-function buildExpiryBar(){
-  const list = expiringItems();
-  if(!list.length) return null;
-  const box = document.createElement('div');
-  box.className = 'exp-bar' + (list.some(x=>x.days < 0) ? ' has-expired' : '');
-  box.id = 'expBar';
-  const head = document.createElement('div');
-  head.className = 'exp-head';
-  head.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"></circle><polyline points="12 9 12 13 14.8 14.8"></polyline><line x1="9.5" y1="2.5" x2="14.5" y2="2.5"></line></svg>'+
-    '<span class="exp-title">'+escapeHtml(t('expBarTitle'))+'</span><span class="exp-count">'+list.length+'</span>';
-  box.appendChild(head);
-  const LIMIT = 3;
-  const shown = (expExpanded || list.length <= LIMIT) ? list : list.slice(0, LIMIT);
-  shown.forEach(x=>{
-    const row = document.createElement('button');
-    row.type = 'button';
-    row.className = 'exp-row lvl-' + expLevel(x.days);
-    const album = x.it.category ? catLabel(x.it.category) : t('expAlbumNone');
-    row.innerHTML = '<span class="exp-dot"></span><span class="exp-main"><span class="exp-name">'+escapeHtml(x.it.name)+'</span>'+
-      '<span class="exp-album">'+escapeHtml(album || t('expAlbumNone'))+'</span></span>'+
-      '<span class="exp-when"><b>'+escapeHtml(expShort(x.days))+'</b><small>'+escapeHtml(fmtExpDate(x.it.validUntil, false))+'</small></span>';
-    row.onclick = ()=>openFromExpiry(x.it);
-    box.appendChild(row);
-  });
-  if(list.length > LIMIT){
-    const more = document.createElement('button');
-    more.type = 'button';
-    more.className = 'exp-more';
-    more.textContent = expExpanded ? t('expLess') : t('expMore', {n:list.length - LIMIT});
-    more.onclick = ()=>{ expExpanded = !expExpanded; render(); };
-    box.appendChild(more);
+function expRowEl(x, onPick){
+  const row = document.createElement('button');
+  row.type = 'button';
+  row.className = 'exp-row lvl-' + expLevel(x.days);
+  const album = x.it.category ? catLabel(x.it.category) : t('expAlbumNone');
+  row.innerHTML = '<span class="exp-dot"></span><span class="exp-main"><span class="exp-name">'+escapeHtml(x.it.name)+'</span>'+
+    '<span class="exp-album">'+escapeHtml(album || t('expAlbumNone'))+'</span></span>'+
+    '<span class="exp-when"><b>'+escapeHtml(expShort(x.days))+'</b><small>'+escapeHtml(fmtExpDate(x.it.validUntil, false))+'</small></span>';
+  row.onclick = ()=>onPick(x.it);
+  return row;
+}
+function allExpiryItems(){
+  return items.filter(i=>isYmd(i.validUntil))
+    .map(i=>({it:i, days:expDaysLeft(i.validUntil)}))
+    .sort((a,b)=>(a.days - b.days) || normalizeSr(a.it.name).localeCompare(normalizeSr(b.it.name)));
+}
+
+/* ---------- Zvonce u zaglavlju: vidi se kad bar jedan dokument ima rok; broj kad nešto ističe ili je isteklo ---------- */
+const expHdrBtn = document.getElementById('expHdrBtn');
+expHdrBtn.title = t('expHdr');
+expHdrBtn.setAttribute('aria-label', t('expHdr'));
+function updateExpHeader(){
+  const any = items.some(i=>isYmd(i.validUntil));
+  const due = expiringItems();
+  expHdrBtn.style.display = (any && !selectionMode) ? 'flex' : 'none';
+  expHdrBtn.parentElement.classList.toggle('five', any && !selectionMode);
+  document.body.classList.toggle('hdr-five', any && !selectionMode);
+  expHdrBtn.classList.toggle('alert', due.length > 0);
+  expHdrBtn.classList.toggle('expired', due.some(x=>x.days < 0));
+  document.getElementById('expHdrCount').textContent = due.length > 99 ? '99+' : String(due.length);
+}
+expHdrBtn.onclick = ()=>openExpScreen();
+
+/* ---------- Ekran „Rokovi važenja“: isteklo / uskoro ističe / kasnije ---------- */
+const expScreen = document.getElementById('expScreen');
+function openExpScreen(){
+  renderExpScreen();
+  expScreen.classList.add('open');
+  expScreen.scrollTop = 0;
+  pushBack(closeExpScreen);
+}
+const closeExpScreen = ()=>{ expScreen.classList.remove('open'); };
+function renderExpScreen(){
+  const panel = document.getElementById('expPanel');
+  const N = getExpiryDays();
+  panel.innerHTML = settingsHeader(t('expScreenTitle')) + '<div class="set-body" id="expBody"></div>';
+  const body = document.getElementById('expBody');
+  const all = allExpiryItems();
+  if(!all.length){
+    body.innerHTML = '<div class="exp-empty">'+escapeHtml(t('expEmpty'))+'</div>';
+    return;
   }
-  return box;
+  const hint = document.createElement('div');
+  hint.className = 'exp-scr-hint';
+  hint.textContent = t('expScreenHint', {n:N, d:dayWord(N)});
+  body.appendChild(hint);
+  const groups = [
+    ['expGrpGone', 'gone', all.filter(x=>x.days < 0)],
+    ['expGrpSoon', 'soon', all.filter(x=>x.days >= 0 && x.days <= N)],
+    ['expGrpLater', 'later', all.filter(x=>x.days > N)]
+  ];
+  groups.forEach(([key, cls, list])=>{
+    if(!list.length) return;
+    const lab = document.createElement('div');
+    lab.className = 'exp-grp-label ' + cls;
+    lab.innerHTML = escapeHtml(t(key)) + ' <span>' + list.length + '</span>';
+    body.appendChild(lab);
+    const box = document.createElement('div');
+    box.className = 'exp-bar' + (cls === 'gone' ? ' has-expired' : '');
+    box.style.marginBottom = '22px';
+    list.forEach(x=>box.appendChild(expRowEl(x, (it)=>requestCloseThen(()=>openFromExpiry(it)))));
+    body.appendChild(box);
+  });
+}
+
+/* ---------- Obaveštenje pri otvaranju: za svaki dokument najviše 3 puta
+   (ulazak u period upozorenja, 7 dana pre, isteklo), svaki put samo jednom.
+   Pamti se u postojećem skladištu meta, ključ 'expNotified': {ID dokumenta: {vu: rok, lvl: 1|2|3}}.
+   Promena roka (obnova dokumenta) počinje brojanje iz početka. ---------- */
+const EXP_RANK = {warn:1, soon:2, expired:3};
+let _expNotified = null;
+let _expNoticeBusy = false;
+function expRank(days){ return EXP_RANK[expLevel(days)] || 0; }
+async function loadExpNotified(){
+  if(_expNotified) return _expNotified;
+  try{ const r = await db2Get('meta', 'expNotified'); _expNotified = (r && r.map) ? r.map : {}; }
+  catch(e){ console.error(e); _expNotified = {}; }
+  return _expNotified;
+}
+async function saveExpNotified(){
+  try{ await db2Put('meta', {key:'expNotified', map:_expNotified, updatedAt:Date.now()}); }catch(e){ console.error(e); }
+}
+/* korisnik je sam upisao rok: za trenutni nivo nema obaveštenja (već zna) */
+async function markExpSeen(item){
+  await loadExpNotified();
+  if(isYmd(item.validUntil)) _expNotified[item.id] = {vu:item.validUntil, lvl:expRank(expDaysLeft(item.validUntil))};
+  else delete _expNotified[item.id];
+  await saveExpNotified();
+}
+async function checkExpNotices(){
+  if(_expNoticeBusy || document.hidden) return;
+  _expNoticeBusy = true;
+  try{
+    const map = await loadExpNotified();
+    const due = [];
+    items.forEach(it=>{
+      if(!isYmd(it.validUntil)) return;
+      const days = expDaysLeft(it.validUntil);
+      const r = expRank(days);
+      if(!r) return;
+      const rec = map[it.id];
+      if(!rec || rec.vu !== it.validUntil || (rec.lvl || 0) < r) due.push({it, days, r});
+    });
+    if(!due.length) return;
+    due.sort((a,b)=>(a.days - b.days) || normalizeSr(a.it.name).localeCompare(normalizeSr(b.it.name)));
+    const act = await showExpNotice(due);
+    due.forEach(x=>{ map[x.it.id] = {vu:x.it.validUntil, lvl:x.r}; });
+    await saveExpNotified();
+    if(act === 'open'){
+      if(due.length === 1) openFromExpiry(due[0].it);
+      else openExpScreen();
+    }
+  }finally{ _expNoticeBusy = false; }
+}
+function showExpNotice(due){
+  return new Promise(resolve=>{
+    const bg = document.getElementById('expNoticeBackdrop');
+    document.getElementById('enTitle').textContent = t('expNoticeTitle');
+    const list = document.getElementById('enList');
+    const LIMIT = 5;
+    list.innerHTML = due.slice(0, LIMIT).map(x=>
+      '<div class="en-row"><span class="en-name">'+escapeHtml(x.it.name)+'</span>'+
+      '<span class="en-when lvl-'+expLevel(x.days)+'">'+escapeHtml(expPhrase(x.it.validUntil))+'</span></div>').join('') +
+      (due.length > LIMIT ? '<div class="en-more">'+escapeHtml(t('expNoticeMore', {n:due.length - LIMIT}))+'</div>' : '');
+    list.scrollTop = 0;
+    document.getElementById('enHint').textContent = t('expNoticeHint');
+    document.getElementById('enOk').textContent = t('expNoticeOk');
+    document.getElementById('enOpen').textContent = due.length === 1 ? t('expNoticeOpen') : t('expNoticeAll');
+    let result = 'ok';
+    const closer = ()=>{ bg.classList.remove('open'); resolve(result); };
+    document.getElementById('enOk').onclick = ()=>{ result = 'ok'; requestClose(); };
+    document.getElementById('enOpen').onclick = ()=>{ result = 'open'; requestClose(); };
+    bg.onclick = (e)=>{ if(e.target === bg){ result = 'ok'; requestClose(); } };
+    bg.classList.add('open');
+    pushBack(closer);
+  });
 }
 /* Dodir na red: slika/dokument od više stranica -> pregled u svom albumu (nazad vodi na početni ekran);
    PDF i drugi fajlovi se otvaraju kao i iz mreže. */
@@ -1999,7 +2207,9 @@ function openFromExpiry(item){
 }
 /* posle ponoći (aplikacija ostala otvorena) brojevi dana se osvežavaju pri povratku */
 document.addEventListener('visibilitychange', ()=>{
-  if(!document.hidden && _expRenderDay && _expRenderDay !== todayYmd()) render();
+  if(document.hidden) return;
+  if(_expRenderDay && _expRenderDay !== todayYmd()) render();
+  checkExpNotices();
 });
 
 /* ---------- Oznaka roka na sličici ---------- */
@@ -2895,6 +3105,8 @@ function render(){
   searchbarWrap.style.display = (selectionMode || !searchOpen) ? 'none' : 'flex';
   toolbarWrap.style.display = 'none';
   document.getElementById('settingsBtn').style.display = selectionMode ? 'none' : 'flex';
+  _expRenderDay = todayYmd();
+  updateExpHeader();
   document.getElementById('searchBtn').style.display = selectionMode ? 'none' : 'flex';
   document.getElementById('newAlbumBtn').style.display = selectionMode ? 'none' : 'flex';
   document.getElementById('viewToggleBtn').style.display = 'none';
@@ -3146,11 +3358,6 @@ function render(){
     btn.style.display = selectionMode ? 'none' : 'flex';
   };
   setupViewToggleBtn();
-
-  /* Traka „Uskoro ističe“: samo kad nešto ističe u narednih N dana ili je već isteklo */
-  _expRenderDay = todayYmd();
-  const expBar = buildExpiryBar();
-  if(expBar) contentArea.appendChild(expBar);
 
   /* Pocetni ekran: samo albumi prvog nivoa (podalbumi su unutar svog albuma) */
   appendAlbumGroups(contentArea, categories.filter(c=>!c.parent), cat=>{
@@ -3731,6 +3938,7 @@ async function copySelectedToFolder(catId){
     try{
       const clone = await copyDoc(orig, catId);
       items.push(clone);
+      if(clone.validUntil) markExpSeen(clone);
       maybeAutoCover(catId, clone);
       ok++;
     }catch(e){ console.error(e); }
@@ -4226,7 +4434,7 @@ document.getElementById('deepSearchToggle').onclick = ()=>{
   render();
 };
 
-loadAll().then(()=>{ refreshOldDbPresent().catch(()=>{}); checkDeepLink(); });
+loadAll().then(()=>{ refreshOldDbPresent().catch(()=>{}); checkDeepLink(); checkExpNotices(); });
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
 }
@@ -4431,7 +4639,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 62</div>'+
+    '<div class="settings-hint set-build">verzija 63</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -5436,6 +5644,7 @@ document.getElementById('pgSave').onclick = async ()=>{
       await db2AddDoc(item, ed.pages.map(p=>({blob:p.blob, thumbBlob:p.thumbBlob, w:p.w, h:p.h})), null);
       items.push(item);
       maybeAutoCover(item.category, item);
+      if(item.validUntil) markExpSeen(item);
       ed.dirty = false;
       requestClose();
       render();
@@ -5443,6 +5652,7 @@ document.getElementById('pgSave').onclick = async ()=>{
     }else{
       const item = ed.item;
       const det = await db2UpdatePages(item, ed.pages.map(p=>p.file ? {file:p.file} : {blob:p.blob, thumbBlob:p.thumbBlob, w:p.w, h:p.h}), name, [], {validUntil: ed.validUntil || null});
+      markExpSeen(item);
       ed.dirty = false;
       requestClose();
       render();
@@ -5491,11 +5701,15 @@ async function mergeSelected(){
     const doc = {id:newItemId(), name:first.name, ts:Date.now(), category:first.category || null, type:'image', validUntil: first.validUntil || null};
     await db2AddDoc(doc, pages, null);
     items.push(doc);
-    const ids = new Set(chosen.map(i=>i.id));
-    const coverFix = categories.filter(c=>c.cover && ids.has(c.cover)).map(c=>({c, old:c.cover}));
-    coverFix.forEach(x=>{ x.c.cover = doc.id; });
-    if(coverFix.length) saveCategories();
-    moveToTrash(chosen);
+    if(doc.validUntil){
+      markExpSeen(doc);
+      /* rok prelazi na nov dokument: kod prve slike se uklanja, da se isti rok ne vidi i ne javlja dvaput.
+         Originali ostaju u albumu (ništa se ne briše usput); ako korisniku ne trebaju, sam ih briše uz potvrdu. */
+      const oldVu = first.validUntil;
+      first.validUntil = null;
+      try{ await idbPut(first); markExpSeen(first); }
+      catch(e){ first.validUntil = oldVu; console.error(e); }
+    }
     toastHide();
     render();
     toast(t('merged', {name:doc.name, n:pages.length}));
