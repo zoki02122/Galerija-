@@ -272,7 +272,8 @@
   /* Razmak izmedju grupe pinovanih i grupe ostalih albuma = isti kao izmedju plocica */
   .grid.folders-grid + .grid.folders-grid{margin-top:10px;}
   .grid.folders-grid.folders-list + .grid.folders-grid.folders-list{margin-top:8px;}
-  .grid.photos-grid{grid-template-columns:repeat(3,1fr);gap:10px 8px;}
+  /* minmax(0,1fr): kolone su uvek jednake, i kad je naziv dugačak broj bez razmaka (npr. naziv slike sa kamere) */
+  .grid.photos-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 8px;}
   .photos-grid .meta .name{font-size:15.5px;}
   .photos-grid .meta .index{font-size:10px;}
   .photos-grid .pdf-thumb svg{width:22px;height:22px;}
@@ -412,7 +413,7 @@
 
   .meta{padding:8px 1px 0;}
   .meta .index{display:block;font-family:var(--font-num);font-size:11px;letter-spacing:1px;color:var(--brass-soft);margin-bottom:2px;}
-  .meta .name{display:block;font-family:var(--font-name);font-style:var(--name-style);font-size:19.5px;color:var(--ink);white-space:normal;overflow-wrap:break-word;line-height:1.3;}
+  .meta .name{display:block;font-family:var(--font-name);font-style:var(--name-style);font-size:19.5px;color:var(--ink);white-space:normal;overflow-wrap:anywhere;line-height:1.3;}
   .meta input{background:none;border:none;border-bottom:1px solid var(--brass);outline:none;color:var(--ink);font-size:19.5px;font-family:var(--font-name);font-style:var(--name-style);width:100%;padding:0;}
 
   .empty{text-align:center;padding:56px 20px;color:var(--ink-dim);border:1px solid var(--line-soft);position:relative;}
@@ -1413,6 +1414,20 @@ const I18N = {
     delDocTitle: 'Brisanje dokumenta',
     delDocSub: 'Dokument „{name}“ ({n} str.) biće obrisan.',
     selMore: 'Više',
+    delItemsTitle: 'Premesti u korpu',
+    delItemsOne: 'Stavka „{name}“ ide u korpu. Tamo čeka {days} dana i može se vratiti.',
+    delItemsMany: 'Izabrano za brisanje: {n}. Sve ide u korpu, gde čeka {days} dana i može se vratiti.',
+    delItemsOk: 'U korpu',
+    delAlbumTitle: 'Obriši album',
+    delSubTitle: 'Obriši podalbum',
+    delAlbumText: '„{name}“ biće obrisan{subs}. {items} Obrisan album se ne može vratiti.',
+    delAlbumSubs: ' zajedno sa podalbumima ({n})',
+    delAlbumItems: 'Slike i dokumenti iz njega ({n}) ostaju u „Sve slike“.',
+    delAlbumEmpty: 'U njemu nema slika ni dokumenata.',
+    delAlbumOk: 'Obriši',
+    mergeConfirmText: 'Stranice idu redom kojim si označavao, ukupno {p}. Naziv i album uzimaju se od „{name}“. Originali idu u korpu, odakle mogu da se vrate.',
+    mergeOk: 'Spoji',
+    delModalTrash: 'Ide u korpu, gde čeka {days} dana i može se vratiti.',
     moreTitle: 'Izabrano: {n}',
     mergeRow: 'Spoji u jedan dokument',
     mergeHint: 'redom kojim si označavao; originali idu u korpu',
@@ -1438,11 +1453,11 @@ const I18N = {
       ['Dodavanje', 'Ikonica slike sa plusom dodaje sa telefona: iz galerije (više slika odjednom), slikanjem ili kao dokument (PDF, Word, Excel…). Svaka izabrana slika postaje posebna stavka.', 'Ono što dodaš dok si u albumu (iz galerije, slikanjem ili kao dokument) ide pravo u taj album.'],
       ['Dokument od više stranica', 'U meniju za dodavanje izaberi „Dokument od više stranica“. Slikaj stranicu po stranicu ili izaberi više slika iz galerije, upiši naziv i dodirni „Sačuvaj“.', 'Redosled menjaš prevlačenjem ručke u uglu stranice, a ✕ uklanja stranicu. U mreži se vidi prva stranica sa oznakom broja stranica.'],
       ['Pregled i listanje', 'Dodir na sliku otvara pregled. Prevlačenjem levo i desno listaš stranice, a posle poslednje stranice prelaziš na sledeću stavku. Jedan dodir sakriva ili vraća dugmad.', 'Dugme sa stranicama u pregledu dodaje nove stranice u dokument ili menja njihov redosled.'],
-      ['Spajanje i izdvajanje', 'Označi dve ili više slika (dugi pritisak), pa u traci dodirni „Više“ i „Spoji u jedan dokument“. Stranice idu redom kojim si ih označio, a naziv i album uzimaju se od prve. Originali idu u korpu, a „Opozovi“ sve vraća.', 'Pojedinačnu stranicu izdvajaš na ekranu sa stranicama: dodir na stranicu, pa „Izdvoji kao posebnu sliku“.'],
+      ['Spajanje i izdvajanje', 'Označi dve ili više slika (dugi pritisak), pa u traci dodirni „Više“ i „Spoji u jedan dokument“. Stranice idu redom kojim si ih označio, a naziv i album uzimaju se od prve. Pre spajanja Arhiva pita za potvrdu; originali idu u korpu, odakle mogu da se vrate.', 'Pojedinačnu stranicu izdvajaš na ekranu sa stranicama: dodir na stranicu, pa „Izdvoji kao posebnu sliku“.'],
       ['PDF', 'Dokument ili više označenih slika pretvaraš u jedan PDF: u pregledu dugmetom PDF, a kod izbora preko „Više“. Zatim biraš da li ga deliš (Viber, e-pošta…) ili čuvaš na telefon.', 'Stranice idu u PDF bez gubitka kvaliteta.'],
       ['Pretraga', 'Lupa pretražuje nazive albuma, slika i dokumenata. „Detaljno“ traži i reči unutar PDF, Word i Excel dokumenata.', 'U albumu pretraga obuhvata i njegove podalbume.'],
       ['Prečica na početnom ekranu', 'Označi jednu stavku i dodirni „Prečica“. Stavka se otvara u Chrome-u, a iz Chrome menija biraš „Dodaj na početni ekran“. Prečica dokumenta od više stranica lista sve stranice.'],
-      ['Korpa', 'Obrisano ide u korpu (Podešavanja → korpa) i tamo čeka zadati broj dana, a zatim se trajno briše. Iz korpe stavku vraćaš ili je odmah trajno brišeš.'],
+      ['Korpa', 'Svako brisanje prvo traži potvrdu. Obrisano ide u korpu (Podešavanja → korpa) i tamo čeka zadati broj dana, a zatim se trajno briše. Iz korpe stavku vraćaš ili je odmah trajno brišeš.', 'Albumi ne idu u korpu: kad obrišeš album, njegove slike i dokumenti ostaju u „Sve slike“.'],
       ['Rezervna kopija', 'Podešavanja → rezervna kopija pravi jedan ZIP fajl sa svim dokumentima i albumima. Čuvaj ga van telefona, npr. na Google Drive-u.', 'Vraćanje dodaje samo ono što nedostaje, bez duplikata. Traka na vrhu te podseti kad prođe zadati broj dana od poslednje kopije.'],
       ['Teme', 'Podešavanja → tema menja izgled cele aplikacije. Izbor se pamti i čuva u rezervnoj kopiji.'],
       ['Stari podaci', 'Posle prelaska na nov način čuvanja stari podaci su ostavljeni kao osiguranje. Kad proveriš da je sve na mestu, obriši ih u Podešavanjima da oslobodiš prostor. Pločica se vidi samo dok stari podaci postoje.']
@@ -1531,6 +1546,20 @@ const I18N = {
     delDocTitle: 'Delete document',
     delDocSub: 'Document “{name}” ({n} pp.) will be deleted.',
     selMore: 'More',
+    delItemsTitle: 'Move to trash',
+    delItemsOne: 'Item “{name}” goes to the trash. It waits there for {days} days and can be restored.',
+    delItemsMany: 'Selected for deletion: {n}. Everything goes to the trash, where it waits {days} days and can be restored.',
+    delItemsOk: 'To trash',
+    delAlbumTitle: 'Delete album',
+    delSubTitle: 'Delete sub-album',
+    delAlbumText: '“{name}” will be deleted{subs}. {items} A deleted album cannot be restored.',
+    delAlbumSubs: ' together with its sub-albums ({n})',
+    delAlbumItems: 'Its images and documents ({n}) stay in “All images”.',
+    delAlbumEmpty: 'It has no images or documents.',
+    delAlbumOk: 'Delete',
+    mergeConfirmText: 'Pages follow the order you selected them in, {p} in total. The name and album come from “{name}”. The originals go to the trash, from where they can be restored.',
+    mergeOk: 'Merge',
+    delModalTrash: 'It goes to the trash, where it waits {days} days and can be restored.',
     moreTitle: 'Selected: {n}',
     mergeRow: 'Merge into one document',
     mergeHint: 'in the order you selected them; originals go to the trash',
@@ -1556,11 +1585,11 @@ const I18N = {
       ['Adding', 'The image-plus icon adds from the phone: from the gallery (several images at once), by taking a photo, or as a document (PDF, Word, Excel…). Every picked image becomes a separate item.', 'What you add while inside an album (from the gallery, by taking a photo or as a document) goes straight into that album.'],
       ['Multi-page document', 'In the add menu choose “Multi-page document”. Photograph page by page or pick several images from the gallery, type a name and tap “Save”.', 'Drag the handle in the corner of a page to change the order; ✕ removes a page. The grid shows the first page with the page count.'],
       ['Viewing and paging', 'Tap an image to open it. Swipe left and right to turn pages; after the last page you move on to the next item. One tap hides or shows the buttons.', 'The pages button in the viewer adds new pages to a document or changes their order.'],
-      ['Merging and splitting', 'Select two or more images (long-press), then tap “More” and “Merge into one document”. Pages follow the order you selected them in; the name and album come from the first. The originals go to the trash and “Undo” brings everything back.', 'To split off a single page, open the pages screen, tap the page and choose “Split off as a separate image”.'],
+      ['Merging and splitting', 'Select two or more images (long-press), then tap “More” and “Merge into one document”. Pages follow the order you selected them in; the name and album come from the first. Arhiva asks before merging; the originals go to the trash, from where they can be restored.', 'To split off a single page, open the pages screen, tap the page and choose “Split off as a separate image”.'],
       ['PDF', 'Turn a document or several selected images into one PDF: with the PDF button in the viewer, or via “More” when selecting. Then share it (Viber, email…) or save it to the phone.', 'Pages go into the PDF without losing quality.'],
       ['Search', 'The magnifier searches the names of albums, images and documents. “Detailed” also searches words inside PDF, Word and Excel documents.', 'Inside an album, search also covers its sub-albums.'],
       ['Home screen shortcut', 'Select one item and tap “Shortcut”. The item opens in Chrome; choose “Add to home screen” from the Chrome menu. The shortcut of a multi-page document shows all pages.'],
-      ['Trash', 'Deleted items go to the trash (Settings → trash) and wait there for the set number of days, then they are deleted for good. From the trash you can restore an item or delete it right away.'],
+      ['Trash', 'Every deletion asks for confirmation first. Deleted items go to the trash (Settings → trash) and wait there for the set number of days, then they are deleted for good. From the trash you can restore an item or delete it right away.', 'Albums do not go to the trash: when you delete an album, its images and documents stay in “All images”.'],
       ['Backup', 'Settings → backup makes one ZIP file with all documents and albums. Keep it off the phone, for example on Google Drive.', 'Restoring adds only what is missing, without duplicates. A bar at the top reminds you when the set number of days has passed since the last backup.'],
       ['Themes', 'Settings → theme changes the look of the whole app. The choice is remembered and saved in the backup.'],
       ['Old data', 'After the move to the new storage the old data was kept as a safety net. Once you have checked everything is in place, delete it in Settings to free up space. The tile is shown only while old data exists.']
@@ -2743,12 +2772,26 @@ document.getElementById('acCover').onclick = ()=>{
 };
 document.getElementById('acDelete').onclick = ()=>{
   const catId = albumContextTarget;
-  requestClose();
+  requestCloseThen(()=>confirmDeleteAlbum(catId));
+};
+async function confirmDeleteAlbum(catId){
+  const cat = catById(catId);
+  if(!cat) return;
+  const subN = childrenOf(catId).length;
+  const itemN = items.filter(it=>albumIdSet(catId).has(it.category)).length;
+  const yes = await askConfirm({icon:'🗂️', title: cat.parent ? t('delSubTitle') : t('delAlbumTitle'),
+    text: t('delAlbumText', {name:cat.name, subs: subN ? t('delAlbumSubs', {n:subN}) : '',
+      items: itemN ? t('delAlbumItems', {n:itemN}) : t('delAlbumEmpty')}),
+    okIcon:'🗑️', okLabel:t('delAlbumOk')});
+  if(!yes) return;
+  deleteAlbumNow(catId);
+}
+function deleteAlbumNow(catId){
   const cat = catById(catId);
   if(!cat) return;
   const name = cat.name;
   const isSub = !!cat.parent;
-  /* album + njegovi podalbumi; pamti mesta u spisku i stari album svake slike (za Opozovi) */
+  /* album + njegovi podalbumi (potvrda je već data); slike idu u Sve slike */
   const ids = albumIdSet(catId);
   const removed = categories.map((c,idx)=>({c, idx})).filter(x=>ids.has(x.c.id));
   const affected = items.filter(it=>ids.has(it.category)).map(it=>({it, was: it.category}));
@@ -2758,17 +2801,8 @@ document.getElementById('acDelete').onclick = ()=>{
   if(ids.has(currentFolder)) currentFolder = null;
   render();
   const subCount = removed.length - 1;
-  toastUndo(
-    (isSub ? 'Podalbum "' : 'Album "') + name + '" obrisan' + (subCount > 0 ? ' (i podalbuma: '+subCount+').' : '.'),
-    ()=>{
-      removed.forEach(x=>{ categories.splice(Math.min(x.idx, categories.length), 0, x.c); });
-      affected.forEach(a=>{ a.it.category = a.was; idbPut(a.it).catch(e=>console.error(e)); });
-      saveCategories();
-      render();
-    },
-    ()=>{}
-  );
-};
+  toast((isSub ? 'Podalbum "' : 'Album "') + name + '" obrisan' + (subCount > 0 ? ' (i podalbuma: '+subCount+').' : '.'));
+}
 /* Premestanje albuma u drugi album / nazad na pocetni ekran */
 function moveTargetsFor(cat){
   return categories.filter(c=>!c.parent && c.id !== cat.id && c.id !== cat.parent);
@@ -3158,6 +3192,7 @@ document.getElementById('modalDelete').onclick = (e)=>{
   document.querySelector('#delBackdrop h2').textContent = np > 1 ? t('delDocTitle') : 'Brisanje slike';
   document.getElementById('delSub').textContent = np > 1 ? t('delDocSub', {name:item.name, n:np})
     : 'Slika \u201E' + item.name + '\u201C biće obrisana.';
+  document.getElementById('delSub').textContent += ' ' + t('delModalTrash', {days:getTrashDays()});
   delBackdrop.classList.add('open');
   pushBack(closeDeleteConfirm);
 };
@@ -3181,18 +3216,7 @@ function deleteModalItem(id){
   }else{
     requestClose();
   }
-  toastUndo(
-    'Premešteno u korpu.',
-    ()=>{
-      restoreFromTrash([item]);
-      render();
-      if(modalBg.classList.contains('open')){
-        const idx = currentGalleryItems.findIndex(i=>i.id===item.id);
-        if(idx >= 0){ currentGalleryIndex = idx; showModalItem(item); }
-      }
-    },
-    ()=>{}
-  );
+  toast('Premešteno u korpu.');
 }
 
 function openMoveSheet(){
@@ -3296,18 +3320,18 @@ async function copySelectedToFolder(catId){
   toast(ok === chosen.length ? 'Kopirano u "'+catLabel(catId)+'".' : t('saveErr'));
 }
 
-function deleteSelected(){
-  if(selectedIds.size === 0) return;
-  const ids = Array.from(selectedIds);
+async function deleteSelected(){
   const removedItems = items.filter(i=>selectedIds.has(i.id));
+  if(!removedItems.length) return;
+  const days = getTrashDays();
+  const yes = await askConfirm({icon:'🗑️', title:t('delItemsTitle'),
+    text: removedItems.length === 1 ? t('delItemsOne', {name:removedItems[0].name, days}) : t('delItemsMany', {n:removedItems.length, days}),
+    okIcon:'🗑️', okLabel:t('delItemsOk')});
+  if(!yes) return;
   moveToTrash(removedItems);
   exitSelection();
   render();
-  toastUndo(
-    ids.length===1 ? 'Premešteno u korpu.' : 'U korpu premešteno: '+ids.length+'.',
-    ()=>{ restoreFromTrash(removedItems); render(); },
-    ()=>{}
-  );
+  toast(removedItems.length===1 ? 'Premešteno u korpu.' : 'U korpu premešteno: '+removedItems.length+'.');
 }
 /* ---------- Korpa ---------- */
 /* Upisuje se odmah: ako se aplikacija zatvori, stavka ostaje u korpi (ne nestaje, ne vraca se sama). */
@@ -3518,43 +3542,6 @@ function toastPersist(msg){
 function toastHide(){
   toastEl.classList.remove('show');
 }
-let _undoTimer = null;
-let _undoFinalize = null;
-function toastUndo(msg, undoFn, finalizeFn){
-  if(_undoTimer){ clearTimeout(_undoTimer); _undoTimer = null; }
-  clearTimeout(_toastTimer); _toastTimer = null;
-  if(_undoFinalize){ const prev = _undoFinalize; _undoFinalize = null; prev(); }
-  toastEl.innerHTML = '<span class="toast-msg">'+escapeHtml(msg)+'</span><span class="toast-undo" id="toastUndoBtn">Opozovi</span>';
-  toastEl.classList.add('show');
-  let done = false;
-  const finalizeOnce = ()=>{
-    if(done) return;
-    done = true;
-    _undoFinalize = null;
-    finalizeFn();
-  };
-  _undoFinalize = finalizeOnce;
-  document.getElementById('toastUndoBtn').onclick = ()=>{
-    if(done) return;
-    done = true;
-    _undoFinalize = null;
-    clearTimeout(_undoTimer); _undoTimer = null;
-    toastEl.classList.remove('show');
-    undoFn();
-  };
-  _undoTimer = setTimeout(()=>{
-    _undoTimer = null;
-    toastEl.classList.remove('show');
-    finalizeOnce();
-  }, 5000);
-}
-document.addEventListener('visibilitychange', ()=>{
-  if(document.visibilityState === 'hidden' && _undoFinalize){
-    if(_undoTimer){ clearTimeout(_undoTimer); _undoTimer = null; }
-    toastEl.classList.remove('show');
-    _undoFinalize();
-  }
-});
 async function addFilesWithProgress(files, category){
   if(files.length === 0) return;
   if(files.length === 1){ await addFile(files[0], category); return; }
@@ -4024,7 +4011,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 60</div>'+
+    '<div class="settings-hint set-build">verzija 61</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -5046,14 +5033,17 @@ function refreshModalAfterEdit(item){
 
 /* =====================================================================
    2c  SPAJANJE: 2+ slike -> jedan dokument (redosled = redosled dodira)
-   Originali idu u korpu; „Opozovi“ vraća originale i uklanja nov dokument.
+   Pre spajanja se traži potvrda; originali idu u korpu, odakle mogu da se vrate.
    ===================================================================== */
 async function mergeSelected(){
   const chosen = Array.from(selectedIds).map(id=>items.find(i=>i.id === id)).filter(Boolean);
   if(chosen.length < 2 || chosen.some(i=>i.type !== 'image')) return;
-  exitSelection();
   const first = chosen[0];
   const total = chosen.reduce((s, i)=>s + pageCount(i), 0);
+  const yes = await askConfirm({icon:'🗂️', title:t('mergeRow'), text:t('mergeConfirmText', {p:total, name:first.name}),
+    okIcon:'🗂️', okLabel:t('mergeOk'), danger:false});
+  if(!yes) return;
+  exitSelection();
   try{
     toastPersist(t('mergeBusy', {n:0, total}));
     const pages = [];
@@ -5075,15 +5065,7 @@ async function mergeSelected(){
     moveToTrash(chosen);
     toastHide();
     render();
-    toastUndo(t('merged', {name:doc.name, n:pages.length}), async ()=>{
-      restoreFromTrash(chosen);
-      coverFix.forEach(x=>{ x.c.cover = x.old; });
-      if(coverFix.length) saveCategories();
-      items = items.filter(i=>i !== doc);
-      setThumbUrl(doc, null);
-      try{ await idbDelete(doc.id); }catch(e){ console.error(e); }
-      render();
-    }, ()=>{});
+    toast(t('merged', {name:doc.name, n:pages.length}));
   }catch(e){
     console.error(e);
     toastHide();
