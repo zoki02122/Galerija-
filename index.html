@@ -1098,9 +1098,17 @@ html[data-theme="ponoc"]{
 .mf-kind{ margin-top:18px; font-family:var(--font-ui); font-size:17px; font-weight:700; color:var(--ink); }
 .mf-meta{ margin-top:4px; font-family:var(--font-num); font-size:13px; color:var(--ink-faint); letter-spacing:.3px; }
 .mf-meta:empty{ display:none; }
+.mf-note{ margin-top:10px; max-width:280px; font-family:var(--font-ui); font-size:13.5px; line-height:1.4; color:var(--ink-dim); }
+.mf-note:empty{ display:none; }
 .mf-open{ margin-top:20px; min-width:170px; height:48px; padding:0 26px; border-radius:14px; border:none; background:var(--accent); color:var(--on-accent);
   font-family:var(--font-ui); font-size:16px; font-weight:700; cursor:pointer; }
 .mf-open:active{ transform:scale(.97); }
+/* verzija 68b: PDF stranicu po stranicu (pdf.js crta stranicu kao sliku) */
+.modal-bg.is-file.is-pdfview #modalImg{ display:block; }
+.modal-load{ position:absolute; left:50%; top:50%; width:34px; height:34px; margin:-17px 0 0 -17px; border-radius:50%;
+  border:3px solid var(--line); border-top-color:var(--brass); animation:mlSpin .8s linear infinite; pointer-events:none; }
+.modal-load[hidden]{ display:none; }
+@keyframes mlSpin{ to{ transform:rotate(360deg); } }
 #aiSheet .sheet{ max-height:92vh; max-height:92dvh; overflow-y:auto; overscroll-behavior:contain; box-sizing:border-box; }
 .ai-p{ font-size:14px; line-height:1.55; color:var(--ink); margin:0 2px 16px; }
 .ai-p.ai-err{ color:var(--danger); font-weight:600; }
@@ -1271,7 +1279,7 @@ html[data-theme="ponoc"]{
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
   </button>
   <div class="modal-inner">
-    <div class="modal-frame" id="modalFrame"><img id="modalImg" src=""><div class="modal-file" id="modalFile" hidden><div class="mf-ico" id="mfIco"></div><div class="mf-kind" id="mfKind"></div><div class="mf-meta" id="mfMeta"></div><button class="mf-open" id="mfOpen" type="button"></button></div></div>
+    <div class="modal-frame" id="modalFrame"><img id="modalImg" src=""><div class="modal-load" id="modalLoad" hidden></div><div class="modal-file" id="modalFile" hidden><div class="mf-ico" id="mfIco"></div><div class="mf-kind" id="mfKind"></div><div class="mf-meta" id="mfMeta"></div><div class="mf-note" id="mfNote"></div><button class="mf-open" id="mfOpen" type="button"></button></div></div>
     <div class="modal-info">
       <div class="modal-cap-row"><div class="modal-caption" id="modalCaption"></div><button class="modal-ren" id="modalRename" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg></button></div>
       <span class="modal-page-no" id="modalPageNo"></span>
@@ -1732,6 +1740,8 @@ const I18N = {
     fileSaved: 'Sačuvano na telefon.',
     fileShareNo: 'Chrome ne može da podeli ovu vrstu fajla, pa je sačuvan na telefon.',
     fileShareErr: 'Deljenje nije uspelo.',
+    pdfLocked: 'PDF je zaključan lozinkom. „Otvori“ ga šalje drugoj aplikaciji.',
+    pdfBroken: 'PDF ne može da se prikaže u Arhivi. „Otvori“ ga šalje drugoj aplikaciji.',
     moreTitle: 'Izabrano: {n}',
     mergeRow: 'Spoji u jedan dokument',
     mergeHint: 'redom kojim si označavao; originali ostaju u albumu',
@@ -2023,6 +2033,8 @@ const I18N = {
     fileSaved: 'Saved to phone.',
     fileShareNo: 'Chrome cannot share this type of file, so it was saved to the phone.',
     fileShareErr: 'Sharing failed.',
+    pdfLocked: 'The PDF is password protected. “Open” sends it to another app.',
+    pdfBroken: 'The PDF cannot be shown in Arhiva. “Open” sends it to another app.',
     moreTitle: 'Selected: {n}',
     mergeRow: 'Merge into one document',
     mergeHint: 'in the order you selected them; originals stay in the album',
@@ -4159,12 +4171,14 @@ let _modalReq = 0;        /* poslednji zahtev za prikaz (stariji odgovori se odb
 function setModalSrc(u){ if(u) modalImg.src = u; else modalImg.removeAttribute('src'); }
 function showModalItem(item, page){
   modalItemId = item.id;
+  if(item.type === 'pdf' && pdfCanView(item)){ showModalPdf(item, page); return; }
   if(item.type !== 'image'){ showModalFile(item); return; }
-  modalBg.classList.remove('is-file');
+  modalBg.classList.remove('is-file', 'is-pdfview');
+  document.getElementById('modalLoad').hidden = true;
   document.getElementById('modalFile').hidden = true;
   document.getElementById('modalDelete').setAttribute('aria-label', t('delImgLbl'));
   const n = pageCount(item);
-  modalPage = Math.max(0, Math.min(page || 0, n - 1));
+  modalPage = (page < 0) ? n - 1 : Math.max(0, Math.min(page || 0, n - 1));   /* -1 = poslednja stranica */
   const pg = modalPage;
   const req = ++_modalReq;
   let fullShown = false;
@@ -4178,7 +4192,7 @@ function showModalItem(item, page){
     .catch(e=>{ console.error(e); if(req === _modalReq) toast(t('fileMissing')); });
   modalCaption.textContent = item.name;
   const total = currentGalleryItems.length;
-  const showNav = total > 1 || n > 1;
+  const showNav = (total > 1 && currentGalleryIndex >= 0) || n > 1;
   document.getElementById('modalPrev').hidden = !showNav;
   document.getElementById('modalNext').hidden = !showNav;
   document.getElementById('modalPosition').textContent = total > 1 && currentGalleryIndex >= 0
@@ -4196,7 +4210,7 @@ function fileKindKey(ext){
   return 'fileKindOther';
 }
 /* „Otvori“: ove vrste zasad prikazuje posebna stranica (photo.html); ostale se dele ili čuvaju */
-function fileOpensInReader(it){ const e = fileExtOf(it); return e === 'pdf' || e === 'docx' || e === 'xlsx' || e === 'xls'; }
+function fileOpensInReader(it){ const e = fileExtOf(it); return e === 'docx' || e === 'xlsx' || e === 'xls'; }
 function fmtFileSize(b){
   if(!(b > 0)) return '';
   if(b < 1024) return b + ' B';
@@ -4207,7 +4221,8 @@ function showModalFile(item){
   ++_modalReq;                       /* odbaci zakasneo prikaz prethodne slike */
   modalPage = 0;
   modalBg.classList.add('is-file');
-  modalBg.classList.remove('ui-hidden');
+  modalBg.classList.remove('ui-hidden', 'is-pdfview');
+  document.getElementById('modalLoad').hidden = true;
   setModalSrc('');
   const ext = fileExtOf(item);
   document.getElementById('mfIco').innerHTML = pdfIconSvg() + (ext ? '<span class="mf-ext">' + escapeHtml(ext.toUpperCase()) + '</span>' : '');
@@ -4215,6 +4230,8 @@ function showModalFile(item){
   const p = (item.pages || [])[0];
   document.getElementById('mfMeta').textContent = fmtFileSize(p && p.size);   /* vrsta je već na ikonici */
   document.getElementById('mfOpen').textContent = t('fileOpen');
+  const why = item.type === 'pdf' ? (_pdfBad.get(pdfFileId(item)) || (typeof pdfjsLib === 'undefined' ? 'broken' : '')) : '';
+  document.getElementById('mfNote').textContent = why ? t(why === 'locked' ? 'pdfLocked' : 'pdfBroken') : '';
   document.getElementById('modalFile').hidden = false;
   document.getElementById('modalDelete').setAttribute('aria-label', t('delFileLbl'));
   modalCaption.textContent = item.name;
@@ -4223,6 +4240,109 @@ function showModalFile(item){
   document.getElementById('modalPosition').textContent = '';
   document.getElementById('modalPageNo').textContent = '';
   updateModalExp(item);
+}
+/* ---------- 68b: PDF stranicu po stranicu ----------
+   pdf.js crta samo trenutnu i sledeću stranicu, kao sliku u istom pregledu.
+   Otvoren PDF (najviše 2) i nacrtane stranice (najviše 6) se pamte; starije se oslobađaju.
+   Oštećen ili zaključan PDF (ili pdf.js nije učitan) -> kartica fajla. */
+const _pdfDocs = new Map();       /* ID fajla -> {p: Promise<doc>, doc} */
+const _pdfBad = new Map();        /* ID fajla koji pdf.js ne može da pročita -> 'locked' | 'broken' */
+const _pdfPages = new Map();      /* 'ID fajla#stranica' -> Promise<adresa slike> */
+function pdfFileId(it){ const p = (it.pages || [])[0]; return p ? p.file : null; }
+function pdfCanView(it){ const f = pdfFileId(it); return !!f && typeof pdfjsLib !== 'undefined' && !_pdfBad.has(f); }
+function pdfKnownTotal(it){ const e = _pdfDocs.get(pdfFileId(it)); return (e && e.doc) ? e.doc.numPages : 0; }
+function modalTotal(it){ return (it.type === 'pdf' && pdfCanView(it)) ? (pdfKnownTotal(it) || 1) : pageCount(it); }
+function pdfDocFor(it){
+  const f = pdfFileId(it);
+  if(_pdfDocs.has(f)){ const e = _pdfDocs.get(f); _pdfDocs.delete(f); _pdfDocs.set(f, e); return e.p; }
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const e = {doc:null, p:null};
+  e.p = (async ()=>{
+    const bytes = new Uint8Array(await (await getFileBlob(it, 0)).arrayBuffer());
+    const doc = await pdfjsLib.getDocument({data: bytes}).promise;   /* zaključan PDF: PasswordException */
+    e.doc = doc;
+    return doc;
+  })();
+  e.p.catch(err=>{ _pdfBad.set(f, err && err.name === 'PasswordException' ? 'locked' : 'broken'); _pdfDocs.delete(f); });
+  _pdfDocs.set(f, e);
+  while(_pdfDocs.size > 2){
+    const k = _pdfDocs.keys().next().value, old = _pdfDocs.get(k);
+    _pdfDocs.delete(k);
+    old.p.then(d=>d.destroy()).catch(()=>{});
+    for(const key of Array.from(_pdfPages.keys())) if(key.startsWith(k + '#')) pdfDropPage(key);
+  }
+  return e.p;
+}
+function pdfDropPage(key){
+  const pr = _pdfPages.get(key);
+  _pdfPages.delete(key);
+  if(pr) pr.then(u=>{ try{ URL.revokeObjectURL(u); }catch(e){} }).catch(()=>{});
+}
+function pdfPageUrl(it, n){
+  const key = pdfFileId(it) + '#' + n;
+  if(_pdfPages.has(key)){ const pr = _pdfPages.get(key); _pdfPages.delete(key); _pdfPages.set(key, pr); return pr; }
+  const pr = (async ()=>{
+    const doc = await pdfDocFor(it);
+    const page = await doc.getPage(n + 1);
+    const base = page.getViewport({scale:1});
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    /* širina ekrana × gustina × 1,5 (oštar tekst), najviše 3000 px po dužoj strani */
+    let scale = (window.innerWidth * dpr * 1.5) / base.width;
+    scale = Math.min(scale, 3000 / Math.max(base.width, base.height), 6);
+    const vp = page.getViewport({scale});
+    const cv = document.createElement('canvas');
+    cv.width = Math.max(1, Math.floor(vp.width)); cv.height = Math.max(1, Math.floor(vp.height));
+    await page.render({canvasContext: cv.getContext('2d'), viewport: vp}).promise;
+    page.cleanup();
+    const blob = await new Promise((res, rej)=>cv.toBlob(b=>b ? res(b) : rej(new Error('crtanje nije uspelo')), 'image/jpeg', 0.92));
+    cv.width = cv.height = 0;
+    return URL.createObjectURL(blob);
+  })();
+  pr.catch(()=>{ _pdfPages.delete(key); });
+  _pdfPages.set(key, pr);
+  while(_pdfPages.size > 6) pdfDropPage(_pdfPages.keys().next().value);
+  return pr;
+}
+function showModalPdf(item, page){
+  const req = ++_modalReq;
+  modalBg.classList.add('is-file', 'is-pdfview');
+  document.getElementById('modalFile').hidden = true;
+  document.getElementById('modalDelete').setAttribute('aria-label', t('delFileLbl'));
+  modalCaption.textContent = item.name;
+  updateModalExp(item);
+  const known = pdfKnownTotal(item);
+  const want = (page < 0) ? (known ? known - 1 : -1) : (page || 0);
+  modalPage = Math.max(0, want);
+  const setNav = (n)=>{
+    const total = currentGalleryItems.length;
+    const showNav = (total > 1 && currentGalleryIndex >= 0) || n > 1;
+    document.getElementById('modalPrev').hidden = !showNav;
+    document.getElementById('modalNext').hidden = !showNav;
+    document.getElementById('modalPosition').textContent = total > 1 && currentGalleryIndex >= 0 ? (currentGalleryIndex+1) + ' / ' + total : '';
+    document.getElementById('modalPageNo').textContent = n > 1 ? t('pgPageNo', {n:modalPage+1, total:n}) : '';
+  };
+  setNav(known || 1);
+  setModalSrc('');
+  const load = document.getElementById('modalLoad');
+  load.hidden = false;
+  pdfDocFor(item).then(doc=>{
+    if(req !== _modalReq) return;
+    const n = doc.numPages;
+    modalPage = (want < 0) ? n - 1 : Math.min(want, n - 1);
+    setNav(n);
+    const pg = modalPage;
+    return pdfPageUrl(item, pg).then(u=>{
+      if(req !== _modalReq) return;
+      modalImg.src = u;
+      load.hidden = true;
+      if(pg + 1 < n) pdfPageUrl(item, pg + 1).catch(()=>{});   /* sledeća stranica unapred */
+    });
+  }).catch(e=>{
+    console.error('PDF se ne može prikazati', e);
+    if(req !== _modalReq) return;
+    if(!_pdfBad.has(pdfFileId(item))) _pdfBad.set(pdfFileId(item), e && e.name === 'PasswordException' ? 'locked' : 'broken');
+    showModalFile(item);
+  });
 }
 async function fileAsFile(it){
   const blob = await getFileBlob(it, 0);
@@ -4272,7 +4392,7 @@ document.getElementById('mfOpen').onclick = (e)=>{
 function modalNav(dir){
   const cur = currentGalleryIndex >= 0 ? currentGalleryItems[currentGalleryIndex] : items.find(i=>i.id === modalItemId);
   if(!cur) return;
-  const n = pageCount(cur);
+  const n = modalTotal(cur);
   if(dir > 0 && modalPage < n - 1){ showModalItem(cur, modalPage + 1); return; }
   if(dir < 0 && modalPage > 0){ showModalItem(cur, modalPage - 1); return; }
   if(currentGalleryItems.length < 2 || currentGalleryIndex < 0){
@@ -4281,7 +4401,7 @@ function modalNav(dir){
   }
   currentGalleryIndex = (currentGalleryIndex + dir + currentGalleryItems.length) % currentGalleryItems.length;
   const nx = currentGalleryItems[currentGalleryIndex];
-  showModalItem(nx, dir > 0 ? 0 : pageCount(nx) - 1);
+  showModalItem(nx, dir > 0 ? 0 : -1);
 }
 document.getElementById('modalPrev').onclick = (e)=>{ e.stopPropagation(); modalNav(-1); };
 document.getElementById('modalNext').onclick = (e)=>{ e.stopPropagation(); modalNav(1); };
@@ -4298,7 +4418,7 @@ modalFrame.addEventListener('touchend', (e)=>{
   if(Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)*1.4){
     modalNav(dx < 0 ? 1 : -1);
   }else if(Math.abs(dx) < 10 && Math.abs(dy) < 10){
-    if(modalBg.classList.contains('is-file')) return;   /* kartica fajla: dugmad ostaju */
+    if(modalBg.classList.contains('is-file') && !modalBg.classList.contains('is-pdfview')) return;   /* kartica fajla: dugmad ostaju */
     // obican dodir (bez pomeranja prsta) = sakrij / vrati dugmad i natpise
     modalBg.classList.toggle('ui-hidden');
   }
