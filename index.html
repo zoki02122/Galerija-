@@ -1221,13 +1221,48 @@ html[data-theme="ponoc"]{
 .ws-chip:active{ border-color:var(--brass-soft); background:var(--surface-2); }
 .ws-chip:disabled{ opacity:.45; cursor:default; }
 .ws-chip svg{ color:var(--brass); flex:none; }
-.ws-tabs{ display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:4px; margin-top:16px; background:var(--surface-2);
-  border:1px solid var(--line); border-radius:12px; }
-.ws-tab{ height:38px; border:none; border-radius:9px; background:transparent; color:var(--ink-dim); font-family:var(--font-ui);
-  font-size:13.5px; font-weight:700; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 6px; }
-.ws-tab.on{ background:var(--surface); color:var(--ink); box-shadow:0 1px 3px rgba(0,0,0,.14); }
-.ws-tab:disabled{ opacity:.4; cursor:default; }
-.ws-view{ margin-top:12px; }
+.ws-view{ margin-top:16px; }
+/* verzija 72: dugme „Otvori rezultat“ u radionici i ekran „Rezultat“ */
+.ws-open-res{ display:flex; align-items:center; gap:12px; width:100%; box-sizing:border-box; padding:12px 14px; margin:0 0 4px;
+  background:var(--surface); border:1.5px solid var(--brass-soft); border-radius:14px; cursor:pointer; font-family:inherit; text-align:left; color:var(--ink); }
+.ws-open-res[hidden]{ display:none; }
+.ws-open-res:disabled{ opacity:.5; cursor:default; }
+.ws-open-res:active{ background:var(--surface-2); }
+.wor-ic{ width:38px; height:38px; flex:none; border-radius:50%; background:var(--surface-2); color:var(--brass); display:flex; align-items:center; justify-content:center; }
+.wor-ic svg{ width:18px; height:18px; }
+.wor-tx{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.wor-tx b{ font-size:15px; font-weight:700; }
+.wor-tx small{ font-size:12px; color:var(--ink-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.wor-ch{ flex:none; font-size:22px; color:var(--brass); line-height:1; }
+.ws-lbl[hidden], .ws-orig[hidden], .ws-ask[hidden], .ws-btns[hidden], .wr-edit[hidden]{ display:none; }
+.ws-res-scr .set-header .set-title{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.wr-edit{ flex:none; height:38px; padding:0 14px; margin-right:4px; border-radius:19px; border:1px solid var(--brass-soft); background:var(--surface);
+  color:var(--brass); font-family:var(--font-ui); font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px; }
+.wr-edit:disabled{ opacity:.4; cursor:default; }
+.wr-change{ background:var(--surface); border:1.5px solid var(--brass); border-radius:14px; padding:12px 14px; margin:0 0 12px; }
+.wr-change-t{ font-size:12px; font-weight:700; color:var(--brass); margin-bottom:4px; }
+.wr-change-x{ font-size:14.5px; line-height:1.5; color:var(--ink); overflow-wrap:anywhere; }
+.wr-change-s{ font-size:12px; color:var(--ink-dim); margin-top:6px; line-height:1.45; }
+.wr-paper{ font-size:15.5px; line-height:1.6; padding:18px 16px; }
+.wr-paper .ws-doc-title{ font-size:19px; }
+.wr-paper h4{ font-size:16.5px; }
+.wr-paper table{ font-size:13.5px; }
+#wrPaper.wr-dim{ opacity:.35; pointer-events:none; }
+#wrMsg .ws-card{ margin-bottom:12px; }
+.wr-edit-hint{ font-size:12.5px; color:var(--ink-dim); line-height:1.5; margin:0 2px 10px; }
+.wr-editor{ display:flex; flex-direction:column; gap:8px; }
+.wr-in{ width:100%; box-sizing:border-box; border:1px solid var(--line); border-radius:10px; background:var(--surface-2); color:var(--ink);
+  font-family:var(--font-ui); font-size:15px; line-height:1.5; padding:9px 11px; margin:0; resize:none; overflow:hidden; display:block; }
+.wr-in:focus{ outline:none; border-color:var(--brass); }
+.wr-in-title{ font-size:17px; font-weight:700; }
+.wr-in-h{ font-size:15.5px; font-weight:700; }
+.wr-li{ display:flex; gap:6px; align-items:flex-start; }
+.wr-dot{ flex:none; width:14px; padding-top:10px; color:var(--ink-dim); text-align:center; }
+.wr-editor table{ border-collapse:collapse; }
+.wr-editor th, .wr-editor td{ padding:3px; min-width:110px; border:1px solid var(--line); }
+.wr-in-c{ font-size:13.5px; padding:6px 7px; border-radius:6px; }
+.wr-editor th .wr-in-c{ font-weight:700; }
+[data-theme="ponoc"] .wr-in{ background:#000; }
 .ws-hint{ text-align:center; padding:30px 16px; color:var(--ink-dim); font-size:14px; line-height:1.55; border:1px dashed var(--line); border-radius:14px; }
 .ws-orig img{ display:block; width:100%; height:auto; border-radius:8px; margin:0 0 10px; background:#fff; border:1px solid var(--line); box-sizing:border-box; }
 .ws-orig-tx{ font-size:13px; line-height:1.5; color:var(--ink); background:var(--surface); border:1px solid var(--line); border-radius:12px;
@@ -1546,11 +1581,11 @@ html[data-theme="ponoc"]{
     <button type="button" class="ws-src" id="wsSrc"></button>
     <div class="ws-lbl" id="wsTasksLbl"></div>
     <div class="ws-tasks" id="wsTasks"></div>
-    <div class="ws-tabs" id="wsTabs"><button type="button" class="ws-tab" data-tab="orig" id="wsTabOrig"></button><button type="button" class="ws-tab" data-tab="res" id="wsTabRes"></button></div>
-    <div class="ws-view">
+    <div class="ws-view" id="wsView">
       <div id="wsMsg"></div>
+      <button type="button" class="ws-open-res" id="wsOpenRes" hidden></button>
+      <div class="ws-lbl" id="wsOrigLbl"></div>
       <div class="ws-orig" id="wsOrig"></div>
-      <div id="wsRes"></div>
     </div>
   </div></div>
   <div class="ws-bar"><div class="ws-bar-in">
@@ -1559,9 +1594,31 @@ html[data-theme="ponoc"]{
       <textarea id="wsAsk" rows="1" maxlength="1000" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="send"></textarea>
       <button type="button" class="ws-send" id="wsSend"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg></button>
     </div>
+  </div></div>
+</div>
+<div class="ws-screen ws-res-scr" id="wsResScr">
+  <div class="set-header"><button type="button" class="set-back" id="wrBack" aria-label="nazad"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h2 class="set-title" id="wrTitle"></h2>
+    <button type="button" class="wr-edit" id="wrEdit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"></path><line x1="13.5" y1="6.5" x2="17.5" y2="10.5"></line></svg><span id="wrEditLbl"></span></button></div>
+  <div class="ws-body" id="wrBody"><div class="ws-inner">
+    <div id="wrMsg"></div>
+    <div id="wrVer"></div>
+    <div id="wrChange"></div>
+    <div id="wrPaper"></div>
+    <div id="wrFoot"></div>
+  </div></div>
+  <div class="ws-bar" id="wrBar"><div class="ws-bar-in">
+    <div class="ws-status" id="wrStatus"></div>
+    <div class="ws-ask" id="wrAskRow">
+      <textarea id="wrAsk" rows="1" maxlength="1000" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="send"></textarea>
+      <button type="button" class="ws-send" id="wrSend"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg></button>
+    </div>
     <div class="ws-btns">
       <button type="button" class="pg-btn" id="wsShare"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"></circle><circle cx="6" cy="12" r="2.6"></circle><circle cx="18" cy="19" r="2.6"></circle><line x1="8.3" y1="10.7" x2="15.7" y2="6.3"></line><line x1="8.3" y1="13.3" x2="15.7" y2="17.7"></line></svg><span id="wsShareLbl"></span></button>
       <button type="button" class="pg-btn pg-save" id="wsSave"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11l3 3v13H5z"></path><path d="M8 4v5h7V4"></path><rect x="8" y="13" width="8" height="5"></rect></svg><span id="wsSaveLbl"></span></button>
+    </div>
+    <div class="ws-btns" id="wrEditBtns" hidden>
+      <button type="button" class="pg-btn" id="wrCancel"></button>
+      <button type="button" class="pg-btn pg-save" id="wrDone"></button>
     </div>
   </div></div>
 </div>
@@ -2046,7 +2103,7 @@ const I18N = {
     wsOrigNone: 'Za ovu vrstu fajla nema prikaza.',
     wsOrigMore: 'Prikazano je prvih {n} od {total} stranica.',
     wsOrigNoText: 'Iz ovog fajla nije izvučen tekst.',
-    wsBusy: 'Radim: {task}',
+    wsBusy: 'Šaljem: {task}',
     wsBusyWait: 'Obično traje nekoliko sekundi, kod dužih dokumenata i duže.',
     wsErrTitle: 'Obrada nije uspela',
     wsVer: 'verzija {n} od {total}',
@@ -2054,8 +2111,8 @@ const I18N = {
     wsVerNext: 'sledeća verzija',
     wsTotal: 'ukupno u ovoj radionici ≈ {usd}',
     wsAskPh0: 'prvo izaberi dokument',
-    wsAskPh1: 'zadatak svojim rečima…',
-    wsAskPh2: 'doradi rezultat, npr. „skrati“…',
+    wsAskPh1: 'nov zadatak svojim rečima…',
+    wsAskPh2: 'doradi, npr. „skrati“…',
     wsSend: 'Pošalji',
     wsAskEmpty: 'Upiši zadatak.',
     wsNeedSrc: 'Prvo izaberi dokument.',
@@ -2086,6 +2143,26 @@ const I18N = {
     wsPdfFoot: 'Arhiva · napravljeno uz AI · izvor: {src}',
     wsPdfFootNoSrc: 'Arhiva · napravljeno uz AI',
     wsAllImages: 'Sve slike',
+    wsOrigLbl: 'original · samo za čitanje',
+    wsOpenRes: 'Otvori rezultat · v{n}',
+    wsVerCount: 'verzija ukupno: {n}',
+    wsResTitle: 'Rezultat · v{n}',
+    wsEdit: 'Izmeni',
+    wsChangeBox: 'Šta je promenjeno u verziji {n}',
+    wsChangePrev: 'Prethodna verzija je sačuvana: vraćaš se strelicom ‹ gore.',
+    wsChangeAsked: 'Urađeno po zahtevu: „{task}“.',
+    wsManualLabel: 'tvoja izmena',
+    wsManualChange: 'Ručno izmenjeno delova teksta: {n}.',
+    wsManualCost: 'ručna izmena · bez troška',
+    wsNewVer: 'Napravljena verzija {n}.',
+    wsEditHint: 'Ispravi tekst pa dodirni „Gotovo“. Svaka izmena je nova verzija.',
+    wsEditLead: 'Dodirni bilo koji deo teksta i ispravi ga. Obrisan pasus ili stavka nestaje iz dokumenta.',
+    wsEditTitleLbl: 'naslov',
+    wsEditCancel: 'Odustani',
+    wsEditDone: 'Gotovo',
+    wsEditEmpty: 'Rezultat ne može biti prazan.',
+    wsEditDiscardTitle: 'Odbaci izmene',
+    wsEditDiscardText: 'Ručne izmene nisu sačuvane. Odbaciti ih?',
     aiSetKeyLbl: 'Gemini API ključ',
     aiSetKeyPh: 'nalepi nov ključ',
     aiSetKeyNow: 'upisan ključ: …{k}',
@@ -2128,7 +2205,7 @@ const I18N = {
       ['Spajanje i izdvajanje', 'Označi dve ili više slika (dugi pritisak), pa u traci dodirni „Više“ i „Spoji u jedan dokument“. Stranice idu redom kojim si ih označio, a naziv, album i rok važenja uzimaju se od prve (rok prelazi na nov dokument). Pre spajanja Arhiva pita za potvrdu. Originali ostaju u albumu; ako ti ne trebaju, označi ih i obriši.', 'Pojedinačnu stranicu izdvajaš na ekranu sa stranicama: dodir na stranicu, pa „Izdvoji kao posebnu sliku“.'],
       ['PDF', 'Sliku, dokument od slika ili više označenih slika pretvaraš u jedan PDF: u pregledu dugmetom PDF, a kod izbora preko „Više“. Zatim biraš da li ga deliš (Viber, e-pošta…) ili čuvaš na telefon.', 'Stranice idu u PDF bez gubitka kvaliteta.', 'Kod PDF fajla na tom mestu je dugme za deljenje: šalje se originalni fajl, bez izmena. Chrome ne dozvoljava deljenje Word i Excel fajlova, pa je kod njih tu dugme za čuvanje na telefon; sačuvan fajl šalješ iz Vibera ili e-pošte (priloži fajl).'],
       ['Rok važenja', 'Dokumentu koji ističe (registracija, pasoš, osiguranje, garancija) upiši rok: u pregledu dodirni dugme sa kalendarom, zatim polje za datum, izaberi datum i dodirni „Sačuvaj“. Isto važi za PDF, Word i Excel. Rok upisuješ i preko izbora: dugi pritisak, pa „Više“ i „Rok važenja“. Upisan rok menjaš i dodirom na oznaku roka ispod naziva ili na olovku pored nje. Rok se vidi i menja i na ekranu sa stranicama. Ispod datuma možeš da upišeš i šta treba uraditi (npr. „obnoviti kod agenta“); ta napomena se vidi u obaveštenju, u rokovima i u pregledu.', 'Kad se rok približi, Arhiva te obavesti jednom, a zatim još po jednom 7 dana pre i kad dokument istekne. Na početnom ekranu se tada pojavi zvonce sa brojem (crveno ako je nešto isteklo). Dodir na zvonce otvara spisak svih rokova: isteklo, uskoro ističe i kasnije.', 'Koliko dana ranije da te upozori biraš u Podešavanja → rok važenja (podrazumevano 30). Obaveštenje vidiš kad otvoriš Arhivu. Kad obnoviš dokument, upiši nov datum; ako rok više nije potreban, dodirni „Ukloni rok“. Rok se čuva u rezervnoj kopiji.'],
-      ['AI radionica (proba)', 'AI radionica je posebno mesto gde AI radi sa tvojim dokumentom. Otvara se dugmetom sa zvezdicama ✨ u pregledu bilo kog dokumenta, pločicom „AI radionica“ na početnom ekranu ili preko izbora: dugi pritisak, pa „Više“ i „AI radionica“.', 'Dodirni gotov zadatak (Sažetak, Tabela iznosa, Prevedi, Zapisnik) ili upiši svoj zadatak u polje dole i dodirni strelicu. Istim poljem doteruješ rezultat, npr. „skrati“ ili „dodaj red za ključeve“. Svaka izmena je nova verzija, a strelicama se vraćaš na raniju. Kartica „Original“ pokazuje dokument.', 'Dokument ostaje nepromenjen. Rezultat ulazi u arhivu tek kad dodirneš „Sačuvaj“, i to kao nov PDF u album koji izabereš. „Podeli“ šalje rezultat kao PDF. „Pročitaj“ predlaže naziv, album, rok i tekst za pretragu samog dokumenta; ništa se ne menja dok ne dodirneš „Primeni izabrano“.', 'Ključ, model i trošak su u Podešavanja → AI obrada. Ispod svakog rezultata piše koliko je koštao. Pre prvog slanja Arhiva traži saglasnost, jer dokument ide Google-ovom servisu Gemini. Dok je ovo proba, ne šalji lične i poverljive dokumente.'],
+      ['AI radionica (proba)', 'AI radionica je posebno mesto gde AI radi sa tvojim dokumentom. Otvara se dugmetom sa zvezdicama ✨ u pregledu bilo kog dokumenta, tasterom ✨ pored filtera „Abeceda / Datum“ na početnom ekranu ili preko izbora: dugi pritisak, pa „Više“ i „AI radionica“.', 'Dodirni gotov zadatak (Sažetak, Tabela iznosa, Prevedi, Zapisnik) ili upiši svoj zadatak u polje dole i dodirni strelicu. Rezultat se otvara na posebnom ekranu, gde ga čitaš ceo. „Izmeni“ ti dozvoljava da ispraviš bilo koji deo teksta, a polje dole traži doradu od AI, npr. „skrati“ ili „dodaj red za ključeve“. Svaka izmena je nova verzija: okvir „Šta je promenjeno“ kaže šta je urađeno, a strelicama se vraćaš na raniju verziju. U radionici ispod zadataka uvek vidiš original.', 'Dokument ostaje nepromenjen. Rezultat ulazi u arhivu tek kad dodirneš „Sačuvaj“, i to kao nov PDF u album koji izabereš. „Podeli“ šalje rezultat kao PDF. „Pročitaj“ predlaže naziv, album, rok i tekst za pretragu samog dokumenta; ništa se ne menja dok ne dodirneš „Primeni izabrano“.', 'Ključ, model i trošak su u Podešavanja → AI obrada. Ispod svakog rezultata piše koliko je koštao. Pre prvog slanja Arhiva traži saglasnost, jer dokument ide Google-ovom servisu Gemini. Dok je ovo proba, ne šalji lične i poverljive dokumente.'],
       ['Pretraga', 'Lupa pretražuje nazive albuma, slika i dokumenata. „Detaljno“ traži i reči unutar PDF, Word i Excel dokumenata.', 'U albumu pretraga obuhvata i njegove podalbume.'],
       ['Prečica na početnom ekranu', 'Označi jednu stavku i dodirni „Prečica“. Stavka se otvara u Chrome-u, a iz Chrome menija biraš „Dodaj na početni ekran“. Prečica dokumenta od više stranica lista sve stranice.'],
       ['Korpa', 'Svako brisanje prvo traži potvrdu. Obrisano ide u korpu (Podešavanja → korpa) i tamo čeka zadati broj dana, a zatim se trajno briše. Iz korpe stavku vraćaš ili je odmah trajno brišeš.', 'Albumi ne idu u korpu: kad obrišeš album, njegove slike i dokumenti ostaju u „Sve slike“.'],
@@ -2410,7 +2487,7 @@ const I18N = {
     wsOrigNone: 'This type of file cannot be shown.',
     wsOrigMore: 'Showing the first {n} of {total} pages.',
     wsOrigNoText: 'No text could be taken from this file.',
-    wsBusy: 'Working: {task}',
+    wsBusy: 'Sending: {task}',
     wsBusyWait: 'Usually takes a few seconds, longer for long documents.',
     wsErrTitle: 'Processing failed',
     wsVer: 'version {n} of {total}',
@@ -2418,8 +2495,8 @@ const I18N = {
     wsVerNext: 'next version',
     wsTotal: 'total in this workshop ≈ {usd}',
     wsAskPh0: 'choose a document first',
-    wsAskPh1: 'your task in your own words…',
-    wsAskPh2: 'refine the result, e.g. “shorter”…',
+    wsAskPh1: 'a new task in your own words…',
+    wsAskPh2: 'refine, e.g. “shorter”…',
     wsSend: 'Send',
     wsAskEmpty: 'Type a task.',
     wsNeedSrc: 'Choose a document first.',
@@ -2450,6 +2527,26 @@ const I18N = {
     wsPdfFoot: 'Arhiva · made with AI · source: {src}',
     wsPdfFootNoSrc: 'Arhiva · made with AI',
     wsAllImages: 'All images',
+    wsOrigLbl: 'original · read only',
+    wsOpenRes: 'Open result · v{n}',
+    wsVerCount: 'versions in total: {n}',
+    wsResTitle: 'Result · v{n}',
+    wsEdit: 'Edit',
+    wsChangeBox: 'What changed in version {n}',
+    wsChangePrev: 'The previous version is kept: go back with the ‹ arrow above.',
+    wsChangeAsked: 'Done as asked: “{task}”.',
+    wsManualLabel: 'your edit',
+    wsManualChange: 'Parts of the text edited by hand: {n}.',
+    wsManualCost: 'edited by hand · no cost',
+    wsNewVer: 'Version {n} is ready.',
+    wsEditHint: 'Correct the text, then tap “Done”. Every edit is a new version.',
+    wsEditLead: 'Tap any part of the text and correct it. An emptied paragraph or item is removed from the document.',
+    wsEditTitleLbl: 'title',
+    wsEditCancel: 'Cancel',
+    wsEditDone: 'Done',
+    wsEditEmpty: 'The result cannot be empty.',
+    wsEditDiscardTitle: 'Discard edits',
+    wsEditDiscardText: 'Edits made by hand are not saved. Discard them?',
     aiSetKeyLbl: 'Gemini API key',
     aiSetKeyPh: 'paste a new key',
     aiSetKeyNow: 'saved key: …{k}',
@@ -2492,7 +2589,7 @@ const I18N = {
       ['Merging and splitting', 'Select two or more images (long-press), then tap “More” and “Merge into one document”. Pages follow the order you selected them in; the name, album and valid-until date come from the first (the date moves to the new document). Arhiva asks before merging. The originals stay in the album; if you do not need them, select and delete them.', 'To split off a single page, open the pages screen, tap the page and choose “Split off as a separate image”.'],
       ['PDF', 'Turn an image, an image document or several selected images into one PDF: with the PDF button in the viewer, or via “More” when selecting. Then share it (Viber, email…) or save it to the phone.', 'Pages go into the PDF without losing quality.', 'For a PDF file that spot holds a share button: the original file is sent, unchanged. Chrome does not allow sharing Word and Excel files, so for them that button saves the file to the phone; send the saved file from Viber or email (attach file).'],
       ['Valid until', 'For a document that expires (registration, passport, insurance, warranty) set the date: in the viewer tap the calendar button, then the date field, pick the date and tap “Save”. The same works for PDF, Word and Excel. You can also set it when selecting: long-press, then “More” and “Valid until”. Once set, you can also change it by tapping the date label under the name or the pencil next to it. The date is also shown and changed on the pages screen. Under the date you can also write what needs to be done (e.g. “renew with the agent”); the note is shown in the notification, in the dates list and in the viewer.', 'When the date gets close, Arhiva notifies you once, then once more 7 days before and when the document expires. A bell with a number appears on the home screen (red if something has expired). Tap the bell to see all dates: expired, expiring soon and later.', 'How many days in advance you are warned is set in Settings → valid until (30 by default). You see the notification when you open Arhiva. When you renew a document, enter the new date; if the date is no longer needed, tap “Remove date”. The date is saved in the backup.'],
-      ['AI workshop (trial)', 'The AI workshop is a separate place where AI works with your document. Open it with the button with the stars ✨ in the viewer of any document, with the “AI workshop” tile on the home screen, or by selecting: long-press, then “More” and “AI workshop”.', 'Tap a ready task (Summary, Table of amounts, Translate, Record) or type your own task in the field below and tap the arrow. Use the same field to refine the result, e.g. “shorter” or “add a row for the keys”. Every change is a new version, and the arrows take you back to an earlier one. The “Original” tab shows the document.', 'The document stays unchanged. The result enters the archive only when you tap “Save”, as a new PDF in the album you choose. “Share” sends the result as a PDF. “Read” suggests a name, an album, a date and text for search for the document itself; nothing changes until you tap “Apply selected”.', 'Key, model and cost are in Settings → AI processing. Below every result you see what it cost. Before the first send Arhiva asks for consent, because the document goes to the Google Gemini service. While this is a trial, do not send personal or confidential documents.'],
+      ['AI workshop (trial)', 'The AI workshop is a separate place where AI works with your document. Open it with the button with the stars ✨ in the viewer of any document, with the ✨ button next to the “Abeceda / Datum” filters on the home screen, or by selecting: long-press, then “More” and “AI workshop”.', 'Tap a ready task (Summary, Table of amounts, Translate, Record) or type your own task in the field below and tap the arrow. The result opens on its own screen where you read all of it. “Edit” lets you correct any part of the text, and the field below asks AI to refine it, e.g. “shorter” or “add a row for the keys”. Every change is a new version: the “What changed” box says what was done, and the arrows take you back to an earlier version. In the workshop the original is always shown below the tasks.', 'The document stays unchanged. The result enters the archive only when you tap “Save”, as a new PDF in the album you choose. “Share” sends the result as a PDF. “Read” suggests a name, an album, a date and text for search for the document itself; nothing changes until you tap “Apply selected”.', 'Key, model and cost are in Settings → AI processing. Below every result you see what it cost. Before the first send Arhiva asks for consent, because the document goes to the Google Gemini service. While this is a trial, do not send personal or confidential documents.'],
       ['Search', 'The magnifier searches the names of albums, images and documents. “Detailed” also searches words inside PDF, Word and Excel documents.', 'Inside an album, search also covers its sub-albums.'],
       ['Home screen shortcut', 'Select one item and tap “Shortcut”. The item opens in Chrome; choose “Add to home screen” from the Chrome menu. The shortcut of a multi-page document shows all pages.'],
       ['Trash', 'Every deletion asks for confirmation first. Deleted items go to the trash (Settings → trash) and wait there for the set number of days, then they are deleted for good. From the trash you can restore an item or delete it right away.', 'Albums do not go to the trash: when you delete an album, its images and documents stay in “All images”.'],
@@ -5872,7 +5969,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 71</div>'+
+    '<div class="settings-hint set-build">verzija 72</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -7642,22 +7739,24 @@ document.getElementById('modalAi').onclick = (e)=>{
 document.getElementById('modalAi').setAttribute('aria-label', t('wsTitle'));
 
 /* =====================================================================
-   KORAK 4c (verzija 71): AI RADIONICA — jedan dokument
+   KORAK 4c (verzija 71, ekran „Rezultat“ od verzije 72): AI RADIONICA — jedan dokument
    - Poseban ekran (z-index 54): iznad pregleda (50) i čitača (53), ispod donjih prozora (55) koji se otvaraju sa njega.
    - Izvor je SAMO ZA ČITANJE. Rezultat je nacrt u memoriji, u verzijama v1, v2… U arhivi se ništa ne menja
      dok korisnik ne dodirne „Sačuvaj“: tada nastaje NOV PDF dokument (derivedFrom = ID izvora), a izvor ostaje isti.
    - „Pročitaj“ je postojeći prozor sa predlogom (verzija 66): izvor menja tek „Primeni izabrano“.
    - Rezultat je JSON po šemi WS_SCHEMA: naslov + blokovi (heading, paragraph, bullets, table) + napomena.
      Dorada šalje izvor + trenutni rezultat + uputstvo i vraća ceo nov rezultat (nova verzija).
+   - Verzija 72: rezultat se otvara na posebnom ekranu „Rezultat“ (#wsResScr, isti sloj 54, kasnije u HTML-u = iznad
+     radionice): čitanje, „Šta je promenjeno“, ručna izmena („Izmeni“ → nova verzija), dorada preko AI, Podeli, Sačuvaj.
+     Radionica ostaje za izvor, gotove zadatke i Original; njeno polje daje NOV zadatak od izvora.
    - PDF se crta na platnu (A4, 150 dpi) i pakuje postojećim buildPdfBlob (JPEG stranice).
    ===================================================================== */
 const aiWs = document.getElementById('aiWs');
 const wsBody = document.getElementById('wsBody');
 const wsAsk = document.getElementById('wsAsk');
-let _ws = null;     /* {src, vers:[{label, res, usage, model}], cur, tab, busy, err, dirty, saved, discard, urls, origReq, lastTask} */
+let _ws = null;     /* {src, vers:[{label, res, usage, model, change}], cur, busy:{ctrl,label,model,where}, err:{e,task,where}, dirty, saved, discard, urls, origReq, edit, resOpen} */
 let _wsReq = 0;
-function wsSparkSvg(){ return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3.5l1.7 5.1 5.1 1.7-5.1 1.7L10 17.1l-1.7-5.1-5.1-1.7 5.1-1.7z"></path><path d="M18 14l.8 2.2 2.2.8-2.2.8L18 20l-.8-2.2-2.2-.8 2.2-.8z"></path></svg>'; }   /* funkcija (ne const): koristi je i početni ekran */
-const WS_SPARK_SVG = wsSparkSvg();
+const WS_SPARK_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3.5l1.7 5.1 5.1 1.7-5.1 1.7L10 17.1l-1.7-5.1-5.1-1.7 5.1-1.7z"></path><path d="M18 14l.8 2.2 2.2.8-2.2.8L18 20l-.8-2.2-2.2-.8 2.2-.8z"></path></svg>';
 const WS_SCHEMA = {
   type:'object',
   properties:{
@@ -7672,9 +7771,10 @@ const WS_SCHEMA = {
       },
       required:['type']
     }},
-    note:{type:'string', description:'One short sentence to the user, or empty string'}
+    note:{type:'string', description:'One short sentence to the user, or empty string'},
+    change:{type:'string', description:'When changing an existing result: one sentence saying what was changed; otherwise empty string'}
   },
-  required:['title', 'blocks', 'note']
+  required:['title', 'blocks', 'note', 'change']
 };
 /* jezici za „Prevedi“: [kod, naziv u meniju, naziv za AI] */
 const WS_LANGS = [['sr', 'Srpski (latinica)', 'Serbian (Latin script)'], ['en', 'English', 'English'], ['de', 'Deutsch', 'German'],
@@ -7682,9 +7782,9 @@ const WS_LANGS = [['sr', 'Srpski (latinica)', 'Serbian (Latin script)'], ['en', 
 
 function wsOpen(src){
   if(_ws){ if(src && (!_ws.src || _ws.src.id !== src.id)) wsSetSource(src); return; }
-  _ws = {src:src || null, vers:[], cur:-1, tab:'orig', busy:null, err:null, dirty:false, saved:null, discard:false, urls:[], origReq:0, lastTask:null};
+  _ws = {src:src || null, vers:[], cur:-1, busy:null, err:null, dirty:false, saved:null, discard:false, urls:[], origReq:0, edit:null, resOpen:false};
   wsAsk.value = '';
-  wsFitAsk();
+  wsFitAsk(wsAsk);
   aiWs.classList.add('open');
   wsBody.scrollTop = 0;
   wsRenderOrig();
@@ -7704,6 +7804,7 @@ function closeWs(){
   wsDropOrig();
   _ws = null;
   aiWs.classList.remove('open');
+  wsResScr.classList.remove('open');
   try{ if(document.activeElement && aiWs.contains(document.activeElement)) document.activeElement.blur(); }catch(e){}
 }
 document.getElementById('wsBack').onclick = ()=>requestClose();
@@ -7720,9 +7821,9 @@ function wsSetSource(src){
   if(_ws.busy && _ws.busy.ctrl){ try{ _ws.busy.ctrl.abort(); }catch(e){} }
   _wsReq++;
   wsDropOrig();
-  Object.assign(_ws, {src, vers:[], cur:-1, tab:'orig', busy:null, err:null, dirty:false, saved:null, lastTask:null});
+  Object.assign(_ws, {src, vers:[], cur:-1, busy:null, err:null, dirty:false, saved:null, edit:null});
   wsAsk.value = '';
-  wsFitAsk();
+  wsFitAsk(wsAsk);
   wsBody.scrollTop = 0;
   wsRenderOrig();
   wsRender();
@@ -7732,25 +7833,47 @@ function wsThumbHtml(it){
   const lbl = it.type === 'pdf' ? 'PDF' : (it.type === 'doc' ? (it.ext || 'DOK') : '');
   return '<span class="ws-src-th">' + (lbl ? escapeHtml(lbl) : pdfIconSvg()) + '</span>';
 }
+/* kartica „radim…“ i kartica greške — iste u radionici i na ekranu „Rezultat“ */
+function wsBusyHtml(stopId){
+  const src = _ws.src;
+  return '<div class="ws-card ws-busy"><div class="ai-wait"><span class="ai-spin"></span>' +
+    '<div class="ai-wait-t">' + escapeHtml(t('wsBusy', {task:_ws.busy.label})) + '</div>' +
+    '<div class="ai-wait-s">' + escapeHtml(t('aiReadingSub', {name:src ? src.name : '', model:_ws.busy.model})) + '</div>' +
+    '<div class="ai-wait-s">' + escapeHtml(t('wsBusyWait')) + '</div></div>' +
+    '<button type="button" class="sheet-cta secondary" id="' + stopId + '">' + escapeHtml(t('aiCancel')) + '</button></div>';
+}
+function wsErrFill(box, pfx){
+  const e = _ws.err.e, code = e && e.aiCode;
+  const toSettings = code === 'aiErrNoKey' || code === 'aiErrKey' || code === 'aiErrModel';
+  const retry = !!_ws.err.task && !toSettings && ['aiErrBig', 'aiErrNoText', 'aiErrFile', 'aiErrBlocked'].indexOf(code) < 0;
+  box.innerHTML = '<div class="ws-card"><div class="ai-wait-t">' + escapeHtml(t('wsErrTitle')) + '</div>' +
+    '<p class="ai-p ai-err">' + escapeHtml(aiErrText(e)) + '</p>' +
+    (toSettings ? '<button type="button" class="sheet-cta" id="' + pfx + 'ErrSet">' + escapeHtml(t('aiOpenSettings')) + '</button>' : '') +
+    (retry ? '<button type="button" class="sheet-cta" id="' + pfx + 'ErrRetry">' + escapeHtml(t('aiTryAgain')) + '</button>' : '') +
+    '<button type="button" class="sheet-cta secondary ai-gap" id="' + pfx + 'ErrClose">' + escapeHtml(t('aiClose')) + '</button></div>';
+  const set = document.getElementById(pfx + 'ErrSet');
+  if(set) set.onclick = ()=>{ if(_ws) _ws.err = null; wsRender(); openSettings(); openSettingsSub('ai'); };
+  const rt = document.getElementById(pfx + 'ErrRetry');
+  if(rt) rt.onclick = ()=>{ const task = _ws.err.task; _ws.err = null; wsRun(task); };
+  document.getElementById(pfx + 'ErrClose').onclick = ()=>{ if(_ws){ _ws.err = null; wsRender(); } };
+}
 
-/* ---------- Prikaz ekrana ---------- */
+/* ---------- Radionica: izvor, gotovi zadaci, Original ---------- */
 function wsRender(){
   if(!_ws) return;
   const src = _ws.src, busy = !!_ws.busy, v = _ws.vers[_ws.cur] || null;
   document.getElementById('wsTitle').textContent = t('wsTitle');
-  /* izvor */
   const srcEl = document.getElementById('wsSrc');
   srcEl.classList.toggle('is-empty', !src);
   srcEl.disabled = busy;
   srcEl.innerHTML = src
     ? wsThumbHtml(src) + '<span class="ws-src-tx"><span class="ws-src-lbl">' + escapeHtml(t('wsSrcLbl')) + '</span><span class="ws-src-nm">' + escapeHtml(src.name || '') + '</span></span><span class="ws-src-ch">' + escapeHtml(t('wsSrcChange')) + '</span>'
     : '<span class="ws-src-th">' + WS_SPARK_SVG + '</span><span class="ws-src-tx"><span class="ws-src-nm">' + escapeHtml(t('wsSrcPick')) + '</span><span class="ws-src-lbl">' + escapeHtml(t('wsSrcPickSub')) + '</span></span><span class="ws-src-ch">›</span>';
-  /* gotovi zadaci */
   document.getElementById('wsTasksLbl').textContent = t('wsTasksLbl');
   const tasks = document.getElementById('wsTasks');
   if(!tasks.dataset.built){
     tasks.dataset.built = '1';
-    [['read', 'wsTaskRead'], ['summary', 'wsTaskSum'], ['amounts', 'wsTaskAmounts'], ['translate', 'wsTaskTrans'], ['record', 'wsTaskRecord']].forEach(([k, key])=>{
+    ['read', 'summary', 'amounts', 'translate', 'record'].forEach(k=>{
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'ws-chip';
@@ -7760,76 +7883,47 @@ function wsRender(){
       tasks.appendChild(b);
     });
   }
-  tasks.querySelectorAll('.ws-chip').forEach(b=>{
-    const key = {read:'wsTaskRead', summary:'wsTaskSum', amounts:'wsTaskAmounts', translate:'wsTaskTrans', record:'wsTaskRecord'}[b.dataset.task];
-    b.querySelector('span').textContent = t(key);
-    b.disabled = !src || busy;
-  });
-  /* kartice */
-  const tabO = document.getElementById('wsTabOrig'), tabR = document.getElementById('wsTabRes');
-  tabO.textContent = t('wsTabOrig');
-  tabR.textContent = v ? t('wsTabResV', {n:_ws.cur + 1}) : t('wsTabRes');
-  tabO.disabled = !src;
-  tabR.disabled = !v;
-  if(_ws.tab === 'res' && !v) _ws.tab = 'orig';
-  tabO.classList.toggle('on', _ws.tab === 'orig');
-  tabR.classList.toggle('on', _ws.tab === 'res');
-  /* poruka (rad u toku / greška) ili sadržaj kartice */
+  const TK = {read:'wsTaskRead', summary:'wsTaskSum', amounts:'wsTaskAmounts', translate:'wsTaskTrans', record:'wsTaskRecord'};
+  tasks.querySelectorAll('.ws-chip').forEach(b=>{ b.querySelector('span').textContent = t(TK[b.dataset.task]); b.disabled = !src || busy; });
+  /* poruka: rad u toku ili greška (u radionici samo za zadatke pokrenute odavde) */
   const msg = document.getElementById('wsMsg');
-  const orig = document.getElementById('wsOrig');
-  const resEl = document.getElementById('wsRes');
-  if(busy){
-    msg.innerHTML = '<div class="ws-card"><div class="ai-wait"><span class="ai-spin"></span>' +
-      '<div class="ai-wait-t">' + escapeHtml(t('wsBusy', {task:_ws.busy.label})) + '</div>' +
-      '<div class="ai-wait-s">' + escapeHtml(t('aiReadingSub', {name:src ? src.name : '', model:_ws.busy.model})) + '</div>' +
-      '<div class="ai-wait-s">' + escapeHtml(t('wsBusyWait')) + '</div></div>' +
-      '<button type="button" class="sheet-cta secondary" id="wsStop">' + escapeHtml(t('aiCancel')) + '</button></div>';
+  if(!src){
+    msg.innerHTML = '<div class="ws-hint">' + escapeHtml(t('wsHintNoSrc')) + '</div>';
+  }else if(busy && _ws.busy.where === 'ws'){
+    msg.innerHTML = wsBusyHtml('wsStop');
     document.getElementById('wsStop').onclick = wsCancel;
-  }else if(_ws.err){
-    const e = _ws.err.e, code = e && e.aiCode;
-    const toSettings = code === 'aiErrNoKey' || code === 'aiErrKey' || code === 'aiErrModel';
-    const retry = !!_ws.err.task && !toSettings && ['aiErrBig', 'aiErrNoText', 'aiErrFile', 'aiErrBlocked'].indexOf(code) < 0;
-    msg.innerHTML = '<div class="ws-card"><div class="ai-wait-t">' + escapeHtml(t('wsErrTitle')) + '</div>' +
-      '<p class="ai-p ai-err">' + escapeHtml(aiErrText(e)) + '</p>' +
-      (toSettings ? '<button type="button" class="sheet-cta" id="wsErrSet">' + escapeHtml(t('aiOpenSettings')) + '</button>' : '') +
-      (retry ? '<button type="button" class="sheet-cta" id="wsErrRetry">' + escapeHtml(t('aiTryAgain')) + '</button>' : '') +
-      '<button type="button" class="sheet-cta secondary ai-gap" id="wsErrClose">' + escapeHtml(t('aiClose')) + '</button></div>';
-    const set = document.getElementById('wsErrSet');
-    if(set) set.onclick = ()=>{ if(_ws) _ws.err = null; wsRender(); openSettings(); openSettingsSub('ai'); };
-    const rt = document.getElementById('wsErrRetry');
-    if(rt) rt.onclick = ()=>{ const task = _ws.err.task; _ws.err = null; wsRun(task); };
-    document.getElementById('wsErrClose').onclick = ()=>{ if(_ws){ _ws.err = null; wsRender(); } };
+  }else if(_ws.err && _ws.err.where === 'ws'){
+    wsErrFill(msg, 'ws');
   }else{
     msg.innerHTML = '';
   }
-  const showView = !busy && !_ws.err;
-  orig.hidden = !(showView && _ws.tab === 'orig');
-  resEl.hidden = !(showView && _ws.tab === 'res');
-  if(!src && showView){
-    orig.hidden = true;
-    resEl.hidden = true;
-    msg.innerHTML = '<div class="ws-hint">' + escapeHtml(t('wsHintNoSrc')) + '</div>';
+  /* dugme „Otvori rezultat“ */
+  const openBtn = document.getElementById('wsOpenRes');
+  openBtn.hidden = !v;
+  if(v){
+    openBtn.disabled = busy;
+    openBtn.innerHTML = '<span class="wor-ic">' + WS_SPARK_SVG + '</span><span class="wor-tx"><b>' + escapeHtml(t('wsOpenRes', {n:_ws.cur + 1})) + '</b><small>' +
+      escapeHtml(v.label) + (_ws.vers.length > 1 ? ' · ' + escapeHtml(t('wsVerCount', {n:_ws.vers.length})) : '') + '</small></span><span class="wor-ch">›</span>';
   }
-  if(!resEl.hidden) wsRenderRes();
-  /* donja traka */
+  const origLbl = document.getElementById('wsOrigLbl');
+  origLbl.textContent = src ? t('wsOrigLbl') : '';
+  origLbl.hidden = !src;
+  document.getElementById('wsOrig').hidden = !src;
+  /* donja traka radionice: nov zadatak od izvora */
   const st = document.getElementById('wsStatus');
   const savedNow = _ws.saved && !_ws.dirty;
   st.classList.toggle('saved', !!savedNow);
   st.textContent = savedNow ? t('wsStatusSaved', {name:_ws.saved.name, album:_ws.saved.album}) : t('wsStatusNone');
-  wsAsk.placeholder = !src ? t('wsAskPh0') : (v ? t('wsAskPh2') : t('wsAskPh1'));
+  wsAsk.placeholder = src ? t('wsAskPh1') : t('wsAskPh0');
   wsAsk.disabled = !src || busy;
   document.getElementById('wsSend').disabled = !src || busy;
   document.getElementById('wsSend').setAttribute('aria-label', t('wsSend'));
-  document.getElementById('wsShareLbl').textContent = t('wsShare');
-  document.getElementById('wsSaveLbl').textContent = t('wsSave');
-  document.getElementById('wsShare').disabled = !v || busy;
-  document.getElementById('wsSave').disabled = !v || busy;
+  if(_ws.resOpen) wrRender();
 }
-document.getElementById('wsTabOrig').onclick = ()=>{ if(!_ws || !_ws.src) return; _ws.tab = 'orig'; _ws.err = null; wsRender(); };
-document.getElementById('wsTabRes').onclick = ()=>{ if(!_ws || !_ws.vers.length) return; _ws.tab = 'res'; _ws.err = null; wsRender(); };
 document.getElementById('wsSrc').onclick = ()=>{ if(_ws && !_ws.busy) wsOpenPick(); };
+document.getElementById('wsOpenRes').onclick = ()=>{ if(_ws && _ws.vers.length && !_ws.busy) wrOpen(); };
 
-/* Kartica „Original“: dokument onakav kakav je u arhivi (samo prikaz) */
+/* Original: dokument onakav kakav je u arhivi (samo prikaz) */
 async function wsRenderOrig(){
   if(!_ws) return;
   const box = document.getElementById('wsOrig');
@@ -7884,7 +7978,30 @@ async function wsRenderOrig(){
   }
 }
 
-/* Kartica „Rezultat“ */
+/* ---------- Ekran „Rezultat“ (verzija 72) ---------- */
+const wsResScr = document.getElementById('wsResScr');
+const wrBody = document.getElementById('wrBody');
+const wrAsk = document.getElementById('wrAsk');
+function wrOpen(){
+  if(!_ws || _ws.resOpen) return;
+  _ws.resOpen = true;
+  wsResScr.classList.add('open');
+  wrBody.scrollTop = 0;
+  wrRender();
+  pushBack(closeWr);
+}
+function closeWr(){
+  if(_ws){
+    if(_ws.busy && _ws.busy.where === 'res') wsCancel();
+    _ws.resOpen = false;
+    _ws.edit = null;
+    if(_ws.err && _ws.err.where === 'res') _ws.err = null;
+  }
+  wsResScr.classList.remove('open');
+  try{ if(document.activeElement && wsResScr.contains(document.activeElement)) document.activeElement.blur(); }catch(e){}
+  if(_ws) wsRender();
+}
+document.getElementById('wrBack').onclick = ()=>requestClose();
 function wsResHtml(res){
   let h = res.title ? '<div class="ws-doc-title">' + escapeHtml(res.title) + '</div>' : '';
   res.blocks.forEach(b=>{
@@ -7897,26 +8014,183 @@ function wsResHtml(res){
   });
   return h;
 }
-function wsRenderRes(){
-  const el = document.getElementById('wsRes');
-  const v = _ws && _ws.vers[_ws.cur];
-  if(!v){ el.innerHTML = '<div class="ws-hint">' + escapeHtml(t('wsHintNoRes')) + '</div>'; return; }
-  const n = _ws.vers.length;
-  const total = _ws.vers.reduce((s, x)=>s + (x.usage.usd || 0), 0);
+function wrRender(){
+  if(!_ws || !_ws.resOpen) return;
+  const v = _ws.vers[_ws.cur];
+  if(!v) return;
+  const n = _ws.vers.length, busy = !!_ws.busy, ed = _ws.edit;
+  document.getElementById('wrTitle').textContent = t('wsResTitle', {n:_ws.cur + 1});
+  const eb = document.getElementById('wrEdit');
+  document.getElementById('wrEditLbl').textContent = t('wsEdit');
+  eb.hidden = !!ed;
+  eb.disabled = busy;
+  /* poruka */
+  const msg = document.getElementById('wrMsg');
+  if(busy && _ws.busy.where === 'res'){
+    msg.innerHTML = wsBusyHtml('wrStop');
+    document.getElementById('wrStop').onclick = wsCancel;
+  }else if(_ws.err && _ws.err.where === 'res'){
+    wsErrFill(msg, 'wr');
+  }else msg.innerHTML = '';
+  /* verzije */
   const arrow = (d)=>'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="' + (d < 0 ? '15 18 9 12 15 6' : '9 6 15 12 9 18') + '"></polyline></svg>';
-  el.innerHTML =
-    (n > 1 ? '<div class="ws-ver"><button type="button" class="ws-ver-btn" id="wsVerPrev" aria-label="' + escapeHtml(t('wsVerPrev')) + '"' + (_ws.cur <= 0 ? ' disabled' : '') + '>' + arrow(-1) + '</button>' +
+  const ver = document.getElementById('wrVer');
+  ver.innerHTML = (n > 1 && !ed) ? '<div class="ws-ver"><button type="button" class="ws-ver-btn" id="wsVerPrev" aria-label="' + escapeHtml(t('wsVerPrev')) + '"' + (_ws.cur <= 0 || busy ? ' disabled' : '') + '>' + arrow(-1) + '</button>' +
       '<div class="ws-ver-tx"><b>' + escapeHtml(t('wsVer', {n:_ws.cur + 1, total:n})) + '</b>' + escapeHtml(v.label) + '</div>' +
-      '<button type="button" class="ws-ver-btn" id="wsVerNext" aria-label="' + escapeHtml(t('wsVerNext')) + '"' + (_ws.cur >= n - 1 ? ' disabled' : '') + '>' + arrow(1) + '</button></div>' : '') +
-    '<div class="ws-paper">' + wsResHtml(v.res) + '</div>' +
-    (v.res.note ? '<div class="ws-note">' + escapeHtml(v.res.note) + '</div>' : '') +
-    '<div class="ws-cost">' + escapeHtml(t('aiUsageLine', {inp:fmtInt(v.usage.inp), out:fmtInt((v.usage.out || 0) + (v.usage.think || 0)), usd:fmtUsd(v.usage.usd), m:v.model.name})) +
-    (n > 1 ? '<br>' + escapeHtml(t('wsTotal', {usd:fmtUsd(total)})) : '') + '</div>';
+      '<button type="button" class="ws-ver-btn" id="wsVerNext" aria-label="' + escapeHtml(t('wsVerNext')) + '"' + (_ws.cur >= n - 1 || busy ? ' disabled' : '') + '>' + arrow(1) + '</button></div>' : '';
   const p = document.getElementById('wsVerPrev'), nx = document.getElementById('wsVerNext');
-  if(p) p.onclick = ()=>{ if(_ws.cur > 0){ _ws.cur--; wsRender(); } };
-  if(nx) nx.onclick = ()=>{ if(_ws.cur < _ws.vers.length - 1){ _ws.cur++; wsRender(); } };
+  if(p) p.onclick = ()=>{ if(_ws.cur > 0){ _ws.cur--; wrBody.scrollTop = 0; wsRender(); } };
+  if(nx) nx.onclick = ()=>{ if(_ws.cur < _ws.vers.length - 1){ _ws.cur++; wrBody.scrollTop = 0; wsRender(); } };
+  /* „Šta je promenjeno“ */
+  const ch = document.getElementById('wrChange');
+  ch.innerHTML = (v.change && !ed) ? '<div class="wr-change"><div class="wr-change-t">' + escapeHtml(t('wsChangeBox', {n:_ws.cur + 1})) + '</div>' +
+    '<div class="wr-change-x">' + escapeHtml(v.change) + '</div>' +
+    (_ws.cur > 0 ? '<div class="wr-change-s">' + escapeHtml(t('wsChangePrev')) + '</div>' : '') + '</div>' : '';
+  /* dokument ili uređivanje */
+  const paper = document.getElementById('wrPaper');
+  paper.classList.toggle('wr-dim', busy);
+  if(ed){
+    if(!paper.querySelector('.wr-editor')) wrBuildEditor(paper);
+  }else{
+    paper.innerHTML = '<div class="ws-paper wr-paper">' + wsResHtml(v.res) + '</div>';
+  }
+  const foot = document.getElementById('wrFoot');
+  foot.innerHTML = ed ? '' : (v.res.note ? '<div class="ws-note">' + escapeHtml(v.res.note) + '</div>' : '') +
+    '<div class="ws-cost">' + (v.model ? escapeHtml(t('aiUsageLine', {inp:fmtInt(v.usage.inp), out:fmtInt((v.usage.out || 0) + (v.usage.think || 0)), usd:fmtUsd(v.usage.usd), m:v.model.name})) : escapeHtml(t('wsManualCost'))) +
+    (n > 1 ? '<br>' + escapeHtml(t('wsTotal', {usd:fmtUsd(_ws.vers.reduce((s, x)=>s + (x.usage.usd || 0), 0))})) : '') + '</div>';
+  /* donja traka */
+  const st = document.getElementById('wrStatus');
+  const savedNow = _ws.saved && !_ws.dirty;
+  st.classList.toggle('saved', !!(savedNow && !ed));
+  st.textContent = ed ? t('wsEditHint') : (savedNow ? t('wsStatusSaved', {name:_ws.saved.name, album:_ws.saved.album}) : t('wsStatusNone'));
+  document.getElementById('wrAskRow').hidden = !!ed;
+  document.querySelector('#wrBar .ws-btns:not(#wrEditBtns)').hidden = !!ed;
+  document.getElementById('wrEditBtns').hidden = !ed;
+  wrAsk.placeholder = t('wsAskPh2');
+  wrAsk.disabled = busy;
+  document.getElementById('wrSend').disabled = busy;
+  document.getElementById('wrSend').setAttribute('aria-label', t('wsSend'));
+  document.getElementById('wsShareLbl').textContent = t('wsShare');
+  document.getElementById('wsSaveLbl').textContent = t('wsSave');
+  document.getElementById('wsShare').disabled = busy;
+  document.getElementById('wsSave').disabled = busy;
+  document.getElementById('wrCancel').textContent = t('wsEditCancel');
+  document.getElementById('wrDone').textContent = t('wsEditDone');
 }
 
+/* ---------- Ručna izmena: svaki deo rezultata postaje polje; „Gotovo“ = nova verzija ---------- */
+const _wrSelAll = new WeakMap();   /* polje → vrednost u trenutku kad je CEO tekst bio označen */
+function wireBackspaceEdit(el){
+  /* Gboard: kad je ceo tekst označen, „obriši“ ponekad skine samo kraj; polje se tada isprazni, kako je korisnik hteo.
+     Za razliku od wireBackspace, ovde se tekst NE označava sam pri dodiru (ispravlja se deo teksta, ne kuca se ispočetka). */
+  el.addEventListener('beforeinput', (e)=>{
+    const all = el.value.length > 0 && el.selectionStart === 0 && el.selectionEnd === el.value.length;
+    if(all && e.inputType && e.inputType.indexOf('delete') === 0) _wrSelAll.set(el, el.value);
+    else _wrSelAll.delete(el);
+  });
+  el.addEventListener('input', (e)=>{
+    const orig = _wrSelAll.get(el);
+    _wrSelAll.delete(el);
+    if(typeof orig !== 'string' || !e.inputType || e.inputType.indexOf('delete') !== 0) return;
+    if(el.value !== '' && el.value.length < orig.length && orig.indexOf(el.value) === 0){
+      el.value = '';
+      el.dispatchEvent(new Event('input'));
+    }
+  });
+}
+function wrFit(el){ el.style.height = 'auto'; el.style.height = (el.scrollHeight + 2) + 'px'; }
+function wrStartEdit(){
+  if(!_ws || _ws.busy || _ws.edit) return;
+  const v = _ws.vers[_ws.cur];
+  if(!v) return;
+  _ws.err = null;
+  _ws.edit = {draft:JSON.parse(JSON.stringify({title:v.res.title, blocks:v.res.blocks})), changed:0, discard:false};
+  document.getElementById('wrPaper').innerHTML = '';
+  wrBody.scrollTop = 0;
+  wrRender();
+  pushBack(closeWrEdit);
+}
+function closeWrEdit(){
+  if(_ws && _ws.edit && _ws.edit.changed && !_ws.edit.discard){
+    pushBack(closeWrEdit);
+    askConfirm({icon:'✏️', title:t('wsEditDiscardTitle'), text:t('wsEditDiscardText'), okIcon:'🗑️', okLabel:t('wsDiscardOk')})
+      .then(yes=>{ if(yes && _ws && _ws.edit){ _ws.edit.discard = true; requestClose(); } });
+    return;
+  }
+  if(_ws){ _ws.edit = null; wsRender(); }
+  try{ if(document.activeElement && wsResScr.contains(document.activeElement)) document.activeElement.blur(); }catch(e){}
+}
+document.getElementById('wrEdit').onclick = wrStartEdit;
+document.getElementById('wrCancel').onclick = ()=>requestClose();
+document.getElementById('wrDone').onclick = ()=>{
+  if(!_ws || !_ws.edit) return;
+  const ed = _ws.edit;
+  if(ed.changed){
+    const res = wsClean({title:ed.draft.title, blocks:ed.draft.blocks, note:''});
+    if(!res){ toast(t('wsEditEmpty')); return; }
+    res.note = '';
+    _ws.vers.push({label:t('wsManualLabel'), res, usage:{inp:0, out:0, think:0, usd:0}, model:null, change:t('wsManualChange', {n:ed.changed})});
+    _ws.cur = _ws.vers.length - 1;
+    _ws.dirty = true;
+    toast(t('wsNewVer', {n:_ws.cur + 1}));
+  }
+  ed.discard = true;
+  wrBody.scrollTop = 0;
+  requestClose();
+};
+function wrBuildEditor(paper){
+  const ed = _ws.edit, d = ed.draft;
+  const box = document.createElement('div');
+  box.className = 'ws-paper wr-editor';
+  const touched = new Set();
+  const mark = (key)=>{ if(!touched.has(key)){ touched.add(key); ed.changed = touched.size; } };
+  const field = (value, multi, cls, onVal, key, label)=>{
+    const el = document.createElement(multi ? 'textarea' : 'input');
+    if(!multi) el.type = 'text';
+    el.className = 'wr-in ' + (cls || '');
+    ['autocomplete', 'autocorrect', 'autocapitalize'].forEach(a=>el.setAttribute(a, 'off'));
+    el.setAttribute('spellcheck', 'false');
+    if(label) el.setAttribute('aria-label', label);
+    if(multi) el.rows = 1;
+    el.value = value || '';
+    wireBackspaceEdit(el);
+    el.addEventListener('input', ()=>{ onVal(el.value); mark(key); if(multi) wrFit(el); });
+    if(!multi) el.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ e.preventDefault(); el.blur(); } });
+    return el;
+  };
+  box.appendChild(field(d.title, true, 'wr-in-title', v=>{ d.title = v; }, 't', t('wsEditTitleLbl')));
+  d.blocks.forEach((b, bi)=>{
+    if(b.type === 'heading') box.appendChild(field(b.text, true, 'wr-in-h', v=>{ b.text = v; }, 'b' + bi));
+    else if(b.type === 'paragraph') box.appendChild(field(b.text, true, 'wr-in-p', v=>{ b.text = v; }, 'b' + bi));
+    else if(b.type === 'bullets'){
+      b.items.forEach((it, ii)=>{
+        const row = document.createElement('div');
+        row.className = 'wr-li';
+        row.innerHTML = '<span class="wr-dot">•</span>';
+        row.appendChild(field(it, true, 'wr-in-p', v=>{ b.items[ii] = v; }, 'b' + bi + '.' + ii));
+        box.appendChild(row);
+      });
+    }else if(b.type === 'table'){
+      const wrap = document.createElement('div');
+      wrap.className = 'ws-tbl-wrap';
+      const tbl = document.createElement('table');
+      b.rows.forEach((r, ri)=>{
+        const tr = document.createElement('tr');
+        r.forEach((c, ci)=>{
+          const td = document.createElement(ri === 0 ? 'th' : 'td');
+          td.appendChild(field(c, true, 'wr-in-c', v=>{ b.rows[ri][ci] = v; }, 'b' + bi + '.' + ri + '.' + ci));
+          tr.appendChild(td);
+        });
+        tbl.appendChild(tr);
+      });
+      wrap.appendChild(tbl);
+      box.appendChild(wrap);
+    }
+  });
+  paper.innerHTML = '<div class="wr-edit-hint">' + escapeHtml(t('wsEditLead')) + '</div>';
+  paper.appendChild(box);
+  requestAnimationFrame(()=>box.querySelectorAll('textarea').forEach(wrFit));
+}
 /* ---------- Zadaci ---------- */
 function wsTaskTap(k){
   if(!_ws || !_ws.src || _ws.busy) return;
@@ -7928,23 +8202,28 @@ function wsTaskTap(k){
   const key = {summary:'wsTaskSum', amounts:'wsTaskAmounts', record:'wsTaskRecord'}[k];
   wsRun({kind:k, label:t(key)});
 }
-function wsSendAsk(){
+/* polje u radionici = nov zadatak od izvora; polje na ekranu „Rezultat“ = dorada trenutne verzije */
+function wsSendAsk(where){
   if(!_ws || _ws.busy) return;
   if(!_ws.src){ toast(t('wsNeedSrc')); return; }
-  const text = wsAsk.value.replace(/\s+/g, ' ').trim();
-  if(!text){ toast(t('wsAskEmpty')); wsAsk.focus(); return; }
+  const el = where === 'res' ? wrAsk : wsAsk;
+  const text = el.value.replace(/\s+/g, ' ').trim();
+  if(!text){ toast(t('wsAskEmpty')); el.focus(); return; }
   const label = text.length > 60 ? text.slice(0, 58) + '…' : text;
-  wsAsk.blur();
-  wsRun({kind:_ws.vers.length ? 'refine' : 'custom', label:'„' + label + '“', text});
+  el.blur();
+  wsRun({kind:where === 'res' ? 'refine' : 'custom', label:'„' + label + '“', text, where});
 }
-document.getElementById('wsSend').onclick = wsSendAsk;
-wsAsk.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); wsSendAsk(); } });
-function wsFitAsk(){
-  wsAsk.style.height = '';
-  if(wsAsk.value) wsAsk.style.height = Math.min(120, Math.max(46, wsAsk.scrollHeight + 2)) + 'px';
+document.getElementById('wsSend').onclick = ()=>wsSendAsk('ws');
+document.getElementById('wrSend').onclick = ()=>wsSendAsk('res');
+[[wsAsk, 'ws'], [wrAsk, 'res']].forEach(([el, w])=>{
+  el.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); wsSendAsk(w); } });
+  el.addEventListener('input', ()=>wsFitAsk(el));
+  wireBackspace(el);
+});
+function wsFitAsk(el){
+  el.style.height = '';
+  if(el.value) el.style.height = Math.min(120, Math.max(46, el.scrollHeight + 2)) + 'px';
 }
-wsAsk.addEventListener('input', wsFitAsk);
-wireBackspace(wsAsk);
 
 function wsLangName(){ return appLang() === 'en' ? 'English' : 'Serbian (Latin script)'; }
 function wsTaskText(task){
@@ -7969,11 +8248,12 @@ function wsPrompt(task, cur){
     'Write in ' + L + ' unless the task asks for another language.',
     'Use only facts from the source. Never invent names, amounts, dates, addresses or numbers. Copy amounts, dates and numbers exactly as they are in the source. Where needed information is missing, write "________" so the user can fill it in by hand.',
     'Do not use markdown symbols such as ** or # inside the texts; use the block types instead.',
+    'Leave "change" empty unless the task below asks you to change an existing result.',
     'Today is ' + todayYmd() + '.'
   ];
   if(cur){
     out.push('CURRENT RESULT (JSON), made earlier from the same source:\n' + JSON.stringify(cur));
-    out.push('TASK: change the current result according to the instruction below and return the whole updated result, not only the changed part. Keep everything the instruction does not ask to change. Instruction from the user: ' + task.text);
+    out.push('TASK: change the current result according to the instruction below and return the whole updated result, not only the changed part. Keep everything the instruction does not ask to change. In "change" write one short sentence in ' + L + ' that tells the user exactly what you changed (for example what was shortened, added or removed). Instruction from the user: ' + task.text);
   }else{
     out.push('TASK: ' + wsTaskText(task));
   }
@@ -8002,7 +8282,7 @@ function wsClean(o){
     }
   });
   if(!blocks.length) return null;
-  return {title:s(o.title).replace(/\s+/g, ' ').trim().slice(0, 120), blocks, note:s(o.note).trim().slice(0, 500)};
+  return {title:s(o.title).replace(/\s+/g, ' ').trim().slice(0, 120), blocks, note:s(o.note).trim().slice(0, 500), change:s(o.change).trim().slice(0, 500)};
 }
 function wsCancel(){
   if(!_ws || !_ws.busy) return;
@@ -8013,7 +8293,8 @@ function wsCancel(){
 }
 async function wsRun(task){
   if(!_ws || !_ws.src || _ws.busy || !task) return;
-  if(!aiGetKey()){ _ws.err = {e:aiError('aiErrNoKey'), task:null}; wsRender(); return; }
+  const where = task.kind === 'refine' ? 'res' : 'ws';
+  if(!aiGetKey()){ _ws.err = {e:aiError('aiErrNoKey'), task:null, where}; wsRender(); return; }
   if(!aiHasConsent()){
     const ok = await askConfirm({icon:'✨', title:t('aiConsentTitle'), text:t('aiConsentText'), okIcon:'✨', okLabel:t('aiConsentOk'), danger:false});
     if(!ok || !_ws) return;
@@ -8021,43 +8302,44 @@ async function wsRun(task){
   }
   const src = _ws.src;
   const base = task.kind === 'refine' ? _ws.vers[_ws.cur] : null;
-  if(task.kind === 'refine' && !base) task = Object.assign({}, task, {kind:'custom'});
+  if(task.kind === 'refine' && !base) return;
   const req = ++_wsReq;
   const ctrl = new AbortController();
   const model = aiModel();
-  _ws.busy = {ctrl, label:task.label, model:model.name};
+  _ws.busy = {ctrl, label:task.label, model:model.name, where};
   _ws.err = null;
-  _ws.lastTask = task;
   wsRender();
-  wsScrollToView();
+  if(where === 'res') wrBody.scrollTop = 0;
+  else wsBody.scrollTop = 0;
   try{
     const docParts = await aiDocParts(src);
     if(req !== _wsReq) return;
-    const r = await aiRequest([{text:wsPrompt(task, base ? base.res : null)}].concat(docParts), {schema:WS_SCHEMA, signal:ctrl.signal, model});
+    const cur = base ? {title:base.res.title, blocks:base.res.blocks, note:base.res.note} : null;
+    const r = await aiRequest([{text:wsPrompt(task, cur)}].concat(docParts), {schema:WS_SCHEMA, signal:ctrl.signal, model});
     if(req !== _wsReq) return;
     aiUsageAdd({model:model.id, name:src.name, inp:r.usage.inp, out:r.usage.out, think:r.usage.think, usd:r.usage.usd});
     if(/SAFETY|PROHIBITED|BLOCKLIST|SPII|RECITATION/.test(r.finish)) throw aiError('aiErrBlocked');
     const res = wsClean(aiParseJson(r.text));
     if(!res) throw aiError(r.finish === 'MAX_TOKENS' ? 'aiErrCut' : 'aiErrParse');
-    _ws.vers.push({label:task.label, res, usage:r.usage, model:r.model});
+    /* „šta je promenjeno“ postoji samo kod dorade; ako ga AI izostavi, piše se bar šta je traženo */
+    const change = base ? (res.change || t('wsChangeAsked', {task:task.text})) : '';
+    delete res.change;
+    _ws.vers.push({label:task.label, res, usage:r.usage, model:r.model, change});
     _ws.cur = _ws.vers.length - 1;
-    _ws.tab = 'res';
     _ws.dirty = true;
     _ws.busy = null;
-    if(task.kind === 'custom' || task.kind === 'refine'){ wsAsk.value = ''; wsFitAsk(); }
-    wsRender();
-    wsScrollToView();
+    if(task.kind === 'custom'){ wsAsk.value = ''; wsFitAsk(wsAsk); }
+    if(task.kind === 'refine'){ wrAsk.value = ''; wsFitAsk(wrAsk); }
+    wrBody.scrollTop = 0;
+    if(_ws.resOpen) wsRender();
+    else{ wsRender(); wrOpen(); }
+    toast(t('wsNewVer', {n:_ws.cur + 1}));
   }catch(e){
     if(req !== _wsReq || !_ws) return;
     _ws.busy = null;
-    if(!(e && e.name === 'AbortError')){ console.error(e); _ws.err = {e, task}; }
+    if(!(e && e.name === 'AbortError')){ console.error(e); _ws.err = {e, task, where}; }
     wsRender();
   }
-}
-function wsScrollToView(){
-  const tabs = document.getElementById('wsTabs');
-  const top = tabs.offsetTop - 10;
-  if(wsBody.scrollTop > top || _ws && _ws.tab === 'res') wsBody.scrollTop = Math.max(0, top);
 }
 
 /* ---------- Izbor dokumenta (prazan početak ili „promeni“) ---------- */
@@ -8293,7 +8575,7 @@ async function wsShare(){
     toast(t('pdfFailed'));
   }finally{ _wsPdfBusy = false; }
 }
-document.getElementById('wsShare').onclick = ()=>{ if(_ws && !_ws.busy) wsShare(); };
+document.getElementById('wsShare').onclick = ()=>{ if(_ws && !_ws.busy && !_ws.edit) wsShare(); };
 
 /* ---------- Sačuvaj u arhivu: nov PDF dokument, original ostaje isti ---------- */
 const wsSaveSheet = document.getElementById('wsSaveSheet');
@@ -8302,7 +8584,7 @@ const wsSaveAlb = document.getElementById('wsSaveAlb');
 const closeWsSave = ()=>{ wsSaveSheet.classList.remove('open'); try{ if(document.activeElement && wsSaveSheet.contains(document.activeElement)) document.activeElement.blur(); }catch(e){} };
 function wsOpenSave(){
   const v = _ws && _ws.vers[_ws.cur];
-  if(!v || _ws.busy) return;
+  if(!v || _ws.busy || _ws.edit) return;
   document.getElementById('wsSaveTitle').textContent = t('wsSaveTitle');
   document.getElementById('wsSaveNameLbl').textContent = t('wsSaveNameLbl');
   document.getElementById('wsSaveAlbLbl').textContent = t('wsSaveAlbLbl');
