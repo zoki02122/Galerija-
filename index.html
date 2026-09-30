@@ -8875,10 +8875,11 @@ const WS_TPL_SCHEMA = {
     type:'object',
     properties:{
       value:{type:'string', description:'The data exactly as written in the text, character for character'},
+      before:{type:'string', description:'The 2 to 5 words written immediately before the data in the text, exactly as written'},
       name:{type:'string', description:'Short field name'},
       kind:{type:'string', enum:WS_FLD_KINDS}
     },
-    required:['value', 'name', 'kind']
+    required:['value', 'before', 'name', 'kind']
   }}},
   required:['fields']
 };
@@ -8969,11 +8970,12 @@ function wsTplPrompt(part, i, n, known){
     'Also return every other piece of data of this case: dates, amounts, account numbers, vehicle registration plates, details of this property (address, floor, apartment number, area), deadlines of this case.',
     'A long fixed list (checklist, inventory, equipment with check boxes) is fixed text: do not return its item names. But apart from it, return every concrete date, name, address, phone, e-mail, ID number or amount anywhere in the part.',
     '"value": copy the data EXACTLY as it appears in the text, character for character (same letters, spaces, dots and dashes), so that it can be found in the text. Only the data itself, without the words around it.',
+    '"before": the 2 to 5 words written immediately before the data in the text, copied exactly (for example "kazna iznosi" or "broj pasoša"). If the data is at the very start of a line or cell, the last words of the previous line or cell.',
     '"name": a short field name in ' + L + ' that says what belongs there, for example ' + ex + '. Different data get different names.',
     '"kind": name (person or company name), address, idnum (personal ID, document or account numbers), date, amount, phone, email or text.',
-    'Do not return fixed legal text, article titles or general phrases. Never invent anything that is not in the text. If the same data appears several times in the same form, return it once. If there is no such data, return an empty list.'
+    'Do not return fixed legal text, article titles or general phrases. Never invent anything that is not in the text. If the same data with the same meaning appears several times (for example the tenant mentioned again), return it once. If the same value appears with DIFFERENT meanings (for example two different penalties that are both 500 EUR, or two different deadlines of 15 days), return it once for EACH meaning, each with its own name and its own "before" words. If there is no such data, return an empty list.'
   ];
-  if(known.length) out.push('Already found in earlier parts. When the same data appears again, use exactly the same name:\n' + known.slice(0, 80).map(f=>f.name + ' = ' + f.value).join('\n'));
+  if(known.length) out.push('Already found in earlier parts. When the same data appears again, use exactly the same name:\n' + known.slice(0, 80).map(f=>f.name + ' = ' + f.value + (f.before ? '   (after: "' + f.before + '")' : '')).join('\n'));
   out.push('TEXT (part ' + i + ' of ' + n + '):\n"""\n' + part + '\n"""');
   return out.join('\n\n');
 }
@@ -9004,7 +9006,7 @@ function wsTplPairs(blocks){
       for(let i = 0; i < r.length - 1; i++){
         const l = r[i], v = r[i + 1];
         if(!/^.{2,80}:$/.test(l) || !v || v.length > 200 || v.indexOf('\u2610') >= 0 || /^\d{1,2}$/.test(v) || /:$/.test(v)) continue;
-        out.push({value:v, name:l.replace(/:$/, '').trim(), kind:wsTplKind(v)});
+        out.push({value:v, name:l.replace(/:$/, '').trim(), kind:wsTplKind(v), before:l});
       }
     });
   });
@@ -9012,38 +9014,75 @@ function wsTplPairs(blocks){
 }
 /* zamena podataka poljima; najduži podatak prvo, da kraći ne „pojede“ deo dužeg. Privremene oznake su znakovi iz
    privatnog opsega (nisu slovo ni cifra), pa ih kasniji kraći podatak ne može pogoditi. */
+/* verzija 80: ista vrednost, različito značenje. Za iznose, datume i ostali tekst ista vrednost sa različitim nazivom
+   (npr. dve kazne od 500 EUR) postaje posebno polje; svako pojavljivanje ide polju čije reči ispred („before“) najbolje
+   odgovaraju tekstu ispred njega. Osobe, adrese, brojevi dokumenata, telefoni i e-pošta: ista vrednost = uvek jedno polje. */
+const WS_TPL_SPLIT = ['amount', 'date', 'text'];
+function wsTplWords(s){ return String(s || '').replace(/[\uE000-\uEFFF]+/g, ' ').toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean); }
+function wsTplPick(items, prev){
+  if(items.length === 1) return items[0];
+  const pw = wsTplWords(prev.slice(-120));
+  let best = null, bs = -1;
+  items.forEach(f=>{
+    const bw = f.bw || (f.bw = wsTplWords(f.before));
+    let sc = 0;
+    while(sc < bw.length && sc < pw.length && bw[bw.length - 1 - sc] === pw[pw.length - 1 - sc]) sc++;
+    /* bez poklapanja na kraju: deo zajedničkih reči (AI ponekad preskoči reč) */
+    if(!sc){ const set = new Set(pw.slice(-8)); sc = bw.filter(w=>set.has(w)).length * 0.1; }
+    if(sc > bs || (sc === bs && f.hits < best.hits)){ best = f; bs = sc; }
+  });
+  return best;
+}
 function wsTplApply(blocks, cands, reserved){
   const res = {title:'', blocks:JSON.parse(JSON.stringify(blocks))};
-  const seenV = new Set((reserved && reserved.values) || []), names = new Set((reserved && reserved.names) || []), list = [];
+  const seenV = new Set((reserved && reserved.values) || []), names = new Set((reserved && reserved.names) || []);
   /* postojeća [polja] se privremeno sklone, da ih nov podatak ne pogodi iznutra */
   const kept = [];
   wsResTexts(res, s=>s.replace(WS_FLD_RE, m=>{ kept.push(m); return '\uE002' + String.fromCharCode(0xE800 + kept.length - 1) + '\uE003'; }));
+  const groups = new Map();
   cands.forEach(c=>{
     const v = String(c.value || '').replace(/\s+/g, ' ').trim();
-    let name = wsFldName(c.name);
+    const name = wsFldName(c.name);
     const vk = v.toLowerCase();
-    if(v.length < 2 || v.length > 300 || !name || v.indexOf('\u2610') >= 0 || seenV.has(vk)) return;
-    seenV.add(vk);
-    let nk = wsFldKey(name), k = 2;
-    while(names.has(nk)){ nk = wsFldKey(name + ' ' + k); k++; }
-    if(k > 2) name = name + ' ' + (k - 1);
-    names.add(nk);
-    list.push({value:v, name, kind:WS_FLD_KINDS.indexOf(c.kind) >= 0 ? c.kind : 'text'});
-  });
-  list.sort((a, b)=>b.value.length - a.value.length);
-  const used = [];
-  let miss = 0;
-  list.forEach((f, idx)=>{
-    const tok = '\uE000' + String.fromCharCode(0xE100 + idx) + '\uE001';
-    let hit = '';
-    for(const fl of ['gu', 'giu']){
-      const re = wsTplRe(f.value, fl);
-      if(!re) break;
-      wsResTexts(res, s=>s.replace(re, (m, pre, core)=>{ if(!hit) hit = core; return pre + tok; }));
-      if(hit) break;
+    if(v.length < 2 || v.length > 300 || !name || v.indexOf('\u2610') >= 0) return;
+    const kind = WS_FLD_KINDS.indexOf(c.kind) >= 0 ? c.kind : 'text';
+    let g = groups.get(vk);
+    if(!g){
+      if(seenV.has(vk)) return;
+      g = {v, items:[]}; groups.set(vk, g);
     }
-    if(hit){ f.tok = tok; f.example = hit.replace(/\s+/g, ' ').trim(); used.push(f); }
-    else miss++;
+    const nk = wsFldKey(name);
+    const same = g.items.find(x=>x.nk === nk);
+    if(same){ if(!same.before && c.before) same.before = String(c.before); return; }
+    if(g.items.length && (WS_TPL_SPLIT.indexOf(kind) < 0 || WS_TPL_SPLIT.indexOf(g.items[0].kind) < 0)) return;
+    g.items.push({nk, name, kind, before:String(c.before || ''), hits:0});
+  });
+  const list = Array.from(groups.values());
+  list.forEach(g=>g.items.forEach(f=>{
+    let nk = wsFldKey(f.name), k = 2;
+    while(names.has(nk)){ nk = wsFldKey(f.name + ' ' + k); k++; }
+    if(k > 2) f.name = f.name + ' ' + (k - 1);
+    names.add(nk);
+  }));
+  list.sort((a, b)=>b.v.length - a.v.length);
+  const used = [];
+  let miss = 0, ti = 0;
+  list.forEach(g=>{
+    g.items.forEach(f=>{ f.tok = '\uE000' + String.fromCharCode(0xE100 + (ti++ % 0x600)) + '\uE001'; });
+    let any = false;
+    for(const fl of ['gu', 'giu']){
+      const re = wsTplRe(g.v, fl);
+      if(!re) break;
+      wsResTexts(res, s=>s.replace(re, (m, pre, core, off, str)=>{
+        const f = wsTplPick(g.items, str.slice(0, off + pre.length));
+        if(!f.example) f.example = core.replace(/\s+/g, ' ').trim();
+        f.hits++; any = true;
+        return pre + f.tok;
+      }));
+      if(any) break;
+    }
+    if(!any){ miss++; return; }
+    g.items.forEach(f=>{ if(f.hits) used.push(f); });
   });
   wsResTexts(res, s=>{
     used.forEach(f=>{ s = s.split(f.tok).join('[' + f.name + ']'); });
@@ -9076,7 +9115,7 @@ async function wsTplMake(src, signal, model, req){
         if(!f || typeof f !== 'object') return;
         const v = String(f.value == null ? '' : f.value).trim();
         if(v && chunks[i].indexOf(v) < 0 && !wsTplRe(v, 'iu')?.test(chunks[i])) return;   /* nije u tekstu = izmišljeno */
-        if(v) found.push({value:v, name:String(f.name || ''), kind:String(f.kind || '')});
+        if(v) found.push({value:v, name:String(f.name || ''), kind:String(f.kind || ''), before:String(f.before || '').slice(0, 120)});
       });
     }
   }finally{
