@@ -1386,6 +1386,15 @@ body:has(#aiWs.open) .toast{ bottom:calc(190px + env(safe-area-inset-bottom)); }
 .ws-pick-nm{ font-size:14.5px; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .ws-pick-al{ font-size:11.5px; color:var(--ink-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:1px; }
 .ws-pick-none{ text-align:center; color:var(--ink-dim); font-size:14px; padding:24px 8px; }
+/* verzija 78: izbor kroz albume */
+.ws-pick-sec{ font-size:12px; color:var(--ink-dim); margin:14px 2px 2px; }
+.ws-pick-fold{ color:var(--brass); }
+.ws-pick-ch{ flex:none; font-size:22px; color:var(--brass); line-height:1; padding:0 4px; }
+.ws-pick-crumb{ display:flex; align-items:center; flex-wrap:wrap; gap:2px 4px; margin:-4px 0 10px; }
+.ws-pick-crumb[hidden]{ display:none; }
+.ws-pick-cr{ background:none; border:none; padding:6px 4px; font-family:var(--font-ui); font-size:14px; font-weight:700; color:var(--brass); cursor:pointer; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ws-pick-cr.cur{ color:var(--ink); cursor:default; }
+.ws-pick-cr-sep{ color:var(--ink-dim); font-size:14px; }
 @media (max-width:360px){ .ws-chip{ padding:0 11px; font-size:13px; } .ws-inner{ padding-left:12px; padding-right:12px; } }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -1698,6 +1707,7 @@ body:has(#aiWs.open) .toast{ bottom:calc(190px + env(safe-area-inset-bottom)); }
 <div class="sheet-bg" id="wsPickSheet">
   <div class="sheet">
     <div class="sheet-head"><button class="back-btn" id="wsPickBack" type="button"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h3 id="wsPickTitle"></h3></div>
+    <div class="ws-pick-crumb" id="wsPickCrumb" hidden></div>
     <input id="wsPickQ" type="text" class="sheet-input" maxlength="100" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
     <div class="ws-pick-list" id="wsPickList"></div>
   </div>
@@ -2207,6 +2217,13 @@ const I18N = {
     wsPickPh: 'pretraži po nazivu',
     wsPickNone: 'Nema dokumenta sa tim nazivom.',
     wsPickEmpty: 'Arhiva je prazna.',
+    wsPickPh2: 'pretraži albume i dokumente',
+    wsPickNone2: 'Nema albuma ni dokumenta sa tim nazivom.',
+    wsPickAlbums: 'Albumi',
+    wsPickDocs: 'Dokumenti',
+    wsPickRecent: 'Poslednji',
+    wsPickCount: 'stavki: {n}',
+    wsPickAlbEmpty: 'Album je prazan.',
     wsSaveTitle: 'Sačuvaj u arhivu',
     wsSaveNameLbl: 'naziv novog dokumenta',
     wsSaveAlbLbl: 'album',
@@ -2634,6 +2651,13 @@ const I18N = {
     wsPickPh: 'search by name',
     wsPickNone: 'No document with that name.',
     wsPickEmpty: 'The archive is empty.',
+    wsPickPh2: 'search albums and documents',
+    wsPickNone2: 'No album or document with that name.',
+    wsPickAlbums: 'Albums',
+    wsPickDocs: 'Documents',
+    wsPickRecent: 'Recent',
+    wsPickCount: 'items: {n}',
+    wsPickAlbEmpty: 'The album is empty.',
     wsSaveTitle: 'Save to the archive',
     wsSaveNameLbl: 'name of the new document',
     wsSaveAlbLbl: 'album',
@@ -8883,40 +8907,139 @@ async function wsRun(task){
 /* ---------- Izbor dokumenta (prazan početak ili „promeni“) ---------- */
 const wsPickSheet = document.getElementById('wsPickSheet');
 const wsPickQ = document.getElementById('wsPickQ');
-const closeWsPick = ()=>wsPickSheet.classList.remove('open');
+/* verzija 78: izbor kroz albume (kao u Arhivi) + „Poslednji“; pretraga traži albume i dokumente.
+   Jedan korak nazad u istoriji: dok je album otvoren, nazad vodi nivo gore (closer se ponovo prijavi). */
+const WS_PICK_INBOX = ':inbox';
+let _wsPick = {alb:null, closing:false};
+function closeWsPick(){
+  if(_wsPick.alb && !_wsPick.closing){
+    const c = catById(_wsPick.alb);
+    _wsPick.alb = (c && c.parent) || null;
+    wsPickQ.value = '';
+    wsRenderPick();
+    wsPickSheet.querySelector('.sheet').scrollTop = 0;
+    pushBack(closeWsPick);
+    return;
+  }
+  _wsPick = {alb:null, closing:false};
+  wsPickSheet.classList.remove('open');
+  try{ wsPickQ.blur(); }catch(e){}
+}
 function wsOpenPick(){
   document.getElementById('wsPickTitle').textContent = t('wsPickTitle');
-  wsPickQ.placeholder = t('wsPickPh');
+  wsPickQ.placeholder = t('wsPickPh2');
   wsPickQ.value = '';
+  _wsPick = {alb:null, closing:false};
   wsRenderPick();
   wsPickSheet.classList.add('open');
   wsPickSheet.querySelector('.sheet').scrollTop = 0;
   pushBack(closeWsPick);
 }
+function wsPickOrdered(cats){
+  const pin = cats.filter(c=>c.pinned), oth = cats.filter(c=>!c.pinned);
+  return displayOrder(pin).concat(displayOrder(oth));
+}
+function wsPickAlbCount(id){
+  if(id === WS_PICK_INBOX) return items.filter(i=>!i.category).length;
+  const ids = new Set([id].concat(childrenOf(id).map(c=>c.id)));
+  return items.filter(i=>ids.has(i.category)).length;
+}
+function wsPickAlbRow(id, name, sub){
+  const row = document.createElement('div');
+  row.className = 'ws-pick-row ws-pick-alb';
+  row.innerHTML = '<span class="ws-src-th ws-pick-fold"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg></span>' +
+    '<div class="ws-pick-tx"><div class="ws-pick-nm"></div><div class="ws-pick-al"></div></div><span class="ws-pick-ch">›</span>';
+  row.querySelector('.ws-pick-nm').textContent = name;
+  row.querySelector('.ws-pick-al').textContent = sub || t('wsPickCount', {n:wsPickAlbCount(id)});
+  row.onclick = ()=>{ _wsPick.alb = id; wsPickQ.value = ''; wsRenderPick(); wsPickSheet.querySelector('.sheet').scrollTop = 0; };
+  return row;
+}
+function wsPickDocRow(it){
+  const row = document.createElement('div');
+  row.className = 'ws-pick-row';
+  const alb = it.category ? (function(){ const c = catById(it.category); const p = c && c.parent ? catById(c.parent) : null; return (p ? p.name + ' / ' : '') + (c ? c.name : ''); })() : t('wsAllImages');
+  row.innerHTML = wsThumbHtml(it) + '<div class="ws-pick-tx"><div class="ws-pick-nm"></div><div class="ws-pick-al"></div></div>';
+  row.querySelector('.ws-pick-nm').textContent = it.name || '';
+  row.querySelector('.ws-pick-al').textContent = alb;
+  row.onclick = ()=>{ _wsPick.closing = true; requestCloseThen(()=>wsPickChosen(it)); };
+  return row;
+}
+function wsPickSec(list, txt){
+  const h = document.createElement('div');
+  h.className = 'ws-pick-sec';
+  h.textContent = txt;
+  list.appendChild(h);
+}
 function wsRenderPick(){
   const list = document.getElementById('wsPickList');
+  const crumb = document.getElementById('wsPickCrumb');
   const q = normalizeSr(wsPickQ.value.trim());
-  const all = items.slice().sort((a, b)=>(b.ts || 0) - (a.ts || 0));
-  const found = q ? all.filter(i=>normalizeSr(i.name || '').includes(q)) : all;
+  const byDate = (a, b)=>(b.ts || 0) - (a.ts || 0);
+  const alb = _wsPick.alb;
   list.innerHTML = '';
-  if(!found.length){
-    list.innerHTML = '<div class="ws-pick-none">' + escapeHtml(t(all.length ? 'wsPickNone' : 'wsPickEmpty')) + '</div>';
+  /* putanja „‹ Albumi › Album › Podalbum“ */
+  crumb.hidden = !alb;
+  crumb.innerHTML = '';
+  if(alb){
+    const parts = [[null, t('wsPickAlbums')]];
+    if(alb === WS_PICK_INBOX) parts.push([WS_PICK_INBOX, t('wsAllImages')]);
+    else{ const c = catById(alb); const p = c && c.parent ? catById(c.parent) : null; if(p) parts.push([p.id, p.name]); if(c) parts.push([c.id, c.name]); }
+    parts.forEach((pt, i)=>{
+      if(i) crumb.insertAdjacentHTML('beforeend', '<span class="ws-pick-cr-sep">›</span>');
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'ws-pick-cr' + (i === parts.length - 1 ? ' cur' : '');
+      b.textContent = (i === 0 ? '‹ ' : '') + pt[1];
+      if(i < parts.length - 1) b.onclick = ()=>{ _wsPick.alb = pt[0]; wsPickQ.value = ''; wsRenderPick(); };
+      crumb.appendChild(b);
+    });
+  }
+  if(!items.length && !categories.length){ list.innerHTML = '<div class="ws-pick-none">' + escapeHtml(t('wsPickEmpty')) + '</div>'; return; }
+  /* opseg: ceo arhiv ili otvoren album sa podalbumima */
+  let scopeDocs, scopeAlbs;
+  if(!alb){ scopeDocs = items; scopeAlbs = categories; }
+  else if(alb === WS_PICK_INBOX){ scopeDocs = items.filter(i=>!i.category); scopeAlbs = []; }
+  else{
+    const subs = childrenOf(alb);
+    const ids = new Set([alb].concat(subs.map(c=>c.id)));
+    scopeDocs = items.filter(i=>ids.has(i.category));
+    scopeAlbs = subs;
+  }
+  if(q){
+    const albs = scopeAlbs.filter(c=>normalizeSr(c.name || '').includes(q));
+    const docs = scopeDocs.filter(i=>normalizeSr(i.name || '').includes(q)).sort(byDate);
+    if(!albs.length && !docs.length){ list.innerHTML = '<div class="ws-pick-none">' + escapeHtml(t('wsPickNone2')) + '</div>'; return; }
+    if(albs.length){
+      wsPickSec(list, t('wsPickAlbums'));
+      wsPickOrdered(albs).forEach(c=>{ const p = c.parent ? catById(c.parent) : null; list.appendChild(wsPickAlbRow(c.id, c.name, p ? p.name + ' · ' + t('wsPickCount', {n:wsPickAlbCount(c.id)}) : '')); });
+    }
+    if(docs.length){
+      wsPickSec(list, t('wsPickDocs'));
+      docs.slice(0, 150).forEach(it=>list.appendChild(wsPickDocRow(it)));
+    }
     return;
   }
-  found.slice(0, 150).forEach(it=>{
-    const row = document.createElement('div');
-    row.className = 'ws-pick-row';
-    const alb = it.category ? catLabel(it.category) : t('wsAllImages');
-    row.innerHTML = wsThumbHtml(it) + '<div class="ws-pick-tx"><div class="ws-pick-nm">' + escapeHtml(it.name || '') + '</div><div class="ws-pick-al">' + escapeHtml(alb) + '</div></div>';
-    row.onclick = ()=>requestCloseThen(()=>wsPickChosen(it));
-    list.appendChild(row);
-  });
+  if(!alb){
+    const recent = items.slice().sort(byDate).slice(0, 4);
+    if(recent.length){ wsPickSec(list, t('wsPickRecent')); recent.forEach(it=>list.appendChild(wsPickDocRow(it))); }
+    wsPickSec(list, t('wsPickAlbums'));
+    wsPickOrdered(categories.filter(c=>!c.parent)).forEach(c=>list.appendChild(wsPickAlbRow(c.id, c.name)));
+    list.appendChild(wsPickAlbRow(WS_PICK_INBOX, t('wsAllImages')));
+    return;
+  }
+  /* otvoren album: podalbumi, pa dokumenti tog albuma */
+  if(scopeAlbs.length) wsPickOrdered(scopeAlbs).forEach(c=>list.appendChild(wsPickAlbRow(c.id, c.name)));
+  const own = (alb === WS_PICK_INBOX ? scopeDocs : items.filter(i=>i.category === alb)).slice().sort(byDate);
+  if(own.length){
+    if(scopeAlbs.length) wsPickSec(list, t('wsPickDocs'));
+    own.slice(0, 300).forEach(it=>list.appendChild(wsPickDocRow(it)));
+  }else if(!scopeAlbs.length) list.innerHTML = '<div class="ws-pick-none">' + escapeHtml(t('wsPickAlbEmpty')) + '</div>';
 }
 wsPickQ.addEventListener('input', wsRenderPick);
 wireBackspace(wsPickQ, wsRenderPick);
 wsPickQ.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ e.preventDefault(); wsPickQ.blur(); } });
 document.getElementById('wsPickBack').onclick = ()=>requestClose();
-wsPickSheet.onclick = (e)=>{ if(e.target === wsPickSheet) requestClose(); };
+wsPickSheet.onclick = (e)=>{ if(e.target === wsPickSheet){ _wsPick.closing = true; requestClose(); } };
 function wsPickChosen(it){
   if(!_ws || (_ws.src && _ws.src.id === it.id)) return;
   if(_ws.dirty){
