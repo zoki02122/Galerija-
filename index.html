@@ -1291,6 +1291,19 @@ html[data-theme="ponoc"]{
 .wr-fld-btn{ width:100%; min-height:46px; margin:0 0 12px; border-radius:14px; border:1.5px solid var(--brass-soft); background:var(--surface); color:var(--brass);
   font-family:var(--font-ui); font-size:15px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; padding:8px 12px; }
 .wr-fld-btn:disabled{ opacity:.4; cursor:default; }
+/* verzija 80: kartica akcije „Uredi polja šablona“ na vrhu rezultata; ceo red je taster */
+.wr-fld-card{ width:100%; margin:0 0 12px; padding:12px 12px 12px 14px; border-radius:16px; border:1px solid var(--brass-soft);
+  background:color-mix(in srgb, var(--brass) 9%, var(--surface)); color:var(--ink); display:flex; align-items:center; gap:12px;
+  text-align:left; font-family:var(--font-ui); cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.wr-fld-card:active{ background:color-mix(in srgb, var(--brass) 16%, var(--surface)); }
+.wr-fld-card:disabled{ opacity:.45; cursor:default; }
+.wr-fld-ic{ flex:none; width:40px; height:40px; border-radius:12px; background:var(--brass); color:var(--on-brass); display:flex; align-items:center; justify-content:center; }
+.wr-fld-tx{ flex:1; min-width:0; }
+.wr-fld-t{ display:block; font-size:16.5px; font-weight:700; line-height:1.25; color:var(--ink); }
+.wr-fld-s{ display:block; font-size:12.5px; line-height:1.35; color:var(--ink-dim); margin-top:3px; }
+.wr-fld-ch{ flex:none; color:var(--brass); display:flex; }
+#wrPaper .ws-fld{ cursor:pointer; }
+.ai-row.fld-focus{ border-color:var(--brass); box-shadow:0 0 0 2px var(--brass-soft); }
 #wsFldList{ margin:4px 0 14px; }
 .fld-kind{ font-size:11.5px; color:var(--ink-dim); font-weight:600; flex:none; max-width:40%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .fld-ex{ font-size:12.5px; color:var(--ink-dim); margin:0 2px; line-height:1.45; overflow-wrap:anywhere; }
@@ -1668,9 +1681,9 @@ body:has(#aiWs.open) .toast{ bottom:calc(190px + env(safe-area-inset-bottom)); }
     <button type="button" class="wr-edit" id="wrEdit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"></path><line x1="13.5" y1="6.5" x2="17.5" y2="10.5"></line></svg><span id="wrEditLbl"></span></button></div>
   <div class="ws-body" id="wrBody"><div class="ws-inner">
     <div id="wrMsg"></div>
+    <div id="wrFields"></div>
     <div id="wrVer"></div>
     <div id="wrChange"></div>
-    <div id="wrFields"></div>
     <div id="wrPaper"></div>
     <div id="wrFoot"></div>
   </div></div>
@@ -2260,6 +2273,8 @@ const I18N = {
     wsManualChange: 'Ručno izmenjeno delova teksta: {n}.',
     wsManualCost: 'ručna izmena · bez troška',
     wsFldBtn: 'Polja šablona ({n})',
+    wsFldCardT: 'Uredi polja šablona',
+    wsFldCardS: '{n} {f} · izaberi šta se menja pri popunjavanju',
     wsSchemaRej: 'šema odbijena',
     wsSchemaRejShort: 'Gemini je odbio šemu (razlog)',
     wsSaveTpl: 'Sačuvaj šablon',
@@ -2702,6 +2717,8 @@ const I18N = {
     wsManualChange: 'Parts of the text edited by hand: {n}.',
     wsManualCost: 'edited by hand · no cost',
     wsFldBtn: 'Template fields ({n})',
+    wsFldCardT: 'Edit template fields',
+    wsFldCardS: '{n} {f} · choose what changes when filling in',
     wsSchemaRej: 'schema rejected',
     wsSchemaRejShort: 'Gemini rejected the schema (reason)',
     wsSaveTpl: 'Save template',
@@ -8292,7 +8309,7 @@ function wsFmt(tx, onSet){
   let h = '', last = 0;
   String(tx).replace(WS_FLD_RE, (m, nm, idx)=>{
     h += escapeHtml(tx.slice(last, idx));
-    h += onSet.has(wsFldKey(nm)) ? '<span class="ws-fld">' + escapeHtml(m) + '</span>' : escapeHtml(m);
+    h += onSet.has(wsFldKey(nm)) ? '<span class="ws-fld" data-fld="' + escapeHtml(wsFldKey(nm)) + '">' + escapeHtml(m) + '</span>' : escapeHtml(m);
     last = idx + m.length;
     return m;
   });
@@ -8348,11 +8365,13 @@ function wrRender(){
   /* verzija 75: dugme „Polja šablona (N)“ — N = broj polja koja se popunjavaju */
   const fb = document.getElementById('wrFields');
   const flds = (v.res.tpl && v.res.fields) || [];
-  fb.innerHTML = (flds.length && !ed) ? '<button type="button" class="wr-fld-btn" id="wrFldBtn"' + (busy ? ' disabled' : '') + '>' +
-    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 6 9 9.5 5"></polyline><line x1="13" y1="7" x2="20" y2="7"></line><polyline points="4 16 6 18 9.5 14"></polyline><line x1="13" y1="16" x2="20" y2="16"></line></svg>' +
-    escapeHtml(t('wsFldBtn', {n:flds.filter(f=>f.on !== false).length})) + '</button>' : '';
+  const fOn = flds.filter(f=>f.on !== false).length;
+  fb.innerHTML = (flds.length && !ed) ? '<button type="button" class="wr-fld-card" id="wrFldBtn"' + (busy ? ' disabled' : '') + '>' +
+    '<span class="wr-fld-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 6 9 9.5 5"></polyline><line x1="13" y1="7" x2="20" y2="7"></line><polyline points="4 16 6 18 9.5 14"></polyline><line x1="13" y1="16" x2="20" y2="16"></line></svg></span>' +
+    '<span class="wr-fld-tx"><span class="wr-fld-t">' + escapeHtml(t('wsFldCardT')) + '</span><span class="wr-fld-s">' + escapeHtml(t('wsFldCardS', {n:fOn, f:wsFldWord(fOn)})) + '</span></span>' +
+    '<span class="wr-fld-ch"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"></polyline></svg></span></button>' : '';
   const fbb = document.getElementById('wrFldBtn');
-  if(fbb) fbb.onclick = wsOpenFields;
+  if(fbb) fbb.onclick = ()=>wsOpenFields();
   /* dokument ili uređivanje */
   const paper = document.getElementById('wrPaper');
   paper.classList.toggle('wr-dim', busy);
@@ -8487,7 +8506,12 @@ function wrBuildEditor(paper){
 /* ---------- Prozor „Polja šablona“ (verzija 75): kvačice i nazivi; „Primeni“ = nova verzija ---------- */
 const wsFldSheet = document.getElementById('wsFldSheet');
 let _wsFld = null;   /* {draft:[{name, orig, example, kind, on, on0}], discard} */
-function wsOpenFields(){
+/* 1 polje, 2 polja, 5 polja, 21 polje (en: 1 field, 2 fields) */
+function wsFldWord(n){
+  if(appLang() === 'en') return n === 1 ? 'field' : 'fields';
+  return (n % 10 === 1 && n % 100 !== 11) ? 'polje' : 'polja';
+}
+function wsOpenFields(focusKey){
   if(!_ws || _ws.busy) return;
   const v = _ws.vers[_ws.cur];
   if(!v || !v.res.tpl || !v.res.fields || !v.res.fields.length) return;
@@ -8499,7 +8523,18 @@ function wsOpenFields(){
   wsFldSheet.classList.add('open');
   wsFldSheet.querySelector('.sheet').scrollTop = 0;
   pushBack(closeWsFld);
+  /* verzija 80: dodir na polje u tekstu otvara prozor na tom polju */
+  const fx = focusKey ? _wsFld.draft.find(f=>wsFldKey(f.orig) === focusKey) : null;
+  if(fx && fx._row){
+    fx._row.classList.add('fld-focus');
+    requestAnimationFrame(()=>{ try{ fx._row.scrollIntoView({block:'center'}); }catch(e){} });
+  }
 }
+document.getElementById('wrPaper').addEventListener('click', (e)=>{
+  const sp = e.target.closest && e.target.closest('.ws-fld[data-fld]');
+  if(!sp || !_ws || _ws.busy || _ws.edit) return;
+  wsOpenFields(sp.getAttribute('data-fld'));
+});
 function wsFldChanged(){ return !!_wsFld && _wsFld.draft.some(f=>f.on !== f.on0 || wsFldName(f.name) !== f.orig); }
 function closeWsFld(){
   if(_wsFld && !_wsFld.discard && wsFldChanged()){
