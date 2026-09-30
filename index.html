@@ -2192,6 +2192,10 @@ const I18N = {
     wsOrigNoText: 'Iz ovog fajla nije izvučen tekst.',
     wsBusy: 'Šaljem: {task}',
     wsTplProg: 'Čitam deo {i} od {n}…',
+    wsTplChgAdd: 'Nova polja: {x}.',
+    wsTplChgRem: 'Vraćeno u tekst: {x}.',
+    wsTplChgRen: 'Preimenovano: {x}.',
+    wsTplChgNone: 'Šablon nije promenjen. Tekst se menja dugmetom „Izmeni“.',
     wsTplGenNote: 'Stalni tekst je preuzet iz originala od reči do reči; AI je pronašao {n} različitih podataka (tekst je poslat u {p} delova). Proveri polja.',
     wsTplGenNone: 'Stalni tekst je preuzet iz originala; AI nije pronašao podatke za polja. Pokušaj ponovo ili izmeni ručno.',
     wsTplGenMiss: 'Još {n} predloga AI nije pronađeno u tekstu, pa nisu ubačeni.',
@@ -2630,6 +2634,10 @@ const I18N = {
     wsOrigNoText: 'No text could be taken from this file.',
     wsBusy: 'Sending: {task}',
     wsTplProg: 'Reading part {i} of {n}…',
+    wsTplChgAdd: 'New fields: {x}.',
+    wsTplChgRem: 'Back in the text: {x}.',
+    wsTplChgRen: 'Renamed: {x}.',
+    wsTplChgNone: 'The template was not changed. The text is changed with the “Edit” button.',
     wsTplGenNote: 'The fixed text is taken from the original word for word; AI found {n} different pieces of data (the text was sent in {p} parts). Check the fields.',
     wsTplGenNone: 'The fixed text is taken from the original; AI found no data for fields. Try again or edit by hand.',
     wsTplGenMiss: '{n} more AI suggestions were not found in the text, so they were not inserted.',
@@ -8991,9 +8999,12 @@ function wsTplPairs(blocks){
 }
 /* zamena podataka poljima; najduži podatak prvo, da kraći ne „pojede“ deo dužeg. Privremene oznake su znakovi iz
    privatnog opsega (nisu slovo ni cifra), pa ih kasniji kraći podatak ne može pogoditi. */
-function wsTplApply(blocks, cands){
+function wsTplApply(blocks, cands, reserved){
   const res = {title:'', blocks:JSON.parse(JSON.stringify(blocks))};
-  const seenV = new Set(), names = new Set(), list = [];
+  const seenV = new Set((reserved && reserved.values) || []), names = new Set((reserved && reserved.names) || []), list = [];
+  /* postojeća [polja] se privremeno sklone, da ih nov podatak ne pogodi iznutra */
+  const kept = [];
+  wsResTexts(res, s=>s.replace(WS_FLD_RE, m=>{ kept.push(m); return '\uE002' + String.fromCharCode(0xE800 + kept.length - 1) + '\uE003'; }));
   cands.forEach(c=>{
     const v = String(c.value || '').replace(/\s+/g, ' ').trim();
     let name = wsFldName(c.name);
@@ -9023,7 +9034,7 @@ function wsTplApply(blocks, cands){
   });
   wsResTexts(res, s=>{
     used.forEach(f=>{ s = s.split(f.tok).join('[' + f.name + ']'); });
-    return s;
+    return s.replace(/\uE002([\uE800-\uEFFF])\uE003/g, (m, c)=>kept[c.charCodeAt(0) - 0xE800]);
   });
   return {blocks:res.blocks, fields:used.map(f=>({name:f.name, example:f.example, kind:f.kind})), miss};
 }
@@ -9068,6 +9079,88 @@ async function wsTplMake(src, signal, model, req){
   res.fields = wsSyncFields(res, ap.fields, null);
   return {res, usage, schemaRej};
 }
+
+/* Dorada šablona (verzija 79): AI ne vraća tekst, nego samo izmene polja — dodaj (podatak tačno kako piše), vrati u tekst,
+   preimenuj. Arhiva ih primenjuje na postojeći tekst, pa nijedan deo ugovora ne može da nestane. Šta je promenjeno piše Arhiva. */
+const WS_TPL_EDIT_SCHEMA = {
+  type:'object',
+  properties:{
+    add:{type:'array', items:{type:'object', properties:{value:{type:'string'}, name:{type:'string'}, kind:{type:'string', enum:WS_FLD_KINDS}}, required:['value', 'name', 'kind']}},
+    remove:{type:'array', items:{type:'string'}, description:'Names of fields whose original data goes back into the text'},
+    rename:{type:'array', items:{type:'object', properties:{from:{type:'string'}, to:{type:'string'}}, required:['from', 'to']}},
+    change:{type:'string', description:'One short sentence to the user'}
+  },
+  required:['add', 'remove', 'rename', 'change']
+};
+function wsTplPlain(res){
+  const out = [];
+  res.blocks.forEach(b=>{
+    if(b.type === 'bullets') out.push(b.items.map(x=>'• ' + x).join('\n'));
+    else if(b.type === 'table') out.push(b.rows.map(r=>r.join(' | ')).join('\n'));
+    else out.push(b.text);
+  });
+  return out.join('\n\n');
+}
+function wsTplEditPrompt(res, instr){
+  const L = wsLangName();
+  const fl = (res.fields || []).map(f=>'[' + f.name + ']' + (f.example ? ' = ' + f.example : '')).join('\n') || '(none)';
+  return [
+    'You help edit a reusable TEMPLATE. Its text is below; data of the case are fields in square brackets. Do NOT rewrite the text. Return only JSON with changes of the fields:',
+    '"add": new fields for data that are still written in the text. "value" is the data copied EXACTLY from the text, character for character, only the data itself; "name" is a short field name in ' + L + '; "kind" is name, address, idnum, date, amount, phone, email or text.',
+    '"remove": names of existing fields (without brackets) that should become fixed text again; their original data returns into the text.',
+    '"rename": existing fields to rename, "from" is the current name, "to" the new name in ' + L + '.',
+    '"change": one short sentence in ' + L + ' to the user. If the instruction asks for something you cannot do with fields (for example to rewrite, shorten or add text), leave the lists empty and say in "change" that the text itself is changed with the "' + t('wsEdit') + '" button.',
+    'Never invent data that is not in the text.',
+    'Existing fields (name = original data):\n' + fl,
+    'TEMPLATE TEXT:\n"""\n' + wsTplPlain(res) + '\n"""',
+    'Instruction from the user: ' + instr
+  ].join('\n\n');
+}
+async function wsTplRefine(task, base, signal, model, src){
+  const cur = base.res;
+  const r = await aiRequest([{text:wsTplEditPrompt(cur, task.text)}], {schema:WS_TPL_EDIT_SCHEMA, signal, model});
+  aiUsageAdd({model:model.id, name:src.name, inp:r.usage.inp, out:r.usage.out, think:r.usage.think, usd:r.usage.usd});
+  if(/SAFETY|PROHIBITED|BLOCKLIST|SPII|RECITATION/.test(r.finish)) throw aiError('aiErrBlocked');
+  const o = aiParseJson(r.text);
+  if(!o || typeof o !== 'object'){ const er = aiError('aiErrParse'); er.raw = String(r.text || ''); er.finish = r.finish || ''; er.schemaRej = r.schemaRej || ''; throw er; }
+  const arr = (x)=>Array.isArray(x) ? x : [];
+  const res = wsResClone(cur);
+  let fields = (cur.fields || []).map(f=>Object.assign({}, f));
+  const byKey = (n)=>fields.find(f=>wsFldKey(f.name) === wsFldKey(n));
+  const done = {add:[], rem:[], ren:[]};
+  /* preimenovanje */
+  arr(o.rename).forEach(x=>{
+    const f = x && byKey(String(x.from || '')), to = wsFldName(String((x && x.to) || ''));
+    if(!f || !to || wsFldKey(to) === wsFldKey(f.name) || byKey(to)) return;
+    const from = f.name;
+    wsResTexts(res, s=>s.replace(WS_FLD_RE, (m, nm)=>wsFldKey(nm) === wsFldKey(from) ? '[' + to + ']' : m));
+    f.name = to; done.ren.push(from + ' → ' + to);
+  });
+  /* vraćanje u tekst (samo polje koje ima podatak iz originala) */
+  arr(o.remove).forEach(n=>{
+    const f = byKey(String(n || ''));
+    if(!f || !f.example) return;
+    wsResTexts(res, s=>s.replace(WS_FLD_RE, (m, nm)=>wsFldKey(nm) === wsFldKey(f.name) ? f.example : m));
+    fields = fields.filter(x=>x !== f); done.rem.push(f.name);
+  });
+  /* nova polja: podatak mora postojati u tekstu šablona */
+  const plain = wsTplPlain(res);
+  const cand = arr(o.add).filter(a=>a && typeof a === 'object').map(a=>({value:String(a.value == null ? '' : a.value).trim(), name:String(a.name || ''), kind:String(a.kind || '')}))
+    .filter(a=>a.value && (plain.indexOf(a.value) >= 0 || (wsTplRe(a.value, 'iu') && wsTplRe(a.value, 'iu').test(plain))));
+  if(cand.length){
+    const ap = wsTplApply(res.blocks, cand, {names:fields.map(f=>wsFldKey(f.name)), values:fields.map(f=>String(f.example || '').toLowerCase())});
+    res.blocks = ap.blocks;
+    ap.fields.forEach(f=>{ fields.push(Object.assign({on:true}, f)); done.add.push(f.name); });
+  }
+  const chg = [];
+  if(done.add.length) chg.push(t('wsTplChgAdd', {x:done.add.join(', ')}));
+  if(done.rem.length) chg.push(t('wsTplChgRem', {x:done.rem.join(', ')}));
+  if(done.ren.length) chg.push(t('wsTplChgRen', {x:done.ren.join(', ')}));
+  if(!chg.length) return {none:true, msg:String(o.change || '').trim().slice(0, 300), usage:r.usage};
+  res.tpl = true;
+  res.fields = wsSyncFields(res, fields, fields);
+  return {res, usage:r.usage, model:r.model, schemaRej:r.schemaRej || '', change:chg.join(' ')};
+}
 /* red „deo 2 od 5“ dok AI radi, bez ponovnog crtanja ekrana */
 function wsBusyProg(){
   const p = _ws && _ws.busy && _ws.busy.prog;
@@ -9108,6 +9201,16 @@ async function wsRun(task){
       const g = await wsTplMake(src, ctrl.signal, model, req);
       if(!g || req !== _wsReq) return;
       res = g.res; usage = g.usage; schemaRej = g.schemaRej || '';
+    }else if(task.kind === 'refine' && base.res.tpl){
+      const g = await wsTplRefine(task, base, ctrl.signal, model, src);
+      if(req !== _wsReq) return;
+      if(g.none){
+        _ws.busy = null;
+        wsRender();
+        toast(g.msg || t('wsTplChgNone'));
+        return;
+      }
+      res = g.res; usage = g.usage; rmodel = g.model; schemaRej = g.schemaRej; res.change = g.change;
     }else{
     const docParts = await aiDocParts(src);
     if(req !== _wsReq) return;
