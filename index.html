@@ -1247,6 +1247,29 @@ html[data-theme="ponoc"]{
 .ws-tpl-tx b{ font-size:14.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .ws-tpl-tx small{ font-size:12px; color:var(--ink-dim); }
 .ws-tpl-del{ flex:none; width:44px; height:44px; margin-right:4px; border:none; background:none; color:var(--ink-dim); border-radius:12px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+/* verzija 82: „Popuni“ u Moji šabloni i ekran popunjavanja */
+.ws-tpl-fill{ flex:none; height:34px; padding:0 11px; border-radius:17px; border:1px solid var(--brass-soft); background:var(--surface-2); color:var(--brass);
+  font-family:var(--font-ui); font-size:13px; font-weight:700; display:inline-flex; align-items:center; gap:5px; cursor:pointer; white-space:nowrap; }
+.ws-tpl-fill:disabled{ opacity:.45; cursor:default; }
+.wf-head{ display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--surface); border:1px solid var(--line); border-radius:14px; }
+.wf-head .ws-tpl-tx b{ font-size:15.5px; }
+.wf-lead{ margin:10px 4px 14px; font-size:13px; line-height:1.5; color:var(--ink-dim); }
+.wf-list{ display:flex; flex-direction:column; gap:12px; }
+.wf-fld .wf-lbl{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin:0 4px 5px; }
+.wf-name{ font-size:13.5px; font-weight:700; color:var(--ink); min-width:0; overflow-wrap:anywhere; }
+.wf-kind{ flex:none; font-size:11.5px; color:var(--ink-dim); }
+.wf-fld .sheet-input.wf-in{ margin:0; width:100%; box-sizing:border-box; }
+.wf-fld .sheet-input.wf-in::placeholder{ color:var(--ink-dim); opacity:.75; }
+.ws-bar .pg-btn.wf-make{ width:100%; height:48px; font-size:15px; }
+.ws-bar .pg-btn.wf-make svg{ color:inherit; }
+.ws-bar .pg-btn.wf-make:disabled{ opacity:.4; cursor:default; }
+.wf-done{ margin:0 0 14px; padding:12px; border-radius:16px; border:1px solid var(--brass-soft); background:color-mix(in srgb, var(--brass) 9%, var(--surface)); }
+.wf-done-hd{ display:flex; align-items:center; gap:10px; }
+.wf-ok{ width:34px; height:34px; flex:none; border-radius:17px; background:var(--brass); color:var(--bg); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:17px; }
+.wf-done .ws-tpl-tx b{ white-space:normal; overflow-wrap:anywhere; }
+.wf-warn{ margin:10px 2px 0; font-size:12.5px; line-height:1.45; color:var(--danger); }
+.wf-done-btns{ display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:8px; margin-top:12px; }
+.wf-done-btns .pg-btn{ height:44px; font-size:14px; }
 .ws-chip{ height:38px; padding:0 14px; border-radius:19px; border:1px solid var(--line); background:var(--surface); color:var(--ink);
   font-family:var(--font-ui); font-size:13.5px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
 .ws-chip:active{ border-color:var(--brass-soft); background:var(--surface-2); }
@@ -1731,6 +1754,20 @@ body:has(#aiWs.open) .toast{ bottom:calc(190px + env(safe-area-inset-bottom)); }
       <button type="button" class="pg-btn" id="wrCancel"></button>
       <button type="button" class="pg-btn pg-save" id="wrDone"></button>
     </div>
+  </div></div>
+</div>
+<!-- verzija 82: popunjavanje šablona -->
+<div class="ws-screen" id="wsFill">
+  <div class="set-header"><button type="button" class="set-back" id="wfBack"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h2 class="set-title" id="wfTitle"></h2></div>
+  <div class="ws-body" id="wfBody"><div class="ws-inner">
+    <div class="wf-head" id="wfHead"></div>
+    <p class="wf-lead" id="wfLead"></p>
+    <div id="wfDone"></div>
+    <div class="wf-list" id="wfList"></div>
+  </div></div>
+  <div class="ws-bar"><div class="ws-bar-in">
+    <div class="ws-status" id="wfStatus"></div>
+    <button type="button" class="pg-btn pg-save wf-make" id="wfMake"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"></path><path d="M14 3v5h5"></path><polyline points="9 14 11.5 16.5 16 12"></polyline></svg><span id="wfMakeLbl"></span></button>
   </div></div>
 </div>
 <div class="sheet-bg" id="wsTplSheet">
@@ -2322,6 +2359,21 @@ const I18N = {
     wsTplOpened: 'sačuvan šablon',
     wsTplCost: 'sačuvan šablon · bez troška',
     wsTplDel: 'Obriši šablon',
+    wfFill: 'Popuni', wfTitle: 'Popuni šablon', wfBackLbl: 'nazad',
+    wfHeadWord: 'Word · polja: {n}', wfHeadPdf: 'PDF · polja: {n}',
+    wfLeadWord: 'Upiši podatke. Nastaje nov Word sa izgledom originala; menja se samo tekst polja. Šablon ostaje isti.',
+    wfLeadPdf: 'Upiši podatke. Nastaje nov PDF dokument. Šablon ostaje isti.',
+    wfPh: 'npr. {ex}', wfNoFields: 'Ovaj šablon nema polja.',
+    wfMake: 'Napravi dokument', wfStCount: 'Popunjeno {k} od {n} polja.', wfStDone: 'Napravljeno: „{name}“.',
+    wfEmptyTitle: 'Nisu popunjena sva polja', wfEmptyText: 'Prazno polja: {n}. Na tim mestima u dokumentu biće crta za ručni upis.', wfEmptyOk: 'Napravi ipak',
+    wfSaveTitle: 'Napravi dokument', wfSaveOk: 'Napravi i sačuvaj',
+    wfSaveHintWord: 'Nov Word ide u izabrani album. Deliti se može samo PDF, pa se Word čuva na telefon i šalje kao prilog.',
+    wfSaveHintPdf: 'Nov PDF ide u izabrani album.',
+    wfMaking: 'Pravim dokument…', wfMakeErr: 'Dokument nije napravljen. Pokušaj ponovo.',
+    wfDoneWord: 'Word · {album}', wfDonePdf: 'PDF · {album}',
+    wfDl: 'Sačuvaj na telefon', wfDlDone: 'Fajl je preuzet na telefon.', wfShare: 'Podeli',
+    wfLost: 'Polja koja nisu upisana u Word: {n}. Tekst šablona se na tim mestima razlikuje od originala. Proveri dokument.',
+    wfDiscardTitle: 'Odbaci unete podatke?', wfDiscardText: 'Upisani podaci nisu iskorišćeni za dokument. Ako izađeš, biće izgubljeni.', wfDiscardOk: 'Odbaci',
     wsTplDelTitle: 'Obriši šablon',
     wsTplDelText: 'Šablon „{name}“ se trajno briše iz Arhive (ne ide u korpu). Dokumenti ostaju.',
     wsTplDeleted: 'Šablon je obrisan.',
@@ -2766,6 +2818,21 @@ const I18N = {
     wsTplOpened: 'saved template',
     wsTplCost: 'saved template · no cost',
     wsTplDel: 'Delete template',
+    wfFill: 'Fill in', wfTitle: 'Fill in template', wfBackLbl: 'back',
+    wfHeadWord: 'Word · fields: {n}', wfHeadPdf: 'PDF · fields: {n}',
+    wfLeadWord: 'Enter the data. A new Word file is made with the original layout; only the field text changes. The template stays the same.',
+    wfLeadPdf: 'Enter the data. A new PDF document is made. The template stays the same.',
+    wfPh: 'e.g. {ex}', wfNoFields: 'This template has no fields.',
+    wfMake: 'Make document', wfStCount: '{k} of {n} fields filled in.', wfStDone: 'Made: “{name}”.',
+    wfEmptyTitle: 'Not all fields are filled in', wfEmptyText: 'Empty fields: {n}. Those places in the document will get a line to fill in by hand.', wfEmptyOk: 'Make anyway',
+    wfSaveTitle: 'Make document', wfSaveOk: 'Make and save',
+    wfSaveHintWord: 'The new Word file goes to the chosen album. Only PDF can be shared, so save the Word file to the phone and send it as an attachment.',
+    wfSaveHintPdf: 'The new PDF goes to the chosen album.',
+    wfMaking: 'Making the document…', wfMakeErr: 'The document was not made. Please try again.',
+    wfDoneWord: 'Word · {album}', wfDonePdf: 'PDF · {album}',
+    wfDl: 'Save to phone', wfDlDone: 'The file was downloaded to the phone.', wfShare: 'Share',
+    wfLost: 'Fields not written into Word: {n}. The template text differs from the original there. Check the document.',
+    wfDiscardTitle: 'Discard the entered data?', wfDiscardText: 'The data you entered was not used for a document. If you leave, it will be lost.', wfDiscardOk: 'Discard',
     wsTplDelTitle: 'Delete template',
     wsTplDelText: 'The template “{name}” is deleted from Arhiva for good (it does not go to the trash). Documents stay.',
     wsTplDeleted: 'Template deleted.',
@@ -6215,7 +6282,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 81</div>'+
+    '<div class="settings-hint set-build">verzija 82</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -8804,11 +8871,16 @@ function wsRenderTpls(busy){
     const d = new Date(tp.updatedAt || tp.createdAt || Date.now());
     row.innerHTML = '<button type="button" class="ws-tpl-open"><span class="ws-tpl-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"></path><path d="M14 3v5h5"></path><rect x="9" y="11.5" width="7" height="2.6" rx="1"></rect><rect x="9" y="16" width="4.5" height="2.6" rx="1"></rect></svg></span>' +
       '<span class="ws-tpl-tx"><b></b><small></small></span></button>' +
+      '<button type="button" class="ws-tpl-fill"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"></path><line x1="13.5" y1="6.5" x2="17.5" y2="10.5"></line></svg><span></span></button>' +
       '<button type="button" class="ws-tpl-del"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 20 7"></polyline><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg></button>';
     row.querySelector('b').textContent = tp.name || tp.title || '';
     row.querySelector('small').textContent = t('wsTplMeta', {n:(tp.fields || []).length, date:d.getDate() + '.' + (d.getMonth() + 1) + '.' + d.getFullYear() + '.'});
-    const op = row.querySelector('.ws-tpl-open'), del = row.querySelector('.ws-tpl-del');
-    op.disabled = del.disabled = busy;
+    const op = row.querySelector('.ws-tpl-open'), del = row.querySelector('.ws-tpl-del'), fill = row.querySelector('.ws-tpl-fill');
+    op.disabled = del.disabled = fill.disabled = busy;
+    /* verzija 82: „Popuni“ — nov dokument od šablona */
+    fill.querySelector('span').textContent = t('wfFill');
+    fill.setAttribute('aria-label', t('wfFill') + ': ' + (tp.name || ''));
+    fill.onclick = ()=>{ if(wsTplSheet.classList.contains('open')) requestCloseThen(()=>wfOpen(tp)); else wfOpen(tp); };
     del.setAttribute('aria-label', t('wsTplDel') + ': ' + (tp.name || ''));
     op.onclick = ()=>{ if(wsTplSheet.classList.contains('open')) requestCloseThen(()=>wsOpenTpl(tp)); else wsOpenTpl(tp); };
     del.onclick = ()=>wsDelTpl(tp);
@@ -9782,6 +9854,7 @@ function wsOpenSave(){
   /* verzija 75: šablon se čuva kao šablon (bez albuma) */
   const isTpl = !!v.res.tpl, cur = isTpl && _ws.tplId ? _tpls.find(x=>x.id === _ws.tplId) : null;
   wsSaveSheet.dataset.tpl = isTpl ? '1' : '';
+  wsSaveSheet.dataset.fill = '';
   document.getElementById('wsSaveAlbLbl').hidden = isTpl;
   document.getElementById('wsSaveAlbWrap').hidden = isTpl;
   if(isTpl){
@@ -9816,6 +9889,7 @@ document.getElementById('wsSaveOk').onclick = ()=>{
   if(!name){ toast(t('wsSaveNameEmpty')); return; }
   if(wsSaveSheet.dataset.tpl){ requestCloseThen(()=>tplSaveFromWs(name)); return; }
   const albumId = wsSaveAlb.value || null;
+  if(wsSaveSheet.dataset.fill){ requestCloseThen(()=>wfMakeDoc(name, albumId)); return; }
   requestCloseThen(()=>wsSaveToArchive(name, albumId));
 };
 async function wsSaveToArchive(name, albumId){
@@ -9846,6 +9920,488 @@ async function wsSaveToArchive(name, albumId){
     toastHide();
     toast(t('wsSaveErr'));
   }finally{ _wsPdfBusy = false; }
+}
+
+/* ---------- Popunjavanje šablona (verzija 82) ----------
+   Moji šabloni → „Popuni“: za svako polje upiše se podatak → „Napravi dokument“ → naziv i album → nov dokument u Arhivi.
+   Šablon od Word-a daje nov Word sa izgledom originala: u originalnom document.xml menja se SAMO tekst na mestu polja
+   (podatak iz originala → upisana vrednost); stalni tekst, stilovi, tabele, zaglavlja i slike ostaju isti.
+   Ostali šabloni daju PDF (isti izgled kao „Sačuvaj“ rezultata). Šablon i izvorni dokument se ne menjaju.
+   ZIP (docx) se čita i piše ugrađenim DecompressionStream / CompressionStream ('deflate-raw'), bez nove biblioteke. */
+async function zipPipe(bytes, stream){
+  return new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer());
+}
+/* svi delovi ZIP-a, raspakovani, istim redom */
+async function zipReadEntries(blob){
+  const buf = new Uint8Array(await blob.arrayBuffer());
+  const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+  let eocd = -1;
+  for(let i = buf.length - 22; i >= Math.max(0, buf.length - 65557); i--){ if(dv.getUint32(i, true) === 0x06054b50){ eocd = i; break; } }
+  if(eocd < 0) throw new Error('NOT_ZIP');
+  const count = dv.getUint16(eocd + 10, true);
+  let p = dv.getUint32(eocd + 16, true);
+  const dec = new TextDecoder(), out = [];
+  for(let i = 0; i < count; i++){
+    if(p + 46 > buf.length || dv.getUint32(p, true) !== 0x02014b50) throw new Error('NOT_ZIP');
+    const flags = dv.getUint16(p + 8, true), method = dv.getUint16(p + 10, true), crc = dv.getUint32(p + 16, true), csize = dv.getUint32(p + 20, true);
+    const nlen = dv.getUint16(p + 28, true), xlen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true), lho = dv.getUint32(p + 42, true);
+    const name = dec.decode(buf.subarray(p + 46, p + 46 + nlen));
+    p += 46 + nlen + xlen + clen;
+    if(flags & 1) throw new Error('LOCKED');
+    if(dv.getUint32(lho, true) !== 0x04034b50) throw new Error('NOT_ZIP');
+    const start = lho + 30 + dv.getUint16(lho + 26, true) + dv.getUint16(lho + 28, true);
+    const raw = buf.subarray(start, start + csize);
+    let data;
+    if(method === 0) data = raw.slice();
+    else if(method === 8) data = await zipPipe(raw, new DecompressionStream('deflate-raw'));
+    else throw new Error('PACKED');
+    if(crc32(data) !== crc) throw new Error('CRC');
+    out.push({name, data});
+  }
+  return out;
+}
+/* ZIP sa sažimanjem (deflate), za Word; deo koji se ne smanji ide nesažet */
+async function zipBuildDeflate(entries){
+  const enc = new TextEncoder(), parts = [], central = [];
+  const dt = dosTimeDate(Date.now());
+  let offset = 0;
+  for(const e of entries){
+    const nameBytes = enc.encode(e.name), crc = crc32(e.data), size = e.data.length;
+    let comp = e.data, method = 0;
+    if(size > 64 && !/\/$/.test(e.name)){
+      const c = await zipPipe(e.data, new CompressionStream('deflate-raw'));
+      if(c.length < size){ comp = c; method = 8; }
+    }
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, method, true);
+    lh.setUint16(10, dt.time, true); lh.setUint16(12, dt.date, true); lh.setUint32(14, crc, true);
+    lh.setUint32(18, comp.length, true); lh.setUint32(22, size, true); lh.setUint16(26, nameBytes.length, true); lh.setUint16(28, 0, true);
+    parts.push(lh.buffer, nameBytes, comp);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true);
+    ch.setUint16(10, method, true); ch.setUint16(12, dt.time, true); ch.setUint16(14, dt.date, true); ch.setUint32(16, crc, true);
+    ch.setUint32(20, comp.length, true); ch.setUint32(24, size, true); ch.setUint16(28, nameBytes.length, true);
+    ch.setUint32(38, 0, true); ch.setUint32(42, offset, true);
+    central.push(ch.buffer, nameBytes);
+    offset += 30 + nameBytes.length + comp.length;
+  }
+  let cdSize = 0;
+  central.forEach(x=>{ cdSize += x.byteLength; });
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, entries.length, true); end.setUint16(10, entries.length, true);
+  end.setUint32(12, cdSize, true); end.setUint32(16, offset, true);
+  return new Blob(parts.concat(central, [end.buffer]), {type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+}
+function b64ToBytes(b64){
+  const s = atob(b64), out = new Uint8Array(s.length);
+  for(let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i);
+  return out;
+}
+
+/* vrednost se sređuje kao u Generatoru: telefon samo cifre (uz vodeći „+“), e-pošta malim slovima bez razmaka,
+   iznos bez valute dobija valutu iz primera */
+function wfClean(f, v){
+  v = String(v || '').replace(/\s+/g, ' ').trim();
+  if(!v) return '';
+  if(f.kind === 'phone') return (v.charAt(0) === '+' ? '+' : '') + v.replace(/\D/g, '');
+  if(f.kind === 'email') return v.replace(/\s+/g, '').toLowerCase();
+  if(f.kind === 'amount' && /\d/.test(v) && !/[\p{L}€$£¥]/u.test(v)){
+    const ex = String(f.example || '');
+    const suf = /\d[\d.,]*(\s*)([^\d\s.,][^\d]*)$/.exec(ex), pre = /^([^\d\s-][^\d]*?)(\s*)\d/.exec(ex);
+    if(suf) return v + suf[1] + suf[2].trim();
+    if(pre) return pre[1].trim() + pre[2] + v;
+  }
+  return v;
+}
+const WF_BLANK = '__________';
+function wfValue(vals, k){ const v = vals.get(k); return v ? v : WF_BLANK; }
+/* tekst šablona sa upisanim vrednostima (za PDF, tekst za pretragu i Word delove koji se prepisuju) */
+function wfFillRes(tp, vals){
+  const res = {title:tp.title || '', blocks:JSON.parse(JSON.stringify(tp.blocks || [])), note:''};
+  const known = new Set((tp.fields || []).map(f=>wsFldKey(f.name)));
+  wsResTexts(res, tx=>tx.replace(WS_FLD_RE, (m, nm)=>{ const k = wsFldKey(nm); return known.has(k) ? wfValue(vals, k) : m; }));
+  return res;
+}
+
+/* ---------- Word: vrednosti na mesto podataka iz originala ----------
+   Delovi (redom kao u tekstu šablona, v79 wsTplBlocks): pasus / naslov / stavka spiska = jedan w:p; ćelija tabele = svi w:p u w:tc.
+   Delovi Word-a i delovi šablona se sparuju po tekstu (šablon sa primerima umesto [polja] mora biti isti kao original).
+   Sparen deo: menjaju se samo znakovi podatka, i kad je podatak razbijen u više w:t (npr. deo podebljan).
+   Deo koji je korisnik u šablonu ručno izmenio: ceo tekst ide u prvi w:t tog dela (formatiranje prvog dela teksta). */
+const W_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+function wdUnit(ps){
+  const chars = [];
+  ps.forEach((p, pi)=>{
+    if(pi) chars.push({c:' ', node:null});
+    const tw = p.ownerDocument.createTreeWalker(p, NodeFilter.SHOW_ELEMENT, {acceptNode:(el)=>{
+      if(el !== p && el.namespaceURI === W_NS && el.localName === 'p') return NodeFilter.FILTER_REJECT;
+      if(el.localName === 'Fallback' || (el.namespaceURI === W_NS && (el.localName === 'del' || el.localName === 'instrText'))) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }});
+    let el;
+    while((el = tw.nextNode())){
+      if(el.namespaceURI !== W_NS) continue;
+      if(el.localName === 't'){ const s = el.textContent; for(let i = 0; i < s.length; i++) chars.push({c:s[i], node:el, off:i}); }
+      else if(el.localName === 'tab' || el.localName === 'br' || el.localName === 'cr') chars.push({c:' ', node:null, el});
+    }
+  });
+  let norm = '';
+  const map = [];
+  chars.forEach((ch, i)=>{
+    if(/[\s\u00a0]/.test(ch.c)){ if(norm && norm[norm.length - 1] !== ' '){ norm += ' '; map.push(i); } }
+    else{ norm += ch.c; map.push(i); }
+  });
+  if(norm.endsWith(' ')){ norm = norm.slice(0, -1); map.pop(); }
+  return {ps, chars, norm, map};
+}
+function wdUnits(body){
+  const units = [];
+  const kids = (el, ln)=>Array.from(el.children).filter(c=>c.namespaceURI === W_NS && (!ln || c.localName === ln));
+  const walk = (el)=>{
+    kids(el).forEach(c=>{
+      if(c.localName === 'p') units.push(wdUnit([c]));
+      else if(c.localName === 'tbl'){
+        kids(c, 'tr').forEach(tr=>kids(tr, 'tc').forEach(tc=>units.push(wdUnit(Array.from(tc.getElementsByTagNameNS(W_NS, 'p'))))));
+      }else if(c.localName === 'sdt' || c.localName === 'customXml' || c.localName === 'sdtContent') walk(c);
+    });
+  };
+  walk(body);
+  return units.filter(u=>u.norm);
+}
+/* delovi šablona: očekivani tekst originala (primer umesto [polja]) i mesta polja u njemu */
+function wdTplUnits(tp){
+  const ex = new Map((tp.fields || []).filter(f=>f.example).map(f=>[wsFldKey(f.name), String(f.example)]));
+  const out = [];
+  const add = (s)=>{
+    s = String(s || '');
+    if(!s.trim()) return;
+    let exp = '', last = 0;
+    const occ = [];
+    s.replace(WS_FLD_RE, (m, nm, idx)=>{
+      exp += s.slice(last, idx);
+      const k = wsFldKey(nm);
+      if(ex.has(k)){ occ.push({a:exp.length, b:exp.length + ex.get(k).length, k}); exp += ex.get(k); }
+      else exp += m;
+      last = idx + m.length;
+      return m;
+    });
+    exp += s.slice(last);
+    out.push({src:s, exp:exp.replace(/\s+/g, ' ').trim(), occ, flds:(s.match(WS_FLD_RE) || []).length});
+  };
+  (tp.blocks || []).forEach(b=>{
+    if(b.type === 'bullets') (b.items || []).forEach(add);
+    else if(b.type === 'table') (b.rows || []).forEach(r=>r.forEach(add));
+    else add(b.text);
+  });
+  return out;
+}
+/* najduži zajednički niz (po jednakom tekstu); veliki dokument: pohlepno sparivanje unapred */
+function wdAlign(D, T){
+  const n = D.length, m = T.length, pairs = [];
+  if(n * m <= 4e6){
+    const L = new Uint16Array((n + 1) * (m + 1)), W1 = m + 1;
+    for(let i = n - 1; i >= 0; i--) for(let j = m - 1; j >= 0; j--)
+      L[i * W1 + j] = D[i].norm === T[j].exp ? L[(i + 1) * W1 + j + 1] + 1 : Math.max(L[(i + 1) * W1 + j], L[i * W1 + j + 1]);
+    let i = 0, j = 0;
+    while(i < n && j < m){
+      if(D[i].norm === T[j].exp){ pairs.push([i, j]); i++; j++; }
+      else if(L[(i + 1) * W1 + j] >= L[i * W1 + j + 1]) i++;
+      else j++;
+    }
+  }else{
+    let i = 0;
+    T.forEach((u, j)=>{ for(let k = i; k < Math.min(n, i + 60); k++) if(D[k].norm === u.exp){ pairs.push([k, j]); i = k + 1; break; } });
+  }
+  return pairs;
+}
+function wdWords(s){ return new Set(String(s || '').toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(w=>w.length > 1)); }
+function wdSimilar(a, b){
+  const A = wdWords(a), B = wdWords(b);
+  if(!A.size || !B.size) return false;
+  let c = 0;
+  A.forEach(w=>{ if(B.has(w)) c++; });
+  return 2 * c / (A.size + B.size) >= 0.5;
+}
+function wdSetText(el, s){
+  el.textContent = s;
+  el.setAttributeNS('http://www.w3.org/XML/1998/namespace', 'xml:space', 'preserve');
+}
+/* sparen deo: zameni samo znakove podataka */
+function wdReplaceOcc(u, t, vals){
+  const edits = new Map();
+  const ed = (node)=>{ let e = edits.get(node); if(!e){ e = {del:new Set(), ins:new Map()}; edits.set(node, e); } return e; };
+  t.occ.forEach(o=>{
+    if(o.b <= o.a || o.b > u.map.length) return;
+    const rs = u.map[o.a], re = u.map[o.b - 1];
+    let first = true;
+    for(let i = rs; i <= re; i++){
+      const ch = u.chars[i];
+      if(!ch.node) continue;
+      const e = ed(ch.node);
+      if(first){ e.ins.set(ch.off, (e.ins.get(ch.off) || '') + wfValue(vals, o.k)); first = false; }
+      e.del.add(ch.off);
+    }
+  });
+  edits.forEach((e, node)=>{
+    const s = node.textContent;
+    let r = '';
+    for(let i = 0; i < s.length; i++){ if(e.ins.has(i)) r += e.ins.get(i); if(!e.del.has(i)) r += s[i]; }
+    wdSetText(node, r);
+  });
+}
+/* deo ručno izmenjen u šablonu: ceo tekst u prvi w:t, ostali prazni */
+function wdRewrite(u, text){
+  const ts = [];
+  u.ps.forEach(p=>{
+    Array.from(p.getElementsByTagNameNS(W_NS, 't')).forEach(x=>ts.push(x));
+    ['tab', 'br', 'cr'].forEach(ln=>Array.from(p.getElementsByTagNameNS(W_NS, ln)).forEach(x=>{ if(x.parentNode && x.parentNode.localName === 'r') x.parentNode.removeChild(x); }));
+  });
+  if(!ts.length) return false;
+  ts.forEach((x, i)=>wdSetText(x, i ? '' : text));
+  return true;
+}
+async function tplFillDocx(tp, vals){
+  const entries = await zipReadEntries(new Blob([b64ToBytes(tp.file.b64)]));
+  const dec = new TextDecoder();
+  let main = 'word/document.xml';
+  const rels = entries.find(e=>e.name === '_rels/.rels');
+  if(rels){
+    const m = /<Relationship\b[^>]*Type="[^"]*\/officeDocument"[^>]*>/.exec(dec.decode(rels.data));
+    const tg = m && /Target="([^"]+)"/.exec(m[0]);
+    if(tg) main = tg[1].replace(/^\//, '');
+  }
+  const ent = entries.find(e=>e.name === main);
+  if(!ent) throw new Error('NO_DOC');
+  const xml = dec.decode(ent.data);
+  const doc = new DOMParser().parseFromString(xml, 'application/xml');
+  if(doc.getElementsByTagName('parsererror').length) throw new Error('BAD_XML');
+  const body = doc.getElementsByTagNameNS(W_NS, 'body')[0];
+  if(!body) throw new Error('NO_DOC');
+  const D = wdUnits(body), T = wdTplUnits(tp);
+  const pairs = wdAlign(D, T);
+  let lost = 0;
+  const doneT = new Set();
+  pairs.forEach(([i, j])=>{ if(T[j].occ.length) wdReplaceOcc(D[i], T[j], vals); doneT.add(j); });
+  /* između sparenih delova: deo šablona koji se razlikuje od originala (ručna izmena) prepisuje se preko sličnog dela Word-a */
+  const anchors = [[-1, -1]].concat(pairs, [[D.length, T.length]]);
+  for(let a = 0; a + 1 < anchors.length; a++){
+    const [i0, j0] = anchors[a], [i1, j1] = anchors[a + 1];
+    let i = i0 + 1;
+    for(let j = j0 + 1; j < j1; j++){
+      const tu = T[j];
+      let hit = -1;
+      for(let k = i; k < i1; k++) if(wdSimilar(D[k].norm, tu.exp)){ hit = k; break; }
+      if(hit >= 0){
+        const filled = tu.src.replace(WS_FLD_RE, (m, nm)=>{ const k = wsFldKey(nm); return (tp.fields || []).some(f=>wsFldKey(f.name) === k) ? wfValue(vals, k) : m; });
+        if(wdRewrite(D[hit], filled.replace(/\s+/g, ' ').trim())) doneT.add(j); else if(tu.flds) lost += tu.flds;
+        i = hit + 1;
+      }else if(tu.flds) lost += tu.flds;
+    }
+  }
+  let out = new XMLSerializer().serializeToString(doc);
+  const decl = /^<\?xml[^>]*\?>/.exec(xml);
+  if(decl && !/^<\?xml/.test(out)) out = decl[0] + (xml.charAt(decl[0].length) === '\n' ? '\n' : '') + out;
+  ent.data = new TextEncoder().encode(out);
+  return {blob:await zipBuildDeflate(entries), lost};
+}
+
+/* ---------- ekran „Popuni šablon“ ---------- */
+let _wf = null;
+const wfScr = document.getElementById('wsFill');
+function wfOpen(tp){
+  if(!tp || _wf) return;
+  _wf = {tp, vals:new Map(), dirty:false, discard:false, busy:false, done:null};
+  document.getElementById('wfTitle').textContent = t('wfTitle');
+  document.getElementById('wfBack').setAttribute('aria-label', t('wfBackLbl'));
+  const head = document.getElementById('wfHead');
+  head.innerHTML = '<span class="ws-tpl-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"></path><path d="M14 3v5h5"></path><rect x="9" y="11.5" width="7" height="2.6" rx="1"></rect><rect x="9" y="16" width="4.5" height="2.6" rx="1"></rect></svg></span><span class="ws-tpl-tx"><b></b><small></small></span>';
+  head.querySelector('b').textContent = tp.name || tp.title || '';
+  head.querySelector('small').textContent = t(tp.file ? 'wfHeadWord' : 'wfHeadPdf', {n:(tp.fields || []).length});
+  document.getElementById('wfLead').textContent = t(tp.file ? 'wfLeadWord' : 'wfLeadPdf');
+  const list = document.getElementById('wfList');
+  list.innerHTML = '';
+  const fields = tp.fields || [];
+  fields.forEach((f, i)=>{
+    const row = document.createElement('div');
+    row.className = 'wf-fld';
+    row.innerHTML = '<label class="wf-lbl" for="wfIn' + i + '"><span class="wf-name"></span><span class="wf-kind"></span></label>' +
+      '<input id="wfIn' + i + '" type="text" class="sheet-input wf-in" maxlength="300" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">';
+    row.querySelector('.wf-name').textContent = f.name;
+    row.querySelector('.wf-kind').textContent = t('wsFldKind_' + (WS_FLD_KINDS.indexOf(f.kind) >= 0 ? f.kind : 'text'));
+    const inp = row.querySelector('input');
+    inp.inputMode = {phone:'tel', email:'email', amount:'decimal', date:'decimal'}[f.kind] || 'text';
+    inp.enterKeyHint = i < fields.length - 1 ? 'next' : 'done';
+    inp.placeholder = f.example ? t('wfPh', {ex:f.example}) : '';
+    wireBackspace(inp);
+    inp.addEventListener('input', ()=>{ if(!_wf) return; _wf.dirty = true; if(_wf.done){ _wf.done = null; wfRenderDone(); } wfStatus(); });
+    inp.addEventListener('blur', ()=>{
+      if(!_wf) return;
+      const v = wfClean(f, inp.value);
+      if(v !== inp.value) inp.value = v;
+      if(v) _wf.vals.set(wsFldKey(f.name), v); else _wf.vals.delete(wsFldKey(f.name));
+      wfStatus();
+    });
+    inp.addEventListener('keydown', (e)=>{
+      if(e.key !== 'Enter') return;
+      e.preventDefault();
+      const next = document.getElementById('wfIn' + (i + 1));
+      if(next){ next.scrollIntoView({block:'center', behavior:'smooth'}); next.focus(); } else inp.blur();
+    });
+    list.appendChild(row);
+  });
+  if(!fields.length) list.innerHTML = '<div class="ws-hint">' + escapeHtml(t('wfNoFields')) + '</div>';
+  document.getElementById('wfMakeLbl').textContent = t('wfMake');
+  wfRenderDone();
+  wfStatus();
+  wfScr.classList.add('open');
+  document.getElementById('wfBody').scrollTop = 0;
+  pushBack(wfClose);
+}
+function wfSyncInputs(){
+  if(!_wf) return;
+  (_wf.tp.fields || []).forEach((f, i)=>{
+    const inp = document.getElementById('wfIn' + i);
+    if(!inp) return;
+    const v = wfClean(f, inp.value);
+    if(v !== inp.value) inp.value = v;
+    if(v) _wf.vals.set(wsFldKey(f.name), v); else _wf.vals.delete(wsFldKey(f.name));
+  });
+}
+function wfStatus(){
+  if(!_wf) return;
+  const n = (_wf.tp.fields || []).length;
+  let k = 0;
+  (_wf.tp.fields || []).forEach((f, i)=>{ const inp = document.getElementById('wfIn' + i); if(inp && inp.value.trim()) k++; });
+  const st = document.getElementById('wfStatus');
+  st.classList.toggle('saved', !!_wf.done);
+  st.textContent = _wf.done ? t('wfStDone', {name:_wf.done.name}) : t('wfStCount', {k, n});
+  document.getElementById('wfMake').disabled = _wf.busy || !n;
+}
+function wfRenderDone(){
+  const box = document.getElementById('wfDone');
+  if(!_wf || !_wf.done){ box.innerHTML = ''; return; }
+  const d = _wf.done;
+  box.innerHTML = '<div class="wf-done"><div class="wf-done-hd"><span class="wf-ok">✓</span><span class="ws-tpl-tx"><b></b><small></small></span></div>' +
+    (d.lost ? '<p class="wf-warn"></p>' : '') +
+    '<div class="wf-done-btns"><button type="button" class="pg-btn" id="wfDl"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"></path><polyline points="7 10 12 15 17 10"></polyline><path d="M5 19h14"></path></svg><span></span></button>' +
+    (d.item.type === 'pdf' ? '<button type="button" class="pg-btn" id="wfSh"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"></circle><circle cx="6" cy="12" r="2.6"></circle><circle cx="18" cy="19" r="2.6"></circle><line x1="8.3" y1="10.7" x2="15.7" y2="6.3"></line><line x1="8.3" y1="13.3" x2="15.7" y2="17.7"></line></svg><span></span></button>' : '') +
+    '</div></div>';
+  box.querySelector('b').textContent = d.name;
+  box.querySelector('small').textContent = t(d.item.type === 'pdf' ? 'wfDonePdf' : 'wfDoneWord', {album:d.album});
+  if(d.lost) box.querySelector('.wf-warn').textContent = t('wfLost', {n:d.lost});
+  const dl = document.getElementById('wfDl');
+  dl.querySelector('span').textContent = t('wfDl');
+  dl.onclick = async ()=>{ try{ fileDownload(await fileAsFile(d.item)); toast(t('wfDlDone')); }catch(e){ console.error(e); toast(t('fileMissing')); } };
+  const sh = document.getElementById('wfSh');
+  if(sh){ sh.querySelector('span').textContent = t('wfShare'); sh.onclick = ()=>fileShareOriginal(d.item); }
+}
+function wfClose(){
+  if(!_wf) return;
+  if(_wf.dirty && !_wf.discard){
+    pushBack(wfClose);
+    askConfirm({icon:'📝', title:t('wfDiscardTitle'), text:t('wfDiscardText'), okIcon:'🗑️', okLabel:t('wfDiscardOk')})
+      .then(yes=>{ if(yes && _wf){ _wf.discard = true; requestClose(); } });
+    return;
+  }
+  _wf = null;
+  wfScr.classList.remove('open');
+  try{ if(document.activeElement && wfScr.contains(document.activeElement)) document.activeElement.blur(); }catch(e){}
+}
+document.getElementById('wfBack').onclick = ()=>requestClose();
+document.getElementById('wfMake').onclick = async ()=>{
+  if(!_wf || _wf.busy) return;
+  wfSyncInputs();
+  const n = (_wf.tp.fields || []).length, empty = n - _wf.vals.size;
+  if(empty > 0){
+    const yes = await askConfirm({icon:'📝', title:t('wfEmptyTitle'), text:t('wfEmptyText', {n:empty}), okIcon:'✍️', okLabel:t('wfEmptyOk'), danger:false});
+    if(!yes || !_wf) return;
+  }
+  wfOpenSave();
+};
+/* predlog naziva: naziv šablona bez „Šablon – “ i ime glavne osobe — polje „ime“ čija vrednost nije ista kao u originalu
+   (sopstveno ime se obično ne menja), a od takvih ono koje se u tekstu javlja najviše puta (npr. zakupac, a ne zakupodavac) */
+function wfDocName(tp, vals){
+  const pre = [t('wsTaskTemplate'), 'Šablon', 'Template'].map(x=>x.toLowerCase() + ' – ');
+  let base = String(tp.name || tp.title || t('wsTaskTemplate')).trim();
+  pre.forEach(x=>{ if(base.toLowerCase().indexOf(x) === 0 && base.length > x.length) base = base.slice(x.length).trim(); });
+  const flat = JSON.stringify(tp.blocks || []);
+  let who = null, best = -1;
+  (tp.fields || []).forEach(f=>{
+    const v = vals.get(wsFldKey(f.name));
+    if(f.kind !== 'name' || !v) return;
+    const cnt = flat.split('[' + f.name + ']').length - 1 + (wsFldKey(v) !== wsFldKey(f.example) ? 1000 : 0);
+    if(cnt > best){ best = cnt; who = v; }
+  });
+  return (who ? base + ' – ' + who : base).slice(0, 200);
+}
+function wfOpenSave(){
+  const tp = _wf.tp;
+  document.getElementById('wsSaveTitle').textContent = t('wfSaveTitle');
+  document.getElementById('wsSaveNameLbl').textContent = t('wsSaveNameLbl');
+  document.getElementById('wsSaveAlbLbl').textContent = t('wsSaveAlbLbl');
+  document.getElementById('wsSaveHint').textContent = t(tp.file ? 'wfSaveHintWord' : 'wfSaveHintPdf');
+  document.getElementById('wsSaveOk').textContent = t('wfSaveOk');
+  document.getElementById('wsSaveAlbLbl').hidden = false;
+  document.getElementById('wsSaveAlbWrap').hidden = false;
+  wsSaveSheet.dataset.tpl = '';
+  wsSaveSheet.dataset.fill = '1';
+  const albums = aiAlbumList();
+  wsSaveAlb.innerHTML = '<option value="">' + escapeHtml(t('aiNoAlbum')) + '</option>' +
+    albums.map(a=>'<option value="' + escapeHtml(a.id) + '">' + escapeHtml(a.path) + '</option>').join('');
+  const src = tp.sourceId ? items.find(i=>i.id === tp.sourceId) : null;
+  const want = (src && src.category) || '';
+  wsSaveAlb.value = want;
+  if(wsSaveAlb.value !== want) wsSaveAlb.value = '';
+  wsSaveName.value = wfDocName(tp, _wf.vals);
+  snapshotField(wsSaveName);
+  wsSaveSheet.classList.add('open');
+  pushBack(closeWsSave);
+}
+async function wfMakeDoc(name, albumId){
+  if(!_wf || _wf.busy) return;
+  const wf = _wf, tp = wf.tp;
+  wf.busy = true;
+  wfStatus();
+  try{
+    requestPersistOnce();
+    toastPersist(t('wfMaking'));
+    const res = wfFillRes(tp, wf.vals);
+    const text = normalizeSr(wsPlain(res));
+    const item = {id:newItemId(), name, ts:Date.now(), category:albumId || null, derivedFrom:tp.sourceId || null};
+    let page, lost = 0;
+    if(tp.file){
+      const r = await tplFillDocx(tp, wf.vals);
+      lost = r.lost;
+      item.type = 'doc';
+      item.ext = 'DOCX';
+      page = {blob:r.blob, thumbBlob:null, w:0, h:0};
+    }else{
+      const {blob, first} = await wsBuildPdf(res, tp.name || '');
+      let thumbBlob = null;
+      try{ const r = await makeThumb(first); thumbBlob = r.tblob || null; }catch(e){ console.error(e); }
+      item.type = 'pdf';
+      page = {blob, thumbBlob, w:0, h:0};
+    }
+    await db2AddDoc(item, [page], text);
+    items.push(item);
+    render();
+    toastHide();
+    const album = albumId ? catLabel(albumId) : t('wsAllImages');
+    if(_wf === wf){
+      wf.dirty = false;
+      wf.done = {item, name, album, lost};
+      wfRenderDone();
+      document.getElementById('wfBody').scrollTop = 0;
+    }
+    toast(t('wsSaved', {album}));
+  }catch(e){
+    console.error(e);
+    toastHide();
+    toast(t('wfMakeErr'));
+  }finally{
+    wf.busy = false;
+    if(_wf === wf) wfStatus();
+  }
 }
 
 /* ---------- Podešavanja → AI obrada ---------- */
