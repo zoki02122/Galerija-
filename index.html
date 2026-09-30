@@ -6114,7 +6114,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 76</div>'+
+    '<div class="settings-hint set-build">verzija 77</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -7513,7 +7513,9 @@ async function aiRequest(parts, o){
   const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + model.id + ':generateContent?key=' + encodeURIComponent(key);
   const contents = [{role:'user', parts}];
   const bodies = o.schema
-    ? [{contents, generationConfig:{responseFormat:{text:{mimeType:'application/json', schema:o.schema}}}},
+    /* verzija 77: u responseFormat je mimeType nabrojana vrednost (APPLICATION_JSON), ne tekst 'application/json' —
+       Google je 'application/json' odbijao (potvrđeno na telefonu), pa šema od v66 do v76 nije bila primenjena */
+    ? [{contents, generationConfig:{responseFormat:{text:{mimeType:'APPLICATION_JSON', schema:o.schema}}}},
        {contents, generationConfig:{responseMimeType:'application/json'}}]
     : [{contents}];
   let data = null, schemaRej = '';
