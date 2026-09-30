@@ -1275,9 +1275,11 @@ html[data-theme="ponoc"]{
 [data-theme="ponoc"] .ws-send{ background:var(--g-grad); box-shadow:var(--g-shine); }
 [data-theme="ponoc"] .ws-bar{ background:#000; }
 [data-theme="ponoc"] .ws-ask textarea{ background:#000; }
-.inbox-row .ws-home{ padding:7px 12px; }
-.ws-home .fw-icon{ width:28px; height:28px; }
-.inbox-row .ws-home .fw-icon svg{ width:16px; height:16px; stroke:var(--brass); }
+.sum-right{ display:flex; align-items:center; gap:8px; flex:none; }
+.ws-home-btn{ width:38px; height:38px; color:var(--brass); }
+.ws-home-btn svg{ width:19px; height:19px; }
+.sort-btn .sb-short{ display:none; }
+@media (max-width:370px){ .sort-btn .sb-full{ display:none; } .sort-btn .sb-short{ display:inline; } }
 #wsSaveSheet .sheet, #wsPickSheet .sheet{ max-height:92vh; max-height:92dvh; overflow-y:auto; overscroll-behavior:contain; box-sizing:border-box; }
 #wsSaveSheet .sheet-input{ margin-bottom:14px; }
 .ws-pick-list{ margin-top:10px; }
@@ -4096,12 +4098,6 @@ function render(){
   inboxTile.appendChild(inboxAdd);
   inboxRow.appendChild(inboxTile);
 
-  /* verzija 71: AI radionica — prazan početak (dokument se bira u radionici) */
-  const wsTile = document.createElement('div');
-  wsTile.className = 'folder-tile-wide ws-home';
-  wsTile.innerHTML = '<div class="fw-icon">'+wsSparkSvg()+'</div><div class="fw-text"><span class="fw-name">'+escapeHtml(t('wsTitle'))+'</span><span class="fw-count">'+escapeHtml(t('wsHomeSub'))+'</span></div>';
-  wsTile.onclick = ()=>wsOpen(null);
-  inboxRow.appendChild(wsTile);
 
   const label = document.createElement('p');
   label.className = 'album-summary';
@@ -4114,10 +4110,10 @@ function render(){
   /* ABECEDA / NOVIJE: dodir ukljucuje, ponovni dodir iskljucuje (povratak na rucni redosled) */
   const albumSortBtns = document.createElement('div');
   albumSortBtns.className = 'sort-seg';
-  [['alpha','Abeceda'],['recent','Datum']].forEach(([mode,lbl])=>{
+  [['alpha','Abeceda','A–Ž'],['recent','Datum','Datum']].forEach(([mode,lbl,short])=>{
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.textContent = lbl;
+    btn.innerHTML = '<span class="sb-full">'+lbl+'</span><span class="sb-short">'+short+'</span>';
     const active = albumSort === mode;
     btn.className = 'sort-btn' + (active ? ' active' : '');
     btn.onclick = ()=>{
@@ -4127,7 +4123,19 @@ function render(){
     };
     albumSortBtns.appendChild(btn);
   });
-  summaryRow.appendChild(albumSortBtns);
+  /* verzija 72: ulaz u AI radionicu je taster ✨ desno od filtera (ne zauzima poseban red) */
+  const sumRight = document.createElement('div');
+  sumRight.className = 'sum-right';
+  sumRight.appendChild(albumSortBtns);
+  const wsBtn = document.createElement('button');
+  wsBtn.type = 'button';
+  wsBtn.className = 'icon-btn ws-home-btn';
+  wsBtn.setAttribute('aria-label', t('wsTitle'));
+  wsBtn.title = t('wsTitle');
+  wsBtn.innerHTML = wsSparkSvg();
+  wsBtn.onclick = ()=>wsOpen(null);
+  sumRight.appendChild(wsBtn);
+  summaryRow.appendChild(sumRight);
 
   albumHeaderZone.appendChild(inboxRow);
   /* Kvadrat: sirina = unutrasnja visina plocice */
