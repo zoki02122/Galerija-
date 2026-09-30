@@ -1108,6 +1108,9 @@ html[data-theme="ponoc"]{
 .mf-open:active{ transform:scale(.97); }
 /* verzija 68b: PDF stranicu po stranicu (pdf.js crta stranicu kao sliku) */
 .modal-bg.is-file.is-pdfview #modalImg{ display:block; }
+/* svetle teme: bela PDF stranica dobija tanku senku da se vidi ivica (drop-shadow prati samu stranicu, ne ceo okvir) */
+[data-theme="banka"] .modal-bg.is-pdfview #modalImg,
+[data-theme="koza"] .modal-bg.is-pdfview #modalImg{ filter:drop-shadow(0 0 1px rgba(0,0,0,.45)) drop-shadow(0 2px 6px rgba(0,0,0,.14)); }
 .modal-load{ position:absolute; left:50%; top:50%; width:34px; height:34px; margin:-17px 0 0 -17px; border-radius:50%;
   border:3px solid var(--line); border-top-color:var(--brass); animation:mlSpin .8s linear infinite; pointer-events:none; }
 .modal-load[hidden]{ display:none; }
