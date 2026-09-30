@@ -1080,6 +1080,12 @@ html[data-theme="ponoc"]{
 [data-theme="ponoc"] .modal-ai{ background:#000; border:1px solid var(--line); color:var(--brass); }
 /* verzija 68a: PDF, Word, Excel i ostali fajlovi u istom pregledu — kartica fajla umesto slike */
 .modal-pdf .mp-share{ display:none; }
+/* v69: fajl koji Chrome ne dozvoljava da podeli (Word, Excel…) — ikonica „sačuvaj na telefon“ */
+.modal-pdf .mp-save, #drShare .mp-save{ display:none; }
+.modal-bg.is-file.no-share .modal-pdf .mp-share{ display:none; }
+.modal-bg.is-file.no-share .modal-pdf .mp-save{ display:block; }
+#docRd.no-share #drShare .mp-share{ display:none; }
+#docRd.no-share #drShare .mp-save{ display:block; }
 .modal-bg.is-file .modal-pdf .mp-pdf{ display:none; }
 .modal-bg.is-file .modal-pdf .mp-share{ display:block; }
 .modal-bg.is-file .modal-pages{ display:none; }
@@ -1302,6 +1308,7 @@ html[data-theme="ponoc"]{
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="12" height="15" rx="1.8"></rect><path d="M4.5 7v11.5A2.5 2.5 0 0 0 7 21h9"></path><line x1="13" y1="7.5" x2="13" y2="13.5"></line><line x1="10" y1="10.5" x2="16" y2="10.5"></line></svg>
   </button>
   <button class="back-btn modal-pdf" id="modalPdf" type="button">
+    <svg class="mp-save" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5V15"></path><polyline points="7.5 10.5 12 15 16.5 10.5"></polyline><path d="M5 12.5V19a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6.5"></path></svg>
     <svg class="mp-share" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3.5"></path><polyline points="7.5 8 12 3.5 16.5 8"></polyline><path d="M5 12.5V19a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6.5"></path></svg>
     <svg class="mp-pdf" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2.5H6.5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V8z"></path><polyline points="14 2.5 14 8 19.5 8"></polyline><text x="12" y="17.6" text-anchor="middle" fill="currentColor" stroke="none" class="modal-pdf-txt">PDF</text></svg>
   </button>
@@ -1335,7 +1342,7 @@ html[data-theme="ponoc"]{
     <div class="dr-title" id="drTitle"></div>
     <button class="back-btn dr-fs" id="drSmaller" type="button"><span class="dr-a sm">A</span></button>
     <button class="back-btn dr-fs" id="drBigger" type="button"><span class="dr-a">A</span></button>
-    <button class="back-btn" id="drShare" type="button"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3.5"></path><polyline points="7.5 8 12 3.5 16.5 8"></polyline><path d="M5 12.5V19a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6.5"></path></svg></button>
+    <button class="back-btn" id="drShare" type="button"><svg class="mp-save" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5V15"></path><polyline points="7.5 10.5 12 15 16.5 10.5"></polyline><path d="M5 12.5V19a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6.5"></path></svg><svg class="mp-share" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3.5"></path><polyline points="7.5 8 12 3.5 16.5 8"></polyline><path d="M5 12.5V19a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6.5"></path></svg></button>
   </div>
   <div class="dr-tabs" id="drTabs" hidden></div>
   <div class="dr-body" id="drBody"></div>
@@ -1789,6 +1796,8 @@ const I18N = {
     fileSave: 'Sačuvaj na telefon',
     fileSaveHint: 'u fasciklu Preuzimanja',
     fileSaved: 'Sačuvano na telefon.',
+    fileNoShareHint: 'Chrome ne dozvoljava deljenje ove vrste fajla. Sačuvaj ga, pa ga pošalji iz Vibera ili e-pošte (priloži fajl).',
+    fileSavedNoShare: 'Sačuvano u Preuzimanja. Pošalji ga iz Vibera ili e-pošte: priloži fajl.',
     fileShareNo: 'Chrome ne može da podeli ovu vrstu fajla, pa je sačuvan na telefon.',
     fileShareErr: 'Deljenje nije uspelo.',
     drBack: 'Nazad na pregled',
@@ -1913,9 +1922,9 @@ const I18N = {
       ['Albumi i podalbumi', 'Novi album praviš ikonicom fascikle sa plusom na vrhu početnog ekrana. U albumu ista ikonica pravi podalbum.', 'Dugi pritisak na album otvara izbor: zakači na vrh, preimenuj, naslovna slika, premesti ili izbriši. Redosled albuma menjaš prevlačenjem ručke u uglu. Naziv albuma menjaš i olovkom pored naslova kad si u albumu.'],
       ['Dodavanje', 'Ikonica slike sa plusom dodaje sa telefona: iz galerije (više slika odjednom), slikanjem ili kao dokument (PDF, Word, Excel…). Svaka izabrana slika postaje posebna stavka.', 'Ono što dodaš dok si u albumu (iz galerije, slikanjem ili kao dokument) ide pravo u taj album.'],
       ['Dokument od više stranica', 'U meniju za dodavanje izaberi „Dokument od više stranica“. Slikaj stranicu po stranicu ili izaberi više slika iz galerije, upiši naziv i dodirni „Sačuvaj“.', 'Redosled menjaš prevlačenjem ručke u uglu stranice, a ✕ uklanja stranicu. U mreži se vidi prva stranica sa oznakom broja stranica.'],
-      ['Pregled i listanje', 'Dodir na bilo koju stavku (sliku, PDF, Word, Excel) otvara isti pregled. Prevlačenjem levo i desno ili strelicama listaš stranice, a posle poslednje stranice prelaziš na sledeću stavku, istim redom kao u albumu. Kod slike i PDF-a jedan dodir sakriva ili vraća dugmad.', 'Dva prsta uvećavaju sliku ili stranicu PDF-a (do 5 puta), a uvećanu pomeraš jednim prstom. Dvostruki dodir uvećava na tom mestu ili vraća ceo prikaz.', 'PDF se prikazuje stranicu po stranicu. Word i Excel imaju karticu sa dugmetom „Otvori“: tekst ili tabela (sa listovima) otvaraju se u Arhivi, a A− i A+ menjaju veličinu slova. Za zaključan PDF i ostale vrste fajlova „Otvori“ nudi deljenje ili čuvanje na telefon.', 'Gornji red dugmadi je isti za sve: ✨ (AI), kalendar (rok važenja), PDF ili deljenje, korpa. Dugme sa stranicama (samo kod slika) dodaje nove stranice ili menja njihov redosled. Olovka pored naziva menja naziv; isto radi i „Više“ → „Preimenuj“ kod izbora.'],
+      ['Pregled i listanje', 'Dodir na bilo koju stavku (sliku, PDF, Word, Excel) otvara isti pregled. Prevlačenjem levo i desno ili strelicama listaš stranice, a posle poslednje stranice prelaziš na sledeću stavku, istim redom kao u albumu. Kod slike i PDF-a jedan dodir sakriva ili vraća dugmad.', 'Dva prsta uvećavaju sliku ili stranicu PDF-a (do 5 puta), a uvećanu pomeraš jednim prstom. Dvostruki dodir uvećava na tom mestu ili vraća ceo prikaz.', 'PDF se prikazuje stranicu po stranicu. Word i Excel imaju karticu sa dugmetom „Otvori“: tekst ili tabela (sa listovima) otvaraju se u Arhivi, a A− i A+ menjaju veličinu slova. Za zaključan PDF i ostale vrste fajlova „Otvori“ nudi deljenje ili čuvanje na telefon (Word i Excel samo čuvanje).', 'Gornji red dugmadi je isti za sve: ✨ (AI), kalendar (rok važenja), PDF ili deljenje, korpa. Dugme sa stranicama (samo kod slika) dodaje nove stranice ili menja njihov redosled. Olovka pored naziva menja naziv; isto radi i „Više“ → „Preimenuj“ kod izbora.'],
       ['Spajanje i izdvajanje', 'Označi dve ili više slika (dugi pritisak), pa u traci dodirni „Više“ i „Spoji u jedan dokument“. Stranice idu redom kojim si ih označio, a naziv, album i rok važenja uzimaju se od prve (rok prelazi na nov dokument). Pre spajanja Arhiva pita za potvrdu. Originali ostaju u albumu; ako ti ne trebaju, označi ih i obriši.', 'Pojedinačnu stranicu izdvajaš na ekranu sa stranicama: dodir na stranicu, pa „Izdvoji kao posebnu sliku“.'],
-      ['PDF', 'Sliku, dokument od slika ili više označenih slika pretvaraš u jedan PDF: u pregledu dugmetom PDF, a kod izbora preko „Više“. Zatim biraš da li ga deliš (Viber, e-pošta…) ili čuvaš na telefon.', 'Stranice idu u PDF bez gubitka kvaliteta.', 'Kod PDF, Word i Excel fajla na tom mestu je dugme za deljenje: šalje se originalni fajl, bez izmena.'],
+      ['PDF', 'Sliku, dokument od slika ili više označenih slika pretvaraš u jedan PDF: u pregledu dugmetom PDF, a kod izbora preko „Više“. Zatim biraš da li ga deliš (Viber, e-pošta…) ili čuvaš na telefon.', 'Stranice idu u PDF bez gubitka kvaliteta.', 'Kod PDF fajla na tom mestu je dugme za deljenje: šalje se originalni fajl, bez izmena. Chrome ne dozvoljava deljenje Word i Excel fajlova, pa je kod njih tu dugme za čuvanje na telefon; sačuvan fajl šalješ iz Vibera ili e-pošte (priloži fajl).'],
       ['Rok važenja', 'Dokumentu koji ističe (registracija, pasoš, osiguranje, garancija) upiši rok: u pregledu dodirni dugme sa kalendarom, zatim polje za datum, izaberi datum i dodirni „Sačuvaj“. Isto važi za PDF, Word i Excel. Rok upisuješ i preko izbora: dugi pritisak, pa „Više“ i „Rok važenja“. Upisan rok menjaš i dodirom na oznaku roka ispod naziva ili na olovku pored nje. Rok se vidi i menja i na ekranu sa stranicama. Ispod datuma možeš da upišeš i šta treba uraditi (npr. „obnoviti kod agenta“); ta napomena se vidi u obaveštenju, u rokovima i u pregledu.', 'Kad se rok približi, Arhiva te obavesti jednom, a zatim još po jednom 7 dana pre i kad dokument istekne. Na početnom ekranu se tada pojavi zvonce sa brojem (crveno ako je nešto isteklo). Dodir na zvonce otvara spisak svih rokova: isteklo, uskoro ističe i kasnije.', 'Koliko dana ranije da te upozori biraš u Podešavanja → rok važenja (podrazumevano 30). Obaveštenje vidiš kad otvoriš Arhivu. Kad obnoviš dokument, upiši nov datum; ako rok više nije potreban, dodirni „Ukloni rok“. Rok se čuva u rezervnoj kopiji.'],
       ['AI obrada (proba)', 'Arhiva može da pročita dokument i predloži naziv, album, rok važenja sa napomenom i tekst za pretragu. U pregledu bilo kog dokumenta dodirni dugme sa zvezdicama ✨. Isto radi i izbor: dugi pritisak, pa „Više“ i „Pročitaj (AI)“.', 'Predlog se prvo prikaže: označi šta želiš, ispravi po potrebi i dodirni „Primeni izabrano“. Ništa se ne menja samo. Kad sačuvaš tekst, „Detaljno“ u pretrazi nalazi i reči iz tog dokumenta, pa i iz slike.', 'Ključ, model i trošak su u Podešavanja → AI obrada. Pre prvog slanja Arhiva traži saglasnost, jer dokument ide Google-ovom servisu Gemini. Dok je ovo proba, ne šalji lične i poverljive dokumente.'],
       ['Pretraga', 'Lupa pretražuje nazive albuma, slika i dokumenata. „Detaljno“ traži i reči unutar PDF, Word i Excel dokumenata.', 'U albumu pretraga obuhvata i njegove podalbume.'],
@@ -2088,6 +2097,8 @@ const I18N = {
     fileSave: 'Save to phone',
     fileSaveHint: 'to the Downloads folder',
     fileSaved: 'Saved to phone.',
+    fileNoShareHint: 'Chrome does not allow sharing this file type. Save it, then send it from Viber or email (attach file).',
+    fileSavedNoShare: 'Saved to Downloads. Send it from Viber or email: attach the file.',
     fileShareNo: 'Chrome cannot share this type of file, so it was saved to the phone.',
     fileShareErr: 'Sharing failed.',
     drBack: 'Back to preview',
@@ -2212,9 +2223,9 @@ const I18N = {
       ['Albums and sub-albums', 'Create a new album with the folder-plus icon at the top of the home screen. Inside an album the same icon creates a sub-album.', 'Long-press an album for options: pin to top, rename, cover image, move or delete. Drag the handle in the corner to change the album order. You can also rename an album with the pencil next to its title inside the album.'],
       ['Adding', 'The image-plus icon adds from the phone: from the gallery (several images at once), by taking a photo, or as a document (PDF, Word, Excel…). Every picked image becomes a separate item.', 'What you add while inside an album (from the gallery, by taking a photo or as a document) goes straight into that album.'],
       ['Multi-page document', 'In the add menu choose “Multi-page document”. Photograph page by page or pick several images from the gallery, type a name and tap “Save”.', 'Drag the handle in the corner of a page to change the order; ✕ removes a page. The grid shows the first page with the page count.'],
-      ['Viewing and paging', 'Tap any item (image, PDF, Word, Excel) to open the same viewer. Swipe left and right or use the arrows to turn pages; after the last page you move on to the next item, in the same order as in the album. For an image or a PDF, one tap hides or shows the buttons.', 'Two fingers zoom an image or a PDF page (up to 5 times); move the zoomed view with one finger. A double tap zooms in at that spot or returns to the full view.', 'A PDF is shown page by page. Word and Excel show a card with an “Open” button: the text or the table (with its sheets) opens inside Arhiva, and A− and A+ change the text size. For a locked PDF and other file types “Open” offers sharing or saving to the phone.', 'The top row of buttons is the same for everything: ✨ (AI), calendar (valid until), PDF or share, trash. The pages button (images only) adds new pages or changes their order. The pencil next to the name renames the item; “More” → “Rename” does the same when selecting.'],
+      ['Viewing and paging', 'Tap any item (image, PDF, Word, Excel) to open the same viewer. Swipe left and right or use the arrows to turn pages; after the last page you move on to the next item, in the same order as in the album. For an image or a PDF, one tap hides or shows the buttons.', 'Two fingers zoom an image or a PDF page (up to 5 times); move the zoomed view with one finger. A double tap zooms in at that spot or returns to the full view.', 'A PDF is shown page by page. Word and Excel show a card with an “Open” button: the text or the table (with its sheets) opens inside Arhiva, and A− and A+ change the text size. For a locked PDF and other file types “Open” offers sharing or saving to the phone (Word and Excel: saving only).', 'The top row of buttons is the same for everything: ✨ (AI), calendar (valid until), PDF or share, trash. The pages button (images only) adds new pages or changes their order. The pencil next to the name renames the item; “More” → “Rename” does the same when selecting.'],
       ['Merging and splitting', 'Select two or more images (long-press), then tap “More” and “Merge into one document”. Pages follow the order you selected them in; the name, album and valid-until date come from the first (the date moves to the new document). Arhiva asks before merging. The originals stay in the album; if you do not need them, select and delete them.', 'To split off a single page, open the pages screen, tap the page and choose “Split off as a separate image”.'],
-      ['PDF', 'Turn an image, an image document or several selected images into one PDF: with the PDF button in the viewer, or via “More” when selecting. Then share it (Viber, email…) or save it to the phone.', 'Pages go into the PDF without losing quality.', 'For a PDF, Word or Excel file that spot holds a share button: the original file is sent, unchanged.'],
+      ['PDF', 'Turn an image, an image document or several selected images into one PDF: with the PDF button in the viewer, or via “More” when selecting. Then share it (Viber, email…) or save it to the phone.', 'Pages go into the PDF without losing quality.', 'For a PDF file that spot holds a share button: the original file is sent, unchanged. Chrome does not allow sharing Word and Excel files, so for them that button saves the file to the phone; send the saved file from Viber or email (attach file).'],
       ['Valid until', 'For a document that expires (registration, passport, insurance, warranty) set the date: in the viewer tap the calendar button, then the date field, pick the date and tap “Save”. The same works for PDF, Word and Excel. You can also set it when selecting: long-press, then “More” and “Valid until”. Once set, you can also change it by tapping the date label under the name or the pencil next to it. The date is also shown and changed on the pages screen. Under the date you can also write what needs to be done (e.g. “renew with the agent”); the note is shown in the notification, in the dates list and in the viewer.', 'When the date gets close, Arhiva notifies you once, then once more 7 days before and when the document expires. A bell with a number appears on the home screen (red if something has expired). Tap the bell to see all dates: expired, expiring soon and later.', 'How many days in advance you are warned is set in Settings → valid until (30 by default). You see the notification when you open Arhiva. When you renew a document, enter the new date; if the date is no longer needed, tap “Remove date”. The date is saved in the backup.'],
       ['AI processing (trial)', 'Arhiva can read a document and suggest a name, an album, a valid-until date with a note, and text for search. In the viewer of any document tap the button with the stars ✨. Selecting works too: long-press, then “More” and “Read (AI)”.', 'The suggestion is shown first: tick what you want, correct it if needed and tap “Apply selected”. Nothing changes on its own. Once you save the text, “Detailed” search also finds words from that document, even from an image.', 'Key, model and cost are in Settings → AI processing. Before the first send Arhiva asks for consent, because the document goes to the Google Gemini service. While this is a trial, do not send personal or confidential documents.'],
       ['Search', 'The magnifier searches the names of albums, images and documents. “Detailed” also searches words inside PDF, Word and Excel documents.', 'Inside an album, search also covers its sub-albums.'],
@@ -4231,6 +4242,7 @@ let _modalReq = 0;        /* poslednji zahtev za prikaz (stariji odgovori se odb
 function setModalSrc(u){ if(u) modalImg.src = u; else modalImg.removeAttribute('src'); }
 function showModalItem(item, page){
   modalItemId = item.id;
+  modalBg.classList.toggle('no-share', fileNoShare(item));
   zmReset(false);
   clearTimeout(_tapTimer); _tapTimer = null; _tapLast = null;
   if(item.type === 'pdf' && pdfCanView(item)){ showModalPdf(item, page); return; }
@@ -4460,6 +4472,7 @@ async function openDocReader(it){
   body.scrollTop = 0;
   drSetScale(drScale());
   docRd.classList.add('open');
+  docRd.classList.toggle('no-share', fileNoShare(it));
   pushBack(closeDocReader);
   try{
     const buf = await (await getFileBlob(it, 0)).arrayBuffer();
@@ -4540,7 +4553,28 @@ async function fileSaveOriginal(it){
   try{ fileDownload(await fileAsFile(it)); toast(t('fileSaved')); }
   catch(e){ console.error(e); toast(t('fileMissing')); }
 }
+/* v69: Chrome deli samo vrste sa svog spiska (PDF, slike, zvuk, video, tekst); Word i Excel ne.
+   Pitamo sam Chrome (canShare proverava naziv i vrstu fajla), bez prepisivanja spiska. */
+function fileCanShare(it){
+  try{
+    if(!navigator.canShare || !navigator.share) return false;
+    const ext = fileExtOf(it) || 'bin';
+    const f = new File([''], 'x.' + ext, {type: EXT_MIME[ext] || 'application/octet-stream'});
+    return navigator.canShare({files:[f]});
+  }catch(e){ return false; }
+}
+function fileNoShare(it){ return !!it && isFileItem(it) && !fileCanShare(it); }
+function fileSaveForSend(it){
+  fileAsFile(it).then(f=>{ fileDownload(f); toast(t('fileSavedNoShare')); })
+    .catch(e=>{ console.error(e); toast(t('fileMissing')); });
+}
 function openFileShareSheet(it){
+  if(fileNoShare(it)){
+    openActionSheet(it.name || t('fileKindOther'), [
+      {icon:'📥', label:t('fileSave'), hint:t('fileNoShareHint'), onClick:()=>fileSaveForSend(it)}
+    ]);
+    return;
+  }
   openActionSheet(it.name || t('fileKindOther'), [
     {icon:'📤', label:t('fileShare'), hint:t('fileShareHint'), onClick:()=>fileShareOriginal(it)},
     {icon:'📥', label:t('fileSave'), hint:t('fileSaveHint'), onClick:()=>fileSaveOriginal(it)}
@@ -5556,7 +5590,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 68</div>'+
+    '<div class="settings-hint set-build">verzija 69</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -6842,8 +6876,12 @@ function openMoreSheet(){
   if(chosen.length === 1 && isFileItem(chosen[0])){
     /* PDF, Word, Excel…: deli se ili čuva originalni fajl (68d) */
     const it = chosen[0];
-    rows.push({icon:'📤', label:t('fileShareLbl'), hint:t('fileShareHint'), onClick:()=>{ exitSelection(); fileShareOriginal(it); }});
-    rows.push({icon:'📥', label:t('fileSave'), hint:t('fileSaveHint'), onClick:()=>{ exitSelection(); fileSaveOriginal(it); }});
+    if(fileNoShare(it)){
+      rows.push({icon:'📥', label:t('fileSave'), hint:t('fileNoShareHint'), onClick:()=>{ exitSelection(); fileSaveForSend(it); }});
+    }else{
+      rows.push({icon:'📤', label:t('fileShareLbl'), hint:t('fileShareHint'), onClick:()=>{ exitSelection(); fileShareOriginal(it); }});
+      rows.push({icon:'📥', label:t('fileSave'), hint:t('fileSaveHint'), onClick:()=>{ exitSelection(); fileSaveOriginal(it); }});
+    }
   }else if(chosen.some(i=>i.type === 'image')){
     rows.push({icon:'📤', label:t('pdfShare'), onClick:()=>{ const l = chosen.slice(); exitSelection(); exportPdf(l, 'share'); }});
     rows.push({icon:'📥', label:t('pdfSave'), onClick:()=>{ const l = chosen.slice(); exitSelection(); exportPdf(l, 'save'); }});
