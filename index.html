@@ -1268,6 +1268,18 @@ html[data-theme="ponoc"]{
 .wr-change-x{ font-size:14.5px; line-height:1.5; color:var(--ink); overflow-wrap:anywhere; }
 .wr-change-s{ font-size:12px; color:var(--ink-dim); margin-top:6px; line-height:1.45; }
 .wr-paper{ font-size:15.5px; line-height:1.6; padding:18px 16px; }
+/* verzija 75: polja šablona istaknuta u tekstu; dugme „Polja šablona (N)“ i prozor sa kvačicama */
+.ws-fld{ color:var(--brass); background:color-mix(in srgb, var(--brass) 15%, transparent); border-radius:5px; padding:0 3px; font-weight:700; -webkit-box-decoration-break:clone; box-decoration-break:clone; }
+.wr-fld-btn{ width:100%; min-height:46px; margin:0 0 12px; border-radius:14px; border:1.5px solid var(--brass-soft); background:var(--surface); color:var(--brass);
+  font-family:var(--font-ui); font-size:15px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; padding:8px 12px; }
+.wr-fld-btn:disabled{ opacity:.4; cursor:default; }
+#wsFldList{ margin:4px 0 14px; }
+.fld-kind{ font-size:11.5px; color:var(--ink-dim); font-weight:600; flex:none; max-width:40%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.fld-ex{ font-size:12.5px; color:var(--ink-dim); margin:0 2px; line-height:1.45; overflow-wrap:anywhere; }
+.fld-ex b{ color:var(--ink); font-weight:600; }
+.ai-row.fld-bad .sheet-input{ border-color:var(--danger, #c0392b); }
+.fld-err{ font-size:12px; color:var(--danger, #c0392b); margin:0 2px 8px; }
+.fld-err:empty{ display:none; }
 .wr-paper .ws-doc-title{ font-size:19px; }
 .wr-paper h4{ font-size:16.5px; }
 .wr-paper table{ font-size:13.5px; }
@@ -1345,7 +1357,7 @@ body:has(#aiWs.open) .toast{ bottom:calc(190px + env(safe-area-inset-bottom)); }
 .ws-home-btn svg{ width:19px; height:19px; }
 .sort-btn .sb-short{ display:none; }
 @media (max-width:370px){ .sort-btn .sb-full{ display:none; } .sort-btn .sb-short{ display:inline; } }
-#wsSaveSheet .sheet, #wsPickSheet .sheet{ max-height:92vh; max-height:92dvh; overflow-y:auto; overscroll-behavior:contain; box-sizing:border-box; }
+#wsSaveSheet .sheet, #wsPickSheet .sheet, #wsFldSheet .sheet{ max-height:92vh; max-height:92dvh; overflow-y:auto; overscroll-behavior:contain; box-sizing:border-box; }
 #wsSaveSheet .sheet-input{ margin-bottom:14px; }
 .ws-pick-list{ margin-top:10px; }
 .ws-pick-row{ display:flex; align-items:center; gap:12px; padding:9px 2px; border-bottom:1px solid var(--line-soft); cursor:pointer; }
@@ -1631,6 +1643,7 @@ body:has(#aiWs.open) .toast{ bottom:calc(190px + env(safe-area-inset-bottom)); }
     <div id="wrMsg"></div>
     <div id="wrVer"></div>
     <div id="wrChange"></div>
+    <div id="wrFields"></div>
     <div id="wrPaper"></div>
     <div id="wrFoot"></div>
   </div></div>
@@ -1649,6 +1662,14 @@ body:has(#aiWs.open) .toast{ bottom:calc(190px + env(safe-area-inset-bottom)); }
       <button type="button" class="pg-btn pg-save" id="wrDone"></button>
     </div>
   </div></div>
+</div>
+<div class="sheet-bg" id="wsFldSheet">
+  <div class="sheet">
+    <div class="sheet-head"><button class="back-btn" id="wsFldBack" type="button"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h3 id="wsFldTitle"></h3></div>
+    <p class="ai-hint" id="wsFldLead"></p>
+    <div id="wsFldList"></div>
+    <button type="button" class="sheet-cta" id="wsFldOk"></button>
+  </div>
 </div>
 <div class="sheet-bg" id="wsPickSheet">
   <div class="sheet">
@@ -2189,6 +2210,22 @@ const I18N = {
     wsManualLabel: 'tvoja izmena',
     wsManualChange: 'Ručno izmenjeno delova teksta: {n}.',
     wsManualCost: 'ručna izmena · bez troška',
+    wsFldBtn: 'Polja šablona ({n})',
+    wsFldTitle: 'Polja šablona',
+    wsFldLead: 'Označeno polje se popunjava za svaki nov slučaj. Kad skineš kvačicu, u tekst se vraća podatak iz originala i postaje stalni tekst. Naziv polja možeš ispraviti.',
+    wsFldEx: 'iz originala:',
+    wsFldNoEx: 'nema podatka iz originala, pa polje ostaje',
+    wsFldOk: 'Primeni',
+    wsFldNameEmpty: 'Upiši naziv polja.',
+    wsFldNameDup: 'Ovaj naziv već ima drugo polje.',
+    wsFldLabel: 'polja šablona',
+    wsFldOff: 'Vraćen podatak iz originala: {list}.',
+    wsFldOn: 'Ponovo polje: {list}.',
+    wsFldRen: 'Preimenovano: {list}.',
+    wsFldDiscardTitle: 'Odbaci izmene polja?',
+    wsFldDiscardText: 'Promene kvačica i naziva neće biti primenjene.',
+    wsFldKind_name: 'ime', wsFldKind_address: 'adresa', wsFldKind_idnum: 'JMBG / broj', wsFldKind_date: 'datum',
+    wsFldKind_amount: 'iznos', wsFldKind_phone: 'telefon', wsFldKind_email: 'e-pošta', wsFldKind_text: 'tekst',
     wsNewVer: 'Napravljena verzija {n}.',
     wsEditHint: 'Ispravi tekst pa dodirni „Gotovo“. Svaka izmena je nova verzija.',
     wsEditLead: 'Dodir na polje označi ceo njegov tekst: odmah kucaj ili diktiraj nov. Obrisan pasus ili stavka nestaje iz dokumenta.',
@@ -2580,6 +2617,22 @@ const I18N = {
     wsManualLabel: 'your edit',
     wsManualChange: 'Parts of the text edited by hand: {n}.',
     wsManualCost: 'edited by hand · no cost',
+    wsFldBtn: 'Template fields ({n})',
+    wsFldTitle: 'Template fields',
+    wsFldLead: 'A checked field is filled in for every new case. When you uncheck it, the data from the original goes back into the text and becomes fixed text. You can correct the field name.',
+    wsFldEx: 'from the original:',
+    wsFldNoEx: 'no data in the original, so it stays a field',
+    wsFldOk: 'Apply',
+    wsFldNameEmpty: 'Enter a field name.',
+    wsFldNameDup: 'Another field already has this name.',
+    wsFldLabel: 'template fields',
+    wsFldOff: 'Data from the original put back: {list}.',
+    wsFldOn: 'Field again: {list}.',
+    wsFldRen: 'Renamed: {list}.',
+    wsFldDiscardTitle: 'Discard field changes?',
+    wsFldDiscardText: 'The checkbox and name changes will not be applied.',
+    wsFldKind_name: 'name', wsFldKind_address: 'address', wsFldKind_idnum: 'ID number', wsFldKind_date: 'date',
+    wsFldKind_amount: 'amount', wsFldKind_phone: 'phone', wsFldKind_email: 'e-mail', wsFldKind_text: 'text',
     wsNewVer: 'Version {n} is ready.',
     wsEditHint: 'Correct the text, then tap “Done”. Every edit is a new version.',
     wsEditLead: 'Tapping a field selects all of its text: type or dictate the new text right away. An emptied paragraph or item is removed from the document.',
@@ -6011,7 +6064,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 74</div>'+
+    '<div class="settings-hint set-build">verzija 75</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -7815,7 +7868,16 @@ const WS_SCHEMA = {
       required:['type']
     }},
     note:{type:'string', description:'One short sentence to the user, or empty string'},
-    change:{type:'string', description:'When changing an existing result: one sentence saying what was changed; otherwise empty string'}
+    change:{type:'string', description:'When changing an existing result: one sentence saying what was changed; otherwise empty string'},
+    fields:{type:'array', description:'Only for a template: every square-bracket field once; otherwise empty', items:{
+      type:'object',
+      properties:{
+        name:{type:'string', description:'Field name exactly as inside the square brackets, without the brackets'},
+        example:{type:'string', description:'The exact value from the source that this field replaced'},
+        kind:{type:'string', enum:['name', 'address', 'idnum', 'date', 'amount', 'phone', 'email', 'text']}
+      },
+      required:['name', 'example', 'kind']
+    }}
   },
   required:['title', 'blocks', 'note', 'change']
 };
@@ -8061,14 +8123,76 @@ function closeWr(){
   if(_ws) wsRender();
 }
 document.getElementById('wrBack').onclick = ()=>requestClose();
-function wsResHtml(res){
-  let h = res.title ? '<div class="ws-doc-title">' + escapeHtml(res.title) + '</div>' : '';
+/* ---------- Polja šablona (verzija 75) ----------
+   Šablon (res.tpl) čuva tekst u kome su SVA polja zapisana kao [Naziv], i spisak res.fields = [{name, example, kind, on}].
+   Polje bez kvačice (on:false) ostaje u tekstu kao [Naziv], a pri prikazu, PDF-u i tekstu za pretragu zamenjuje se podatkom
+   iz originala (example). Tako se kvačica može vratiti bez gubitka. Ručna izmena „upeče“ isključena polja u tekst. */
+const WS_FLD_RE = /\[([^\[\]\n]{1,80})\]/g;
+const WS_FLD_KINDS = ['name', 'address', 'idnum', 'date', 'amount', 'phone', 'email', 'text'];
+function wsFldKey(n){ return String(n || '').replace(/\s+/g, ' ').trim().toLowerCase(); }
+function wsFldName(n){ return String(n || '').replace(/[\[\]\n\r]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80); }
+function wsResTexts(res, fn){
+  if(res.title) res.title = fn(res.title);
   res.blocks.forEach(b=>{
-    if(b.type === 'heading') h += '<h4>' + escapeHtml(b.text) + '</h4>';
-    else if(b.type === 'paragraph') h += '<p>' + escapeHtml(b.text) + '</p>';
-    else if(b.type === 'bullets') h += '<ul>' + b.items.map(x=>'<li>' + escapeHtml(x) + '</li>').join('') + '</ul>';
+    if(typeof b.text === 'string') b.text = fn(b.text);
+    if(b.items) b.items = b.items.map(fn);
+    if(b.rows) b.rows = b.rows.map(r=>r.map(fn));
+  });
+}
+function wsResClone(res){ return JSON.parse(JSON.stringify(res)); }
+/* spisak polja usklađen sa tekstom: svaka [oznaka] iz teksta tačno jednom, redom pojavljivanja;
+   primer i vrsta iz AI spiska (aiList) ili ranijeg spiska (prev), kvačica iz ranijeg spiska (podrazumevano uključena) */
+function wsSyncFields(res, aiList, prev){
+  const find = (list, k)=>(list || []).find(f=>f && wsFldKey(f.name) === k);
+  const out = [], seen = new Set();
+  const scan = (tx)=>{
+    String(tx || '').replace(WS_FLD_RE, (m, nm)=>{
+      const name = wsFldName(nm), k = wsFldKey(name);
+      if(!name || seen.has(k)) return m;
+      seen.add(k);
+      const a = find(aiList, k), p0 = find(prev, k);
+      const example = String((a && a.example) || (p0 && p0.example) || '').replace(/\s+/g, ' ').trim().slice(0, 300);
+      let kind = (a && a.kind) || (p0 && p0.kind) || 'text';
+      if(WS_FLD_KINDS.indexOf(kind) < 0) kind = 'text';
+      out.push({name, example, kind, on:p0 ? p0.on !== false || !example : true});
+      return m;
+    });
+  };
+  const r = {title:res.title, blocks:res.blocks};
+  wsResTexts(wsResClone(r), tx=>{ scan(tx); return tx; });
+  return out;
+}
+/* rezultat kako ga korisnik vidi: isključena polja zamenjena podatkom iz originala */
+function wsResView(res){
+  if(!res || !res.tpl || !res.fields || !res.fields.some(f=>f.on === false)) return res;
+  const off = new Map(res.fields.filter(f=>f.on === false && f.example).map(f=>[wsFldKey(f.name), f.example]));
+  const out = wsResClone(res);
+  wsResTexts(out, tx=>tx.replace(WS_FLD_RE, (m, nm)=>{ const k = wsFldKey(nm); return off.has(k) ? off.get(k) : m; }));
+  return out;
+}
+/* tekst za ekran: uključena polja istaknuta */
+function wsFmt(tx, onSet){
+  if(!onSet || !onSet.size) return escapeHtml(tx);
+  let h = '', last = 0;
+  String(tx).replace(WS_FLD_RE, (m, nm, idx)=>{
+    h += escapeHtml(tx.slice(last, idx));
+    h += onSet.has(wsFldKey(nm)) ? '<span class="ws-fld">' + escapeHtml(m) + '</span>' : escapeHtml(m);
+    last = idx + m.length;
+    return m;
+  });
+  return h + escapeHtml(tx.slice(last));
+}
+function wsResHtml(res0){
+  const res = wsResView(res0);
+  const on = res0 && res0.tpl && res0.fields ? new Set(res0.fields.filter(f=>f.on !== false).map(f=>wsFldKey(f.name))) : null;
+  const F = (x)=>wsFmt(x, on);
+  let h = res.title ? '<div class="ws-doc-title">' + F(res.title) + '</div>' : '';
+  res.blocks.forEach(b=>{
+    if(b.type === 'heading') h += '<h4>' + F(b.text) + '</h4>';
+    else if(b.type === 'paragraph') h += '<p>' + F(b.text) + '</p>';
+    else if(b.type === 'bullets') h += '<ul>' + b.items.map(x=>'<li>' + F(x) + '</li>').join('') + '</ul>';
     else if(b.type === 'table'){
-      h += '<div class="ws-tbl-wrap"><table>' + b.rows.map((r, i)=>'<tr>' + r.map(c=>(i === 0 ? '<th>' : '<td>') + escapeHtml(c) + (i === 0 ? '</th>' : '</td>')).join('') + '</tr>').join('') + '</table></div>';
+      h += '<div class="ws-tbl-wrap"><table>' + b.rows.map((r, i)=>'<tr>' + r.map(c=>(i === 0 ? '<th>' : '<td>') + F(c) + (i === 0 ? '</th>' : '</td>')).join('') + '</tr>').join('') + '</table></div>';
     }
   });
   return h;
@@ -8105,6 +8229,14 @@ function wrRender(){
   ch.innerHTML = (v.change && !ed) ? '<div class="wr-change"><div class="wr-change-t">' + escapeHtml(t('wsChangeBox', {n:_ws.cur + 1})) + '</div>' +
     '<div class="wr-change-x">' + escapeHtml(v.change) + '</div>' +
     (_ws.cur > 0 ? '<div class="wr-change-s">' + escapeHtml(t('wsChangePrev')) + '</div>' : '') + '</div>' : '';
+  /* verzija 75: dugme „Polja šablona (N)“ — N = broj polja koja se popunjavaju */
+  const fb = document.getElementById('wrFields');
+  const flds = (v.res.tpl && v.res.fields) || [];
+  fb.innerHTML = (flds.length && !ed) ? '<button type="button" class="wr-fld-btn" id="wrFldBtn"' + (busy ? ' disabled' : '') + '>' +
+    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 6 9 9.5 5"></polyline><line x1="13" y1="7" x2="20" y2="7"></line><polyline points="4 16 6 18 9.5 14"></polyline><line x1="13" y1="16" x2="20" y2="16"></line></svg>' +
+    escapeHtml(t('wsFldBtn', {n:flds.filter(f=>f.on !== false).length})) + '</button>' : '';
+  const fbb = document.getElementById('wrFldBtn');
+  if(fbb) fbb.onclick = wsOpenFields;
   /* dokument ili uređivanje */
   const paper = document.getElementById('wrPaper');
   paper.classList.toggle('wr-dim', busy);
@@ -8144,7 +8276,8 @@ function wrStartEdit(){
   const v = _ws.vers[_ws.cur];
   if(!v) return;
   _ws.err = null;
-  _ws.edit = {draft:JSON.parse(JSON.stringify({title:v.res.title, blocks:v.res.blocks})), changed:0, discard:false};
+  const vv = wsResView(v.res);
+  _ws.edit = {draft:JSON.parse(JSON.stringify({title:vv.title, blocks:vv.blocks})), changed:0, discard:false};
   document.getElementById('wrPaper').innerHTML = '';
   wrBody.scrollTop = 0;
   wrRender();
@@ -8169,6 +8302,8 @@ document.getElementById('wrDone').onclick = ()=>{
     const res = wsClean({title:ed.draft.title, blocks:ed.draft.blocks, note:''});
     if(!res){ toast(t('wsEditEmpty')); return; }
     res.note = '';
+    const pv = _ws.vers[_ws.cur];
+    if(pv && pv.res.tpl){ res.tpl = true; res.fields = wsSyncFields(res, null, pv.res.fields); }
     _ws.vers.push({label:t('wsManualLabel'), res, usage:{inp:0, out:0, think:0, usd:0}, model:null, change:t('wsManualChange', {n:ed.changed})});
     _ws.cur = _ws.vers.length - 1;
     _ws.dirty = true;
@@ -8232,6 +8367,127 @@ function wrBuildEditor(paper){
   paper.appendChild(box);
   requestAnimationFrame(()=>box.querySelectorAll('textarea').forEach(wrFit));
 }
+/* ---------- Prozor „Polja šablona“ (verzija 75): kvačice i nazivi; „Primeni“ = nova verzija ---------- */
+const wsFldSheet = document.getElementById('wsFldSheet');
+let _wsFld = null;   /* {draft:[{name, orig, example, kind, on, on0}], discard} */
+function wsOpenFields(){
+  if(!_ws || _ws.busy) return;
+  const v = _ws.vers[_ws.cur];
+  if(!v || !v.res.tpl || !v.res.fields || !v.res.fields.length) return;
+  _wsFld = {draft:v.res.fields.map(f=>({name:f.name, orig:f.name, example:f.example, kind:f.kind, on:f.on !== false, on0:f.on !== false})), discard:false};
+  document.getElementById('wsFldTitle').textContent = t('wsFldTitle');
+  document.getElementById('wsFldLead').textContent = t('wsFldLead');
+  document.getElementById('wsFldOk').textContent = t('wsFldOk');
+  wsFldBuild();
+  wsFldSheet.classList.add('open');
+  wsFldSheet.querySelector('.sheet').scrollTop = 0;
+  pushBack(closeWsFld);
+}
+function wsFldChanged(){ return !!_wsFld && _wsFld.draft.some(f=>f.on !== f.on0 || wsFldName(f.name) !== f.orig); }
+function closeWsFld(){
+  if(_wsFld && !_wsFld.discard && wsFldChanged()){
+    pushBack(closeWsFld);
+    askConfirm({icon:'✏️', title:t('wsFldDiscardTitle'), text:t('wsFldDiscardText'), okIcon:'🗑️', okLabel:t('wsDiscardOk')})
+      .then(yes=>{ if(yes && _wsFld){ _wsFld.discard = true; requestClose(); } });
+    return;
+  }
+  _wsFld = null;
+  wsFldSheet.classList.remove('open');
+  try{ if(document.activeElement && wsFldSheet.contains(document.activeElement)) document.activeElement.blur(); }catch(e){}
+}
+function wsFldBuild(){
+  const list = document.getElementById('wsFldList');
+  list.innerHTML = '';
+  _wsFld.draft.forEach((f, i)=>{
+    const row = document.createElement('div');
+    row.className = 'ai-row' + (f.on ? ' on' : '');
+    const head = document.createElement('button');
+    head.type = 'button';
+    head.className = 'ai-row-head';
+    head.innerHTML = '<span class="ai-chk"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12 10 17 19 7"></polyline></svg></span>' +
+      '<span class="ai-row-lbl"></span><span class="fld-kind">' + escapeHtml(t('wsFldKind_' + f.kind)) + '</span>';
+    head.querySelector('.ai-row-lbl').textContent = '[' + (wsFldName(f.name) || '…') + ']';
+    head.setAttribute('aria-pressed', f.on ? 'true' : 'false');
+    head.onclick = ()=>{
+      if(!f.example){ toast(t('wsFldNoEx')); return; }
+      f.on = !f.on;
+      row.classList.toggle('on', f.on);
+      head.setAttribute('aria-pressed', f.on ? 'true' : 'false');
+    };
+    const body = document.createElement('div');
+    body.className = 'ai-row-body';
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.className = 'sheet-input';
+    inp.maxLength = 80;
+    ['autocomplete', 'autocorrect', 'autocapitalize'].forEach(a=>inp.setAttribute(a, 'off'));
+    inp.setAttribute('spellcheck', 'false');
+    inp.setAttribute('enterkeyhint', 'done');
+    inp.setAttribute('aria-label', t('wsFldTitle'));
+    inp.value = f.name;
+    const err = document.createElement('div');
+    err.className = 'fld-err';
+    const upd = ()=>{ f.name = inp.value; head.querySelector('.ai-row-lbl').textContent = '[' + (wsFldName(f.name) || '…') + ']'; err.textContent = ''; row.classList.remove('fld-bad'); };
+    inp.addEventListener('input', upd);
+    wireBackspace(inp, upd);
+    inp.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ e.preventDefault(); inp.blur(); } });
+    const ex = document.createElement('div');
+    ex.className = 'fld-ex';
+    ex.innerHTML = f.example ? escapeHtml(t('wsFldEx')) + ' <b>' + escapeHtml(f.example) + '</b>' : escapeHtml(t('wsFldNoEx'));
+    body.appendChild(inp);
+    body.appendChild(err);
+    body.appendChild(ex);
+    row.appendChild(head);
+    row.appendChild(body);
+    list.appendChild(row);
+    f._err = err; f._row = row;
+  });
+}
+document.getElementById('wsFldBack').onclick = ()=>requestClose();
+wsFldSheet.onclick = (e)=>{ if(e.target === wsFldSheet) requestClose(); };
+document.getElementById('wsFldOk').onclick = ()=>{
+  if(!_ws || !_wsFld) return;
+  const v = _ws.vers[_ws.cur];
+  if(!v) return;
+  /* provera naziva: nije prazan i nije isti kao kod drugog polja */
+  const seen = new Map();
+  let bad = null;
+  _wsFld.draft.forEach(f=>{
+    const nm = wsFldName(f.name), k = wsFldKey(nm);
+    let msg = '';
+    if(!nm) msg = t('wsFldNameEmpty');
+    else if(seen.has(k)) msg = t('wsFldNameDup');
+    else seen.set(k, f);
+    f._err.textContent = msg;
+    f._row.classList.toggle('fld-bad', !!msg);
+    if(msg && !bad) bad = f;
+  });
+  if(bad){ try{ bad._row.scrollIntoView({block:'center'}); }catch(e){} return; }
+  if(!wsFldChanged()){ _wsFld.discard = true; requestClose(); return; }
+  /* nova verzija: preimenovanja u tekstu (u dva koraka, da zamena naziva A↔B ne pomeša polja), zatim kvačice */
+  const res = wsResClone(v.res);
+  const ren = new Map();
+  _wsFld.draft.forEach((f, i)=>{ const nm = wsFldName(f.name); if(nm !== f.orig) ren.set(wsFldKey(f.orig), {i, nm}); });
+  if(ren.size){
+    wsResTexts(res, tx=>tx.replace(WS_FLD_RE, (m, nm)=>{ const r = ren.get(wsFldKey(nm)); return r ? '\u0001' + r.i + '\u0001' : m; }));
+    wsResTexts(res, tx=>tx.replace(/\u0001(\d+)\u0001/g, (m, i)=>'[' + wsFldName(_wsFld.draft[+i].name) + ']'));
+  }
+  res.fields = _wsFld.draft.map(f=>({name:wsFldName(f.name), example:f.example, kind:f.kind, on:f.on || !f.example}));
+  res.note = v.res.note || '';
+  const offL = _wsFld.draft.filter(f=>!f.on && f.on0).map(f=>wsFldName(f.name));
+  const onL = _wsFld.draft.filter(f=>f.on && !f.on0).map(f=>wsFldName(f.name));
+  const renL = _wsFld.draft.filter(f=>wsFldName(f.name) !== f.orig).map(f=>f.orig + ' → ' + wsFldName(f.name));
+  const change = [offL.length ? t('wsFldOff', {list:offL.join(', ')}) : '', onL.length ? t('wsFldOn', {list:onL.join(', ')}) : '',
+    renL.length ? t('wsFldRen', {list:renL.join(', ')}) : ''].filter(Boolean).join(' ');
+  _ws.vers.push({label:t('wsFldLabel'), res, usage:{inp:0, out:0, think:0, usd:0}, model:null, change});
+  _ws.cur = _ws.vers.length - 1;
+  _ws.dirty = true;
+  _wsFld.discard = true;
+  requestClose();
+  wrBody.scrollTop = 0;
+  wsRender();
+  toast(t('wsNewVer', {n:_ws.cur + 1}));
+};
 /* ---------- Zadaci ---------- */
 function wsTaskTap(k){
   if(!_ws || !_ws.src || _ws.busy) return;
@@ -8277,7 +8533,7 @@ function wsTaskText(task){
       return 'Translate the whole source into ' + task.langName + '. Keep the structure: headings, paragraphs, lists and tables. Translate all text; keep names, numbers, amounts and dates unchanged. The title and the note must also be in ' + task.langName + '.';
     case 'template':
       /* verzija 74 (umesto „Zapisnik“): šablon od dokumenta — popunjavanje šablona dolazi u 4d */
-      return 'Make a reusable TEMPLATE from the source. Copy all fixed text word for word, in the same language and order as the source: do not translate, shorten, rephrase or correct it. Replace every piece of data that belongs to this particular case or person (names, addresses, personal ID numbers such as JMBG, ID card or passport numbers, phone numbers, e-mail addresses, dates, amounts, account numbers, vehicle registration plates, apartment or property details of this case) with a field in square brackets that names what belongs there, written in ' + wsLangName() + ', for example [Ime i prezime zakupca], [Adresa stana], [Iznos kirije]. Use exactly the same field name every time the same data appears. Keep the structure: headings, paragraphs, lists and tables. The title is "' + t('wsTaskTemplate') + ' – " followed by the kind of document. In "note" say how many different fields there are and remind the user to check the fixed text against the original.';
+      return 'Make a reusable TEMPLATE from the source. Copy all fixed text word for word, in the same language and order as the source: do not translate, shorten, rephrase or correct it. Replace every piece of data that belongs to this particular case or person (names, addresses, personal ID numbers such as JMBG, ID card or passport numbers, phone numbers, e-mail addresses, dates, amounts, account numbers, vehicle registration plates, apartment or property details of this case) with a field in square brackets that names what belongs there, written in ' + wsLangName() + ', for example [Ime i prezime zakupca], [Adresa stana], [Iznos kirije]. Use exactly the same field name every time the same data appears. Keep the structure: headings, paragraphs, lists and tables. The title is "' + t('wsTaskTemplate') + ' – " followed by the kind of document. In "note" say how many different fields there are and remind the user to check the fixed text against the original. In "fields" list every different field exactly once, in the order it first appears: "name" is the text inside the square brackets (without the brackets, character for character), "example" is the exact value from the source that the field replaced (copied exactly), "kind" is name, address, idnum (personal ID, document or account numbers), date, amount, phone, email or text.';
     default:
       return task.text;
   }
@@ -8291,10 +8547,12 @@ function wsPrompt(task, cur){
     'Use only facts from the source. Never invent names, amounts, dates, addresses or numbers. Copy amounts, dates and numbers exactly as they are in the source. Where needed information is missing, write "________" so the user can fill it in by hand.',
     'Do not use markdown symbols such as ** or # inside the texts; use the block types instead.',
     'Leave "change" empty unless the task below asks you to change an existing result.',
+    'Return "fields" as an empty list unless the task makes a template or the current result is a template.',
     'Today is ' + todayYmd() + '.'
   ];
   if(cur){
     out.push('CURRENT RESULT (JSON), made earlier from the same source:\n' + JSON.stringify(cur));
+    if(cur.fields) out.push('The current result is a TEMPLATE. Keep its square-bracket fields unless the instruction asks otherwise, use exactly the same field name every time, and return the complete updated "fields" list (one entry per field used in the text, with the value from the source as "example").');
     out.push('TASK: change the current result according to the instruction below and return the whole updated result, not only the changed part. Keep everything the instruction does not ask to change. In "change" write one short sentence in ' + L + ' that tells the user exactly what you changed (for example what was shortened, added or removed). Instruction from the user: ' + task.text);
   }else{
     out.push('TASK: ' + wsTaskText(task));
@@ -8325,6 +8583,12 @@ function wsClean(o){
   });
   if(!blocks.length) return null;
   return {title:s(o.title).replace(/\s+/g, ' ').trim().slice(0, 120), blocks, note:s(o.note).trim().slice(0, 500), change:s(o.change).trim().slice(0, 500)};
+}
+function wsCleanFields(o){
+  const s = (v)=>typeof v === 'string' ? v : (typeof v === 'number' ? String(v) : '');
+  return (o && Array.isArray(o.fields) ? o.fields : []).filter(f=>f && typeof f === 'object').slice(0, 200)
+    .map(f=>({name:wsFldName(s(f.name)), example:s(f.example).replace(/\s+/g, ' ').trim().slice(0, 300), kind:s(f.kind)}))
+    .filter(f=>f.name);
 }
 function wsCancel(){
   if(!_ws || !_ws.busy) return;
@@ -8357,11 +8621,17 @@ async function wsRun(task){
     const docParts = await aiDocParts(src);
     if(req !== _wsReq) return;
     const cur = base ? {title:base.res.title, blocks:base.res.blocks, note:base.res.note} : null;
+    if(cur && base.res.tpl) cur.fields = (base.res.fields || []).map(f=>({name:f.name, example:f.example, kind:f.kind}));
     const r = await aiRequest([{text:wsPrompt(task, cur)}].concat(docParts), {schema:WS_SCHEMA, signal:ctrl.signal, model});
     if(req !== _wsReq) return;
     aiUsageAdd({model:model.id, name:src.name, inp:r.usage.inp, out:r.usage.out, think:r.usage.think, usd:r.usage.usd});
     if(/SAFETY|PROHIBITED|BLOCKLIST|SPII|RECITATION/.test(r.finish)) throw aiError('aiErrBlocked');
-    const res = wsClean(aiParseJson(r.text));
+    const raw = aiParseJson(r.text);
+    const res = wsClean(raw);
+    if(res && (task.kind === 'template' || (base && base.res.tpl))){
+      res.tpl = true;
+      res.fields = wsSyncFields(res, wsCleanFields(raw), base ? base.res.fields : null);
+    }
     if(!res){
       /* verzija 74: uz grešku ide i ono što je AI stvarno vratio (kartica greške → „Detalji“) */
       const er = aiError(r.finish === 'MAX_TOKENS' ? 'aiErrCut' : 'aiErrParse');
@@ -8600,7 +8870,7 @@ async function wsShare(){
   _wsPdfBusy = true;
   try{
     toastPersist(t('wsSaving'));
-    const {blob} = await wsBuildPdf(v.res, _ws.src ? _ws.src.name : '');
+    const {blob} = await wsBuildPdf(wsResView(v.res), _ws.src ? _ws.src.name : '');
     const file = new File([blob], safeName(v.res.title || (_ws.src && _ws.src.name) || 'Arhiva') + '.pdf', {type:'application/pdf'});
     toastHide();
     if(navigator.canShare && navigator.canShare({files:[file]})){
@@ -8668,11 +8938,11 @@ async function wsSaveToArchive(name, albumId){
   try{
     requestPersistOnce();
     toastPersist(t('wsSaving'));
-    const {blob, first} = await wsBuildPdf(v.res, ws.src ? ws.src.name : '');
+    const {blob, first} = await wsBuildPdf(wsResView(v.res), ws.src ? ws.src.name : '');
     let thumbBlob = null;
     try{ const r = await makeThumb(first); thumbBlob = r.tblob || null; }catch(e){ console.error(e); }
     const item = {id:newItemId(), name, ts:Date.now(), category:albumId || null, type:'pdf', derivedFrom:ws.src ? ws.src.id : null};
-    await db2AddDoc(item, [{blob, thumbBlob, w:0, h:0}], normalizeSr(wsPlain(v.res)));
+    await db2AddDoc(item, [{blob, thumbBlob, w:0, h:0}], normalizeSr(wsPlain(wsResView(v.res))));
     items.push(item);
     render();
     toastHide();
