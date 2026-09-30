@@ -2180,7 +2180,7 @@ const I18N = {
     wsManualCost: 'ručna izmena · bez troška',
     wsNewVer: 'Napravljena verzija {n}.',
     wsEditHint: 'Ispravi tekst pa dodirni „Gotovo“. Svaka izmena je nova verzija.',
-    wsEditLead: 'Dodirni bilo koji deo teksta i ispravi ga. Obrisan pasus ili stavka nestaje iz dokumenta.',
+    wsEditLead: 'Dodir na polje označi ceo njegov tekst: odmah kucaj ili diktiraj nov. Obrisan pasus ili stavka nestaje iz dokumenta.',
     wsEditTitleLbl: 'naslov',
     wsEditCancel: 'Odustani',
     wsEditDone: 'Gotovo',
@@ -2567,7 +2567,7 @@ const I18N = {
     wsManualCost: 'edited by hand · no cost',
     wsNewVer: 'Version {n} is ready.',
     wsEditHint: 'Correct the text, then tap “Done”. Every edit is a new version.',
-    wsEditLead: 'Tap any part of the text and correct it. An emptied paragraph or item is removed from the document.',
+    wsEditLead: 'Tapping a field selects all of its text: type or dictate the new text right away. An emptied paragraph or item is removed from the document.',
     wsEditTitleLbl: 'title',
     wsEditCancel: 'Cancel',
     wsEditDone: 'Done',
@@ -5996,7 +5996,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 73</div>'+
+    '<div class="settings-hint set-build">verzija 74</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -8109,25 +8109,6 @@ function wrRender(){
 }
 
 /* ---------- Ručna izmena: svaki deo rezultata postaje polje; „Gotovo“ = nova verzija ---------- */
-const _wrSelAll = new WeakMap();   /* polje → vrednost u trenutku kad je CEO tekst bio označen */
-function wireBackspaceEdit(el){
-  /* Gboard: kad je ceo tekst označen, „obriši“ ponekad skine samo kraj; polje se tada isprazni, kako je korisnik hteo.
-     Za razliku od wireBackspace, ovde se tekst NE označava sam pri dodiru (ispravlja se deo teksta, ne kuca se ispočetka). */
-  el.addEventListener('beforeinput', (e)=>{
-    const all = el.value.length > 0 && el.selectionStart === 0 && el.selectionEnd === el.value.length;
-    if(all && e.inputType && e.inputType.indexOf('delete') === 0) _wrSelAll.set(el, el.value);
-    else _wrSelAll.delete(el);
-  });
-  el.addEventListener('input', (e)=>{
-    const orig = _wrSelAll.get(el);
-    _wrSelAll.delete(el);
-    if(typeof orig !== 'string' || !e.inputType || e.inputType.indexOf('delete') !== 0) return;
-    if(el.value !== '' && el.value.length < orig.length && orig.indexOf(el.value) === 0){
-      el.value = '';
-      el.dispatchEvent(new Event('input'));
-    }
-  });
-}
 function wrFit(el){ el.style.height = 'auto'; el.style.height = (el.scrollHeight + 2) + 'px'; }
 function wrStartEdit(){
   if(!_ws || _ws.busy || _ws.edit) return;
@@ -8183,7 +8164,8 @@ function wrBuildEditor(paper){
     if(label) el.setAttribute('aria-label', label);
     if(multi) el.rows = 1;
     el.value = value || '';
-    wireBackspaceEdit(el);
+    /* verzija 74: kao ostala polja u Arhivi — dodir označi ceo tekst (odmah se kuca ili diktira nov), Gboard zaštita za brisanje */
+    wireBackspace(el, ()=>{ onVal(''); mark(key); if(multi) wrFit(el); });
     el.addEventListener('input', ()=>{ onVal(el.value); mark(key); if(multi) wrFit(el); });
     if(!multi) el.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ e.preventDefault(); el.blur(); } });
     return el;
