@@ -2225,6 +2225,8 @@ const I18N = {
     wsManualChange: 'Ručno izmenjeno delova teksta: {n}.',
     wsManualCost: 'ručna izmena · bez troška',
     wsFldBtn: 'Polja šablona ({n})',
+    wsSchemaRej: 'šema odbijena',
+    wsSchemaRejShort: 'Gemini je odbio šemu (razlog)',
     wsSaveTpl: 'Sačuvaj šablon',
     wsSaveTplTitle: 'Sačuvaj šablon',
     wsSaveTplName: 'naziv šablona',
@@ -2648,6 +2650,8 @@ const I18N = {
     wsManualChange: 'Parts of the text edited by hand: {n}.',
     wsManualCost: 'edited by hand · no cost',
     wsFldBtn: 'Template fields ({n})',
+    wsSchemaRej: 'schema rejected',
+    wsSchemaRejShort: 'Gemini rejected the schema (reason)',
     wsSaveTpl: 'Save template',
     wsSaveTplTitle: 'Save template',
     wsSaveTplName: 'template name',
@@ -6110,7 +6114,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 75</div>'+
+    '<div class="settings-hint set-build">verzija 76</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -7512,7 +7516,7 @@ async function aiRequest(parts, o){
     ? [{contents, generationConfig:{responseFormat:{text:{mimeType:'application/json', schema:o.schema}}}},
        {contents, generationConfig:{responseMimeType:'application/json'}}]
     : [{contents}];
-  let data = null;
+  let data = null, schemaRej = '';
   for(let i = 0; i < bodies.length; i++){
     let res;
     try{ res = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(bodies[i]), signal:o.signal}); }
@@ -7524,7 +7528,8 @@ async function aiRequest(parts, o){
     const msg = String(err.message || '');
     const det = JSON.stringify(err.details || '');
     if(res.status === 400 && /API_KEY_INVALID|API key/i.test(msg + det)) throw aiError('aiErrKey');
-    if(res.status === 400 && i < bodies.length - 1 && /response_?format|unknown name|invalid json payload|schema/i.test(msg)) continue;
+    /* verzija 76: odbijena šema se pamti (razlog od Google-a), da se vidi u „Detalji“ umesto nagađanja */
+    if(res.status === 400 && i < bodies.length - 1 && /response_?format|unknown name|invalid json payload|schema/i.test(msg)){ schemaRej = msg.slice(0, 400) || String(res.status); continue; }
     if(res.status === 401 || res.status === 403) throw aiError('aiErrKey');
     if(res.status === 404) throw aiError('aiErrModel', {m:model.name});
     if(res.status === 429) throw aiError('aiErrQuota');
@@ -7539,7 +7544,7 @@ async function aiRequest(parts, o){
   usage.usd = aiCostUsd(model, usage);
   const cparts = (cand && cand.content && Array.isArray(cand.content.parts)) ? cand.content.parts : [];
   const text = cparts.filter(p=>typeof p.text === 'string' && !p.thought).map(p=>p.text).join('');
-  return {text, usage, model, finish:(cand && cand.finishReason) || ''};
+  return {text, usage, model, finish:(cand && cand.finishReason) || '', schemaRej};
 }
 function aiParseJson(s){
   const x = String(s || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
@@ -8005,6 +8010,7 @@ function wsErrDetails(e){
   const lines = [];
   if(e.aiCode) lines.push(t('wsErrCode') + ': ' + e.aiCode + (e.aiVars && e.aiVars.code ? ' (' + e.aiVars.code + ')' : ''));
   if(e.finish) lines.push(t('wsErrFinish') + ': ' + e.finish);
+  if(e.schemaRej) lines.push(t('wsSchemaRej') + ': ' + e.schemaRej);
   if(e.aiVars && e.aiVars.msg) lines.push(String(e.aiVars.msg).slice(0, 400));
   if(typeof e.raw === 'string') lines.push(t('wsErrRaw', {n:e.raw.length}) + ':\n' + (e.raw.slice(0, 700) || '—') + (e.raw.length > 700 ? ' …' : ''));
   else if(!e.aiCode && e.message) lines.push(String(e.message).slice(0, 400));
@@ -8301,7 +8307,8 @@ function wrRender(){
   const foot = document.getElementById('wrFoot');
   foot.innerHTML = ed ? '' : (v.res.note ? '<div class="ws-note">' + escapeHtml(v.res.note) + '</div>' : '') +
     '<div class="ws-cost">' + (v.model ? escapeHtml(t('aiUsageLine', {inp:fmtInt(v.usage.inp), out:fmtInt((v.usage.out || 0) + (v.usage.think || 0)), usd:fmtUsd(v.usage.usd), m:v.model.name})) : escapeHtml(t(v.opened ? 'wsTplCost' : 'wsManualCost'))) +
-    (n > 1 ? '<br>' + escapeHtml(t('wsTotal', {usd:fmtUsd(_ws.vers.reduce((s, x)=>s + (x.usage.usd || 0), 0))})) : '') + '</div>';
+    (n > 1 ? '<br>' + escapeHtml(t('wsTotal', {usd:fmtUsd(_ws.vers.reduce((s, x)=>s + (x.usage.usd || 0), 0))})) : '') + '</div>' +
+    (v.schemaRej ? '<details class="ws-err-det"><summary>' + escapeHtml(t('wsSchemaRejShort')) + '</summary><pre>' + escapeHtml(v.schemaRej) + '</pre></details>' : '');
   /* donja traka */
   const st = document.getElementById('wrStatus');
   const savedNow = _ws.saved && !_ws.dirty;
@@ -8734,6 +8741,17 @@ function wsClean(o){
   const blocks = [];
   (Array.isArray(o.blocks) ? o.blocks : []).forEach(b=>{
     if(!b || typeof b !== 'object') return;
+    /* verzija 76: bez šeme AI ponekad piše vrstu bloka kao naziv polja ({"heading": "…"}); prevodi se u naš oblik */
+    if(!s(b.type)){
+      if(typeof b.heading === 'string') b = {type:'heading', text:b.heading};
+      else if(typeof b.paragraph === 'string') b = {type:'paragraph', text:b.paragraph};
+      else if(Array.isArray(b.bullets)) b = {type:'bullets', items:b.bullets};
+      else if(Array.isArray(b.items)) b = {type:'bullets', items:b.items};
+      else if(Array.isArray(b.table)) b = {type:'table', rows:b.table};
+      else if(Array.isArray(b.rows)) b = {type:'table', rows:b.rows};
+      else if(typeof b.text === 'string') b = {type:'paragraph', text:b.text};
+      else return;
+    }
     const ty = s(b.type);
     if(ty === 'bullets'){
       const it = (Array.isArray(b.items) ? b.items : []).map(x=>s(x).trim()).filter(Boolean).slice(0, 300).map(x=>x.slice(0, 2000));
@@ -8806,12 +8824,13 @@ async function wsRun(task){
       const er = aiError(r.finish === 'MAX_TOKENS' ? 'aiErrCut' : 'aiErrParse');
       er.raw = String(r.text || '');
       er.finish = r.finish || '';
+      er.schemaRej = r.schemaRej || '';
       throw er;
     }
     /* „šta je promenjeno“ postoji samo kod dorade; ako ga AI izostavi, piše se bar šta je traženo */
     const change = base ? (res.change || t('wsChangeAsked', {task:task.text})) : '';
     delete res.change;
-    _ws.vers.push({label:task.label, res, usage:r.usage, model:r.model, change});
+    _ws.vers.push({label:task.label, res, usage:r.usage, model:r.model, change, schemaRej:r.schemaRej || ''});
     _ws.cur = _ws.vers.length - 1;
     _ws.dirty = true;
     _ws.busy = null;
