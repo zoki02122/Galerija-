@@ -2191,6 +2191,10 @@ const I18N = {
     wsOrigMore: 'Prikazano je prvih {n} od {total} stranica.',
     wsOrigNoText: 'Iz ovog fajla nije izvučen tekst.',
     wsBusy: 'Šaljem: {task}',
+    wsTplProg: 'Čitam deo {i} od {n}…',
+    wsTplGenNote: 'Stalni tekst je preuzet iz originala od reči do reči; AI je pronašao {n} različitih podataka (tekst je poslat u {p} delova). Proveri polja.',
+    wsTplGenNone: 'Stalni tekst je preuzet iz originala; AI nije pronašao podatke za polja. Pokušaj ponovo ili izmeni ručno.',
+    wsTplGenMiss: 'Još {n} predloga AI nije pronađeno u tekstu, pa nisu ubačeni.',
     wsBusyWait: 'Obično traje nekoliko sekundi, kod dužih dokumenata i duže.',
     wsErrTitle: 'Obrada nije uspela',
     wsVer: 'verzija {n} od {total}',
@@ -2625,6 +2629,10 @@ const I18N = {
     wsOrigMore: 'Showing the first {n} of {total} pages.',
     wsOrigNoText: 'No text could be taken from this file.',
     wsBusy: 'Sending: {task}',
+    wsTplProg: 'Reading part {i} of {n}…',
+    wsTplGenNote: 'The fixed text is taken from the original word for word; AI found {n} different pieces of data (the text was sent in {p} parts). Check the fields.',
+    wsTplGenNone: 'The fixed text is taken from the original; AI found no data for fields. Try again or edit by hand.',
+    wsTplGenMiss: '{n} more AI suggestions were not found in the text, so they were not inserted.',
     wsBusyWait: 'Usually takes a few seconds, longer for long documents.',
     wsErrTitle: 'Processing failed',
     wsVer: 'version {n} of {total}',
@@ -8041,6 +8049,7 @@ function wsBusyHtml(stopId){
   return '<div class="ws-card ws-busy"><div class="ai-wait"><span class="ai-spin"></span>' +
     '<div class="ai-wait-t">' + escapeHtml(t('wsBusy', {task:_ws.busy.label})) + '</div>' +
     '<div class="ai-wait-s">' + escapeHtml(t('aiReadingSub', {name:src ? src.name : '', model:_ws.busy.model})) + '</div>' +
+    '<div class="ai-wait-s ws-prog"' + (_ws.busy.prog ? '>' + escapeHtml(t('wsTplProg', {i:_ws.busy.prog.i, n:_ws.busy.prog.n})) : ' hidden>') + '</div>' +
     '<div class="ai-wait-s">' + escapeHtml(t('wsBusyWait')) + '</div></div>' +
     '<button type="button" class="sheet-cta secondary" id="' + stopId + '">' + escapeHtml(t('aiCancel')) + '</button></div>';
 }
@@ -8833,6 +8842,238 @@ function wsCleanFields(o){
     .map(f=>({name:wsFldName(s(f.name)), example:s(f.example).replace(/\s+/g, ' ').trim().slice(0, 300), kind:s(f.kind)}))
     .filter(f=>f.name);
 }
+/* ---------- Šablon na način Generatora (verzija 79) ----------
+   AI više NE prepisuje dokument. Tekst šablona je originalni tekst Word / Excel dokumenta, od reči do reči.
+   Tekst se deli na delove od ~1600 znakova po granici bloka (kao aplikacija Generator: sitniji delovi = AI ne preskače osobe i podatke);
+   za svaki deo AI vraća samo spisak podataka (value = tačno kako piše, name, kind). Arhiva sama pronalazi podatak u tekstu
+   i menja ga poljem [Naziv]. Rezerva bez AI: u tabelama red „Naziv polja:“ | „vrednost“. PDF i slike: sledeća verzija. */
+const WS_TPL_CHUNK = 1600;
+const WS_TPL_SCHEMA = {
+  type:'object',
+  properties:{fields:{type:'array', items:{
+    type:'object',
+    properties:{
+      value:{type:'string', description:'The data exactly as written in the text, character for character'},
+      name:{type:'string', description:'Short field name'},
+      kind:{type:'string', enum:WS_FLD_KINDS}
+    },
+    required:['value', 'name', 'kind']
+  }}},
+  required:['fields']
+};
+function wsTplLocal(src){
+  const ext = String((src && src.ext) || '').toLowerCase();
+  return !!src && src.type === 'doc' && (ext === 'docx' || ext === 'xlsx' || ext === 'xls');
+}
+/* originalni tekst dokumenta kao blokovi (naslov, pasus, spisak, tabela), bez ikakve izmene reči */
+async function wsTplBlocks(src){
+  const ext = String(src.ext || '').toLowerCase();
+  let blob;
+  try{ blob = await getFileBlob(src); }catch(e){ throw aiError('aiErrFile'); }
+  const out = [];
+  const tx = (s)=>String(s || '').replace(/[\s\u00a0]+/g, ' ').trim();
+  const pushTable = (rows)=>{
+    rows = rows.map(r=>r.map(tx)).filter(r=>r.some(Boolean));
+    if(!rows.length) return;
+    const n = Math.min(12, Math.max.apply(null, rows.map(r=>r.length)));
+    out.push({type:'table', rows:rows.map(r=>{ r = r.slice(0, n); while(r.length < n) r.push(''); return r; })});
+  };
+  if(ext === 'docx'){
+    if(typeof mammoth === 'undefined') throw aiError('aiErrFile');
+    const r = await mammoth.convertToHtml({arrayBuffer:await blob.arrayBuffer()});
+    const d = new DOMParser().parseFromString('<body>' + r.value + '</body>', 'text/html');
+    d.querySelectorAll('br').forEach(b=>b.replaceWith(' '));
+    const cellTx = (c)=>{ const ps = c.querySelectorAll('p'); return ps.length ? Array.from(ps).map(p=>tx(p.textContent)).filter(Boolean).join(' ') : tx(c.textContent); };
+    const listItems = (ul, acc)=>{
+      Array.from(ul.children).forEach(li=>{
+        if(li.tagName !== 'LI') return;
+        const c = li.cloneNode(true);
+        c.querySelectorAll('ul,ol').forEach(x=>x.remove());
+        const x = tx(c.textContent);
+        if(x) acc.push(x);
+        li.querySelectorAll(':scope > ul, :scope > ol').forEach(s=>listItems(s, acc));
+      });
+      return acc;
+    };
+    Array.from(d.body.children).forEach(n=>{
+      const tg = n.tagName;
+      if(/^H[1-6]$/.test(tg)){ const x = tx(n.textContent); if(x) out.push({type:'heading', text:x}); }
+      else if(tg === 'UL' || tg === 'OL'){ const it = listItems(n, []); if(it.length) out.push({type:'bullets', items:it}); }
+      else if(tg === 'TABLE'){
+        pushTable(Array.from(n.querySelectorAll('tr')).filter(tr=>tr.closest('table') === n).map(tr=>Array.from(tr.children).map(cellTx)));
+      }else{ const x = tx(n.textContent); if(x) out.push({type:'paragraph', text:x}); }
+    });
+  }else{
+    if(typeof XLSX === 'undefined') throw aiError('aiErrFile');
+    const wb = XLSX.read(new Uint8Array(await blob.arrayBuffer()), {type:'array'});
+    wb.SheetNames.forEach(nm=>{
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[nm], {header:1, blankrows:false, defval:'', raw:false});
+      if(wb.SheetNames.length > 1 && rows.length) out.push({type:'heading', text:nm});
+      pushTable(rows.map(r=>r.map(c=>String(c == null ? '' : c))));
+    });
+  }
+  if(!out.length) throw aiError('aiErrNoText');
+  return out;
+}
+/* delovi teksta za AI: celi blokovi; velika tabela se deli po redovima */
+function wsTplChunks(blocks){
+  const units = [];
+  blocks.forEach(b=>{
+    if(b.type === 'bullets') units.push(b.items.map(x=>'• ' + x).join('\n'));
+    else if(b.type === 'table'){
+      let cur = [], len = 0;
+      b.rows.forEach(r=>{
+        const l = r.join(' | ');
+        if(len && len + l.length > WS_TPL_CHUNK){ units.push(cur.join('\n')); cur = []; len = 0; }
+        cur.push(l); len += l.length + 1;
+      });
+      if(cur.length) units.push(cur.join('\n'));
+    }else units.push(b.text);
+  });
+  const chunks = [];
+  let cur = [], len = 0;
+  units.forEach(u=>{
+    if(len && len + u.length > WS_TPL_CHUNK){ chunks.push(cur.join('\n\n')); cur = []; len = 0; }
+    cur.push(u); len += u.length + 2;
+  });
+  if(cur.length) chunks.push(cur.join('\n\n'));
+  return chunks;
+}
+function wsTplPrompt(part, i, n, known){
+  const L = wsLangName();
+  const ex = appLang() === 'en' ? '"Tenant full name", "Child passport number", "Monthly rent"' : '"Ime i prezime zakupca", "Broj pasoša deteta", "Iznos kirije"';
+  const out = [
+    'You help make a reusable TEMPLATE from a real, filled-in document (contract, record, form). Below is ONE PART of its text (part ' + i + ' of ' + n + '). Do NOT rewrite the text. Return only JSON with the list of data in this part that belongs to this particular case or person, as opposed to the fixed text that is the same in every such document.',
+    'First (internally, do not report it) go through the whole part and list EVERY named person: tenants, landlords, owners, spouses, children, other occupants, witnesses, representatives — even if a person is mentioned only once, in a list or in brackets. Then for EACH of them return EACH of their data as a SEPARATE field: full name, personal ID number (JMBG), ID card or passport number, address, citizenship, phone, e-mail. Never join the data of two persons into one field.',
+    'Also return every other piece of data of this case: dates, amounts, account numbers, vehicle registration plates, details of this property (address, floor, apartment number, area), deadlines of this case.',
+    'A long fixed list (checklist, inventory, equipment with check boxes) is fixed text: do not return its item names. But apart from it, return every concrete date, name, address, phone, e-mail, ID number or amount anywhere in the part.',
+    '"value": copy the data EXACTLY as it appears in the text, character for character (same letters, spaces, dots and dashes), so that it can be found in the text. Only the data itself, without the words around it.',
+    '"name": a short field name in ' + L + ' that says what belongs there, for example ' + ex + '. Different data get different names.',
+    '"kind": name (person or company name), address, idnum (personal ID, document or account numbers), date, amount, phone, email or text.',
+    'Do not return fixed legal text, article titles or general phrases. Never invent anything that is not in the text. If the same data appears several times in the same form, return it once. If there is no such data, return an empty list.'
+  ];
+  if(known.length) out.push('Already found in earlier parts. When the same data appears again, use exactly the same name:\n' + known.slice(0, 80).map(f=>f.name + ' = ' + f.value).join('\n'));
+  out.push('TEXT (part ' + i + ' of ' + n + '):\n"""\n' + part + '\n"""');
+  return out.join('\n\n');
+}
+/* tolerantna pretraga (kao Generator findRealSubstring): razmaci, crte i navodnici mogu se razlikovati,
+   ali se uvek menja PRAVI tekst iz dokumenta; podatak ne sme biti deo veće reči ili broja */
+function wsTplRe(value, flags){
+  const words = String(value || '').trim().split(/\s+/).filter(Boolean);
+  if(!words.length) return null;
+  const core = words.map(w=>w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    .replace(/[-\u2010-\u2015]/g, '[-\\u2010-\\u2015]')
+    .replace(/["\u201C\u201D\u201E\u00AB\u00BB]/g, '["\\u201C\\u201D\\u201E\\u00AB\\u00BB]')
+    .replace(/['\u2018\u2019\u201A]/g, "['\\u2018\\u2019\\u201A]")).join('\\s+');
+  try{ return new RegExp('(^|[^\\p{L}\\p{N}])(' + core + ')(?=$|[^\\p{L}\\p{N}])', flags); }catch(e){ return null; }
+}
+function wsTplKind(v){
+  if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'email';
+  if(/^\d{1,2}\.\s?\d{1,2}\.\s?(\d{2}|\d{4})\.?$/.test(v)) return 'date';
+  if(/^\+?[\d\s/()-]{6,}$/.test(v) && /^\+|^0/.test(v)) return 'phone';
+  if(/\d/.test(v) && /(eur|rsd|din|€|\$|usd|chf)/i.test(v)) return 'amount';
+  return 'text';
+}
+/* rezerva bez AI: ćelija „Naziv polja:“ i odmah do nje vrednost */
+function wsTplPairs(blocks){
+  const out = [];
+  blocks.forEach(b=>{
+    if(b.type !== 'table') return;
+    b.rows.forEach(r=>{
+      for(let i = 0; i < r.length - 1; i++){
+        const l = r[i], v = r[i + 1];
+        if(!/^.{2,80}:$/.test(l) || !v || v.length > 200 || v.indexOf('\u2610') >= 0 || /^\d{1,2}$/.test(v) || /:$/.test(v)) continue;
+        out.push({value:v, name:l.replace(/:$/, '').trim(), kind:wsTplKind(v)});
+      }
+    });
+  });
+  return out;
+}
+/* zamena podataka poljima; najduži podatak prvo, da kraći ne „pojede“ deo dužeg. Privremene oznake su znakovi iz
+   privatnog opsega (nisu slovo ni cifra), pa ih kasniji kraći podatak ne može pogoditi. */
+function wsTplApply(blocks, cands){
+  const res = {title:'', blocks:JSON.parse(JSON.stringify(blocks))};
+  const seenV = new Set(), names = new Set(), list = [];
+  cands.forEach(c=>{
+    const v = String(c.value || '').replace(/\s+/g, ' ').trim();
+    let name = wsFldName(c.name);
+    const vk = v.toLowerCase();
+    if(v.length < 2 || v.length > 300 || !name || v.indexOf('\u2610') >= 0 || seenV.has(vk)) return;
+    seenV.add(vk);
+    let nk = wsFldKey(name), k = 2;
+    while(names.has(nk)){ nk = wsFldKey(name + ' ' + k); k++; }
+    if(k > 2) name = name + ' ' + (k - 1);
+    names.add(nk);
+    list.push({value:v, name, kind:WS_FLD_KINDS.indexOf(c.kind) >= 0 ? c.kind : 'text'});
+  });
+  list.sort((a, b)=>b.value.length - a.value.length);
+  const used = [];
+  let miss = 0;
+  list.forEach((f, idx)=>{
+    const tok = '\uE000' + String.fromCharCode(0xE100 + idx) + '\uE001';
+    let hit = '';
+    for(const fl of ['gu', 'giu']){
+      const re = wsTplRe(f.value, fl);
+      if(!re) break;
+      wsResTexts(res, s=>s.replace(re, (m, pre, core)=>{ if(!hit) hit = core; return pre + tok; }));
+      if(hit) break;
+    }
+    if(hit){ f.tok = tok; f.example = hit.replace(/\s+/g, ' ').trim(); used.push(f); }
+    else miss++;
+  });
+  wsResTexts(res, s=>{
+    used.forEach(f=>{ s = s.split(f.tok).join('[' + f.name + ']'); });
+    return s;
+  });
+  return {blocks:res.blocks, fields:used.map(f=>({name:f.name, example:f.example, kind:f.kind})), miss};
+}
+async function wsTplMake(src, signal, model, req){
+  const blocks = await wsTplBlocks(src);
+  const chunks = wsTplChunks(blocks);
+  const usage = {inp:0, out:0, think:0, usd:0};
+  const found = [];
+  let schemaRej = '';
+  try{
+    for(let i = 0; i < chunks.length; i++){
+      if(req !== _wsReq) return null;
+      if(_ws && _ws.busy){ _ws.busy.prog = {i:i + 1, n:chunks.length}; wsBusyProg(); }
+      const r = await aiRequest([{text:wsTplPrompt(chunks[i], i + 1, chunks.length, found)}], {schema:WS_TPL_SCHEMA, signal, model});
+      usage.inp += r.usage.inp; usage.out += r.usage.out; usage.think += r.usage.think; usage.usd += r.usage.usd;
+      if(r.schemaRej) schemaRej = r.schemaRej;
+      if(/SAFETY|PROHIBITED|BLOCKLIST|SPII|RECITATION/.test(r.finish)) throw aiError('aiErrBlocked');
+      const raw = aiParseJson(r.text);
+      const arr = raw && Array.isArray(raw.fields) ? raw.fields : (Array.isArray(raw) ? raw : null);
+      if(!arr){
+        const er = aiError(r.finish === 'MAX_TOKENS' ? 'aiErrCut' : 'aiErrParse');
+        er.raw = String(r.text || ''); er.finish = r.finish || ''; er.schemaRej = r.schemaRej || '';
+        throw er;
+      }
+      arr.forEach(f=>{
+        if(!f || typeof f !== 'object') return;
+        const v = String(f.value == null ? '' : f.value).trim();
+        if(v && chunks[i].indexOf(v) < 0 && !wsTplRe(v, 'iu')?.test(chunks[i])) return;   /* nije u tekstu = izmišljeno */
+        if(v) found.push({value:v, name:String(f.name || ''), kind:String(f.kind || '')});
+      });
+    }
+  }finally{
+    if(usage.inp || usage.out) aiUsageAdd({model:model.id, name:src.name, inp:usage.inp, out:usage.out, think:usage.think, usd:usage.usd});
+  }
+  const ap = wsTplApply(blocks, found.concat(wsTplPairs(blocks)));
+  /* naslov iz prvog naslova dokumenta (ime fajla često sadrži ime osobe); VELIKA SLOVA → „Ugovor o zakupu stana“ */
+  const h1 = ap.blocks.find(b=>b.type === 'heading' && b.text.indexOf('[') < 0);
+  let base = h1 ? h1.text : String(src.name || '').replace(/\.(docx|xlsx|xls)$/i, '');
+  if(h1 && base === base.toUpperCase() && base !== base.toLowerCase()) base = base.charAt(0) + base.slice(1).toLowerCase();
+  const res = {title:(t('wsTaskTemplate') + ' – ' + base).slice(0, 120), blocks:ap.blocks,
+    note:t(ap.fields.length ? 'wsTplGenNote' : 'wsTplGenNone', {n:ap.fields.length, p:chunks.length}) + (ap.miss ? ' ' + t('wsTplGenMiss', {n:ap.miss}) : ''), tpl:true};
+  res.fields = wsSyncFields(res, ap.fields, null);
+  return {res, usage, schemaRej};
+}
+/* red „deo 2 od 5“ dok AI radi, bez ponovnog crtanja ekrana */
+function wsBusyProg(){
+  const p = _ws && _ws.busy && _ws.busy.prog;
+  if(!p) return;
+  document.querySelectorAll('.ws-prog').forEach(el=>{ el.textContent = t('wsTplProg', {i:p.i, n:p.n}); el.hidden = false; });
+}
 function wsCancel(){
   if(!_ws || !_ws.busy) return;
   try{ _ws.busy.ctrl.abort(); }catch(e){}
@@ -8861,6 +9102,13 @@ async function wsRun(task){
   if(where === 'res') wrBody.scrollTop = 0;
   else wsBody.scrollTop = 0;
   try{
+    let res, usage, rmodel = model, schemaRej = '';
+    if(task.kind === 'template' && wsTplLocal(src)){
+      /* verzija 79: šablon na način Generatora — AI vraća samo podatke, tekst ostaje originalan */
+      const g = await wsTplMake(src, ctrl.signal, model, req);
+      if(!g || req !== _wsReq) return;
+      res = g.res; usage = g.usage; schemaRej = g.schemaRej || '';
+    }else{
     const docParts = await aiDocParts(src);
     if(req !== _wsReq) return;
     const cur = base ? {title:base.res.title, blocks:base.res.blocks, note:base.res.note} : null;
@@ -8870,7 +9118,7 @@ async function wsRun(task){
     aiUsageAdd({model:model.id, name:src.name, inp:r.usage.inp, out:r.usage.out, think:r.usage.think, usd:r.usage.usd});
     if(/SAFETY|PROHIBITED|BLOCKLIST|SPII|RECITATION/.test(r.finish)) throw aiError('aiErrBlocked');
     const raw = aiParseJson(r.text);
-    const res = wsClean(raw);
+    res = wsClean(raw);
     if(res && (task.kind === 'template' || (base && base.res.tpl))){
       res.tpl = true;
       res.fields = wsSyncFields(res, wsCleanFields(raw), base ? base.res.fields : null);
@@ -8883,10 +9131,12 @@ async function wsRun(task){
       er.schemaRej = r.schemaRej || '';
       throw er;
     }
+    usage = r.usage; rmodel = r.model; schemaRej = r.schemaRej || '';
+    }
     /* „šta je promenjeno“ postoji samo kod dorade; ako ga AI izostavi, piše se bar šta je traženo */
     const change = base ? (res.change || t('wsChangeAsked', {task:task.text})) : '';
     delete res.change;
-    _ws.vers.push({label:task.label, res, usage:r.usage, model:r.model, change, schemaRej:r.schemaRej || ''});
+    _ws.vers.push({label:task.label, res, usage, model:rmodel, change, schemaRej});
     _ws.cur = _ws.vers.length - 1;
     _ws.dirty = true;
     _ws.busy = null;
