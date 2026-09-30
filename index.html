@@ -1223,12 +1223,15 @@ html[data-theme="ponoc"]{
 .ws-chip svg{ color:var(--brass); flex:none; }
 .ws-view{ margin-top:16px; }
 /* verzija 73: putanja u prvom redu, pločica rezultata, ✕ na dokumentu */
-.ws-path{ display:flex; align-items:baseline; gap:6px; }
+.ws-path{ display:flex; align-items:center; gap:6px; }
 .wp-root{ flex:none; font-size:15px; font-weight:600; color:var(--ink-dim); }
 .wp-sep{ flex:none; font-size:16px; color:var(--ink-dim); }
 .wp-doc{ flex:1 1 auto; min-width:0; border:none; background:none; padding:0; margin:0; font-family:var(--font-ui); font-size:18px; font-weight:700;
   color:var(--title-color); text-align:left; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.wp-doc.is-empty{ color:var(--brass); }
+.wp-doc.is-empty{ color:var(--brass); display:inline-flex; align-items:center; gap:8px; align-self:center; }
+.wp-txt{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.wp-plus{ flex:none; width:28px; height:28px; border-radius:50%; border:1.5px solid var(--brass); display:inline-flex; align-items:center; justify-content:center; }
+.wp-plus svg{ width:15px; height:15px; }
 .wp-doc:disabled{ cursor:default; }
 .ws-res-pill{ flex:none; height:36px; padding:0 12px; margin:0 4px 0 6px; border-radius:18px; border:1.5px solid var(--brass); background:var(--surface);
   color:var(--brass); font-family:var(--font-ui); font-size:13.5px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:5px; white-space:nowrap; }
@@ -7893,7 +7896,9 @@ function wsRender(){
   /* prvi red: putanja „AI radionica › naziv dokumenta“ (dodir na naziv = drugi dokument) i pločica rezultata */
   document.getElementById('wsPathRoot').textContent = t('wsTitle');
   const pd = document.getElementById('wsPathDoc');
-  pd.textContent = src ? (src.name || '') : t('wsSrcPick');
+  /* verzija 74: bez dokumenta — plus ispred „Izaberi dokument“, da se vidi da je to dugme za dodavanje, a ne samo naslov */
+  if(src) pd.textContent = src.name || '';
+  else pd.innerHTML = '<span class="wp-plus"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></span><span class="wp-txt">' + escapeHtml(t('wsSrcPick')) + '</span>';
   pd.classList.toggle('is-empty', !src);
   pd.disabled = busy;
   pd.setAttribute('aria-label', src ? t('wsPathChange', {name:src.name || ''}) : t('wsSrcPick'));
