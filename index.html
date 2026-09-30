@@ -1796,6 +1796,7 @@ const I18N = {
     fileSave: 'Sačuvaj na telefon',
     fileSaveHint: 'u fasciklu Preuzimanja',
     fileSaved: 'Sačuvano na telefon.',
+    fileReady: 'Fajl je spreman.',
     fileNoShareHint: 'Chrome ne dozvoljava deljenje ove vrste fajla. Sačuvaj ga, pa ga pošalji iz Vibera ili e-pošte (priloži fajl).',
     fileSavedNoShare: 'Sačuvano u Preuzimanja. Pošalji ga iz Vibera ili e-pošte: priloži fajl.',
     fileShareNo: 'Chrome ne može da podeli ovu vrstu fajla, pa je sačuvan na telefon.',
@@ -2097,6 +2098,7 @@ const I18N = {
     fileSave: 'Save to phone',
     fileSaveHint: 'to the Downloads folder',
     fileSaved: 'Saved to phone.',
+    fileReady: 'The file is ready.',
     fileNoShareHint: 'Chrome does not allow sharing this file type. Save it, then send it from Viber or email (attach file).',
     fileSavedNoShare: 'Saved to Downloads. Send it from Viber or email: attach the file.',
     fileShareNo: 'Chrome cannot share this type of file, so it was saved to the phone.',
@@ -4541,7 +4543,11 @@ async function fileShareOriginal(it){
   if(navigator.canShare && navigator.share && navigator.canShare({files:[file]})){
     try{ await navigator.share({files:[file]}); }
     catch(e){
-      if(e && e.name === 'NotAllowedError') toastAction(t('pdfReady'), t('pdfShareNow'), ()=>navigator.share({files:[file]}).catch(()=>{}));
+      /* NotAllowedError: istekao dodir (ponovni dodir pomaže) ili Chrome ne dozvoljava tu vrstu fajla —
+         ako odbije i drugi put, fajl se čuva na telefon uz objašnjenje */
+      if(e && e.name === 'NotAllowedError') toastAction(t('fileReady'), t('pdfShareNow'), ()=>navigator.share({files:[file]}).catch(e2=>{
+        if(e2 && e2.name === 'NotAllowedError'){ fileDownload(file); toast(t('fileSavedNoShare')); }
+      }));
       else if(e && e.name !== 'AbortError') toast(t('fileShareErr'));
     }
   }else{
@@ -4553,15 +4559,15 @@ async function fileSaveOriginal(it){
   try{ fileDownload(await fileAsFile(it)); toast(t('fileSaved')); }
   catch(e){ console.error(e); toast(t('fileMissing')); }
 }
-/* v69: Chrome deli samo vrste sa svog spiska (PDF, slike, zvuk, video, tekst); Word i Excel ne.
-   Pitamo sam Chrome (canShare proverava naziv i vrstu fajla), bez prepisivanja spiska. */
+/* v69: Chrome na Androidu deli samo vrste sa svog spiska; Word, Excel i ostale odbije tek u samom deljenju
+   (greška NotAllowedError). canShare() vrstu fajla NE proverava (Chromium navigator_share.cc), zato ovde
+   stoji zvanični spisak: chromium/src third_party/blink/renderer/modules/webshare/FILE_TYPES.md (provereno 30.9.2026). */
+const SHARE_EXT = new Set(['pdf','flac','m4a','mp3','oga','ogg','opus','wav','weba','avif','bmp','gif','ico','jfif','jpeg','jpg',
+  'pjp','pjpeg','png','svg','svgz','tif','tiff','webp','xbm','css','csv','ehtml','htm','html','shtm','shtml','text','txt',
+  'm4v','mp4','mpeg','mpg','ogm','ogv','webm']);
 function fileCanShare(it){
-  try{
-    if(!navigator.canShare || !navigator.share) return false;
-    const ext = fileExtOf(it) || 'bin';
-    const f = new File([''], 'x.' + ext, {type: EXT_MIME[ext] || 'application/octet-stream'});
-    return navigator.canShare({files:[f]});
-  }catch(e){ return false; }
+  if(!navigator.canShare || !navigator.share) return false;
+  return SHARE_EXT.has(fileExtOf(it) || '');
 }
 function fileNoShare(it){ return !!it && isFileItem(it) && !fileCanShare(it); }
 function fileSaveForSend(it){
@@ -5590,7 +5596,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 69</div>'+
+    '<div class="settings-hint set-build">verzija 70</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
