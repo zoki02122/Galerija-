@@ -8651,6 +8651,7 @@ async function tplMergeBackup(list){
     const fields = wsSyncFields(res, wsCleanFields({fields:x.fields}), null).map(f=>({name:f.name, example:f.example, kind:f.kind}));
     await tplPut({id:x.id, name:String(x.name || res.title || 'Šablon').slice(0, 200), title:res.title, blocks:res.blocks, fields,
       sourceId:typeof x.sourceId === 'string' ? x.sourceId : null, createdAt:x.createdAt || Date.now(), updatedAt:x.updatedAt || Date.now()});
+    have.set(x.id, {updatedAt:x.updatedAt || Date.now()});
     n++;
   }
   await tplLoad();
