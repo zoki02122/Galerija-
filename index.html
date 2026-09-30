@@ -1275,6 +1275,10 @@ html[data-theme="ponoc"]{
 /* poruka iznad donje trake radionice i ekrana „Rezultat“ (da ne pokrije Podeli / Sačuvaj) */
 body:has(#aiWs.open) .toast{ bottom:calc(190px + env(safe-area-inset-bottom)); }
 #wrMsg .ws-card{ margin-bottom:12px; }
+.ws-err-det{ margin:0 0 12px; font-size:12.5px; color:var(--ink-dim); }
+.ws-err-det summary{ cursor:pointer; font-weight:700; color:var(--ink); padding:4px 0; }
+.ws-err-det pre{ margin:6px 0 0; padding:10px; max-height:220px; overflow:auto; white-space:pre-wrap; overflow-wrap:anywhere; font-size:11.5px; line-height:1.45;
+  background:var(--surface-2); border:1px solid var(--line); border-radius:8px; color:var(--ink); }
 .wr-edit-hint{ font-size:12.5px; color:var(--ink-dim); line-height:1.5; margin:0 2px 10px; }
 .wr-editor{ display:flex; flex-direction:column; gap:8px; }
 .wr-in{ width:100%; box-sizing:border-box; border:1px solid var(--line); border-radius:10px; background:var(--surface-2); color:var(--ink);
@@ -2117,7 +2121,11 @@ const I18N = {
     wsTaskSum: 'Sažetak',
     wsTaskAmounts: 'Tabela iznosa',
     wsTaskTrans: 'Prevedi',
-    wsTaskRecord: 'Zapisnik',
+    wsTaskTemplate: 'Šablon',
+    wsErrDet: 'Detalji',
+    wsErrCode: 'šifra',
+    wsErrFinish: 'razlog završetka',
+    wsErrRaw: 'odgovor AI ({n} znakova)',
     wsTabOrig: 'Original',
     wsTabRes: 'Rezultat',
     wsTabResV: 'Rezultat · v{n}',
@@ -2232,7 +2240,7 @@ const I18N = {
       ['Spajanje i izdvajanje', 'Označi dve ili više slika (dugi pritisak), pa u traci dodirni „Više“ i „Spoji u jedan dokument“. Stranice idu redom kojim si ih označio, a naziv, album i rok važenja uzimaju se od prve (rok prelazi na nov dokument). Pre spajanja Arhiva pita za potvrdu. Originali ostaju u albumu; ako ti ne trebaju, označi ih i obriši.', 'Pojedinačnu stranicu izdvajaš na ekranu sa stranicama: dodir na stranicu, pa „Izdvoji kao posebnu sliku“.'],
       ['PDF', 'Sliku, dokument od slika ili više označenih slika pretvaraš u jedan PDF: u pregledu dugmetom PDF, a kod izbora preko „Više“. Zatim biraš da li ga deliš (Viber, e-pošta…) ili čuvaš na telefon.', 'Stranice idu u PDF bez gubitka kvaliteta.', 'Kod PDF fajla na tom mestu je dugme za deljenje: šalje se originalni fajl, bez izmena. Chrome ne dozvoljava deljenje Word i Excel fajlova, pa je kod njih tu dugme za čuvanje na telefon; sačuvan fajl šalješ iz Vibera ili e-pošte (priloži fajl).'],
       ['Rok važenja', 'Dokumentu koji ističe (registracija, pasoš, osiguranje, garancija) upiši rok: u pregledu dodirni dugme sa kalendarom, zatim polje za datum, izaberi datum i dodirni „Sačuvaj“. Isto važi za PDF, Word i Excel. Rok upisuješ i preko izbora: dugi pritisak, pa „Više“ i „Rok važenja“. Upisan rok menjaš i dodirom na oznaku roka ispod naziva ili na olovku pored nje. Rok se vidi i menja i na ekranu sa stranicama. Ispod datuma možeš da upišeš i šta treba uraditi (npr. „obnoviti kod agenta“); ta napomena se vidi u obaveštenju, u rokovima i u pregledu.', 'Kad se rok približi, Arhiva te obavesti jednom, a zatim još po jednom 7 dana pre i kad dokument istekne. Na početnom ekranu se tada pojavi zvonce sa brojem (crveno ako je nešto isteklo). Dodir na zvonce otvara spisak svih rokova: isteklo, uskoro ističe i kasnije.', 'Koliko dana ranije da te upozori biraš u Podešavanja → rok važenja (podrazumevano 30). Obaveštenje vidiš kad otvoriš Arhivu. Kad obnoviš dokument, upiši nov datum; ako rok više nije potreban, dodirni „Ukloni rok“. Rok se čuva u rezervnoj kopiji.'],
-      ['AI radionica (proba)', 'AI radionica je posebno mesto gde AI radi sa tvojim dokumentom. Otvara se dugmetom sa zvezdicama ✨ u pregledu bilo kog dokumenta, tasterom ✨ pored filtera „Abeceda / Datum“ na početnom ekranu ili preko izbora: dugi pritisak, pa „Više“ i „AI radionica“.', 'Dodirni gotov zadatak (Sažetak, Tabela iznosa, Prevedi, Zapisnik) ili upiši svoj zadatak u polje dole i dodirni strelicu. Rezultat se otvara na posebnom ekranu, gde ga čitaš ceo. „Izmeni“ ti dozvoljava da ispraviš bilo koji deo teksta, a polje dole traži doradu od AI, npr. „skrati“ ili „dodaj red za ključeve“. Svaka izmena je nova verzija: okvir „Šta je promenjeno“ kaže šta je urađeno, a strelicama se vraćaš na raniju verziju. U radionici ispod zadataka uvek vidiš original. Naziv dokumenta stoji gore, iza „AI radionica“: dodir na njega bira drugi dokument. Kad rezultat postoji, desno od naziva je pločica „Rezultat“ koja ga otvara, a ✕ na dokumentu zatvara radionicu.', 'Dokument ostaje nepromenjen. Rezultat ulazi u arhivu tek kad dodirneš „Sačuvaj“, i to kao nov PDF u album koji izabereš. „Podeli“ šalje rezultat kao PDF. „Pročitaj“ predlaže naziv, album, rok i tekst za pretragu samog dokumenta; ništa se ne menja dok ne dodirneš „Primeni izabrano“.', 'Ključ, model i trošak su u Podešavanja → AI obrada. Ispod svakog rezultata piše koliko je koštao. Pre prvog slanja Arhiva traži saglasnost, jer dokument ide Google-ovom servisu Gemini. Dok je ovo proba, ne šalji lične i poverljive dokumente.'],
+      ['AI radionica (proba)', 'AI radionica je posebno mesto gde AI radi sa tvojim dokumentom. Otvara se dugmetom sa zvezdicama ✨ u pregledu bilo kog dokumenta, tasterom ✨ pored filtera „Abeceda / Datum“ na početnom ekranu ili preko izbora: dugi pritisak, pa „Više“ i „AI radionica“.', 'Dodirni gotov zadatak (Sažetak, Tabela iznosa, Prevedi, Šablon) ili upiši svoj zadatak u polje dole i dodirni strelicu. Rezultat se otvara na posebnom ekranu, gde ga čitaš ceo. „Izmeni“ ti dozvoljava da ispraviš bilo koji deo teksta, a polje dole traži doradu od AI, npr. „skrati“ ili „dodaj red za ključeve“. Svaka izmena je nova verzija: okvir „Šta je promenjeno“ kaže šta je urađeno, a strelicama se vraćaš na raniju verziju. U radionici ispod zadataka uvek vidiš original. Naziv dokumenta stoji gore, iza „AI radionica“: dodir na njega bira drugi dokument. Kad rezultat postoji, desno od naziva je pločica „Rezultat“ koja ga otvara, a ✕ na dokumentu zatvara radionicu.', 'Dokument ostaje nepromenjen. Rezultat ulazi u arhivu tek kad dodirneš „Sačuvaj“, i to kao nov PDF u album koji izabereš. „Podeli“ šalje rezultat kao PDF. „Pročitaj“ predlaže naziv, album, rok i tekst za pretragu samog dokumenta; ništa se ne menja dok ne dodirneš „Primeni izabrano“.', 'Ključ, model i trošak su u Podešavanja → AI obrada. Ispod svakog rezultata piše koliko je koštao. Pre prvog slanja Arhiva traži saglasnost, jer dokument ide Google-ovom servisu Gemini. Dok je ovo proba, ne šalji lične i poverljive dokumente.'],
       ['Pretraga', 'Lupa pretražuje nazive albuma, slika i dokumenata. „Detaljno“ traži i reči unutar PDF, Word i Excel dokumenata.', 'U albumu pretraga obuhvata i njegove podalbume.'],
       ['Prečica na početnom ekranu', 'Označi jednu stavku i dodirni „Prečica“. Stavka se otvara u Chrome-u, a iz Chrome menija biraš „Dodaj na početni ekran“. Prečica dokumenta od više stranica lista sve stranice.'],
       ['Korpa', 'Svako brisanje prvo traži potvrdu. Obrisano ide u korpu (Podešavanja → korpa) i tamo čeka zadati broj dana, a zatim se trajno briše. Iz korpe stavku vraćaš ili je odmah trajno brišeš.', 'Albumi ne idu u korpu: kad obrišeš album, njegove slike i dokumenti ostaju u „Sve slike“.'],
@@ -2504,7 +2512,11 @@ const I18N = {
     wsTaskSum: 'Summary',
     wsTaskAmounts: 'Table of amounts',
     wsTaskTrans: 'Translate',
-    wsTaskRecord: 'Record',
+    wsTaskTemplate: 'Template',
+    wsErrDet: 'Details',
+    wsErrCode: 'code',
+    wsErrFinish: 'finish reason',
+    wsErrRaw: 'AI response ({n} characters)',
     wsTabOrig: 'Original',
     wsTabRes: 'Result',
     wsTabResV: 'Result · v{n}',
@@ -2619,7 +2631,7 @@ const I18N = {
       ['Merging and splitting', 'Select two or more images (long-press), then tap “More” and “Merge into one document”. Pages follow the order you selected them in; the name, album and valid-until date come from the first (the date moves to the new document). Arhiva asks before merging. The originals stay in the album; if you do not need them, select and delete them.', 'To split off a single page, open the pages screen, tap the page and choose “Split off as a separate image”.'],
       ['PDF', 'Turn an image, an image document or several selected images into one PDF: with the PDF button in the viewer, or via “More” when selecting. Then share it (Viber, email…) or save it to the phone.', 'Pages go into the PDF without losing quality.', 'For a PDF file that spot holds a share button: the original file is sent, unchanged. Chrome does not allow sharing Word and Excel files, so for them that button saves the file to the phone; send the saved file from Viber or email (attach file).'],
       ['Valid until', 'For a document that expires (registration, passport, insurance, warranty) set the date: in the viewer tap the calendar button, then the date field, pick the date and tap “Save”. The same works for PDF, Word and Excel. You can also set it when selecting: long-press, then “More” and “Valid until”. Once set, you can also change it by tapping the date label under the name or the pencil next to it. The date is also shown and changed on the pages screen. Under the date you can also write what needs to be done (e.g. “renew with the agent”); the note is shown in the notification, in the dates list and in the viewer.', 'When the date gets close, Arhiva notifies you once, then once more 7 days before and when the document expires. A bell with a number appears on the home screen (red if something has expired). Tap the bell to see all dates: expired, expiring soon and later.', 'How many days in advance you are warned is set in Settings → valid until (30 by default). You see the notification when you open Arhiva. When you renew a document, enter the new date; if the date is no longer needed, tap “Remove date”. The date is saved in the backup.'],
-      ['AI workshop (trial)', 'The AI workshop is a separate place where AI works with your document. Open it with the button with the stars ✨ in the viewer of any document, with the ✨ button next to the “Abeceda / Datum” filters on the home screen, or by selecting: long-press, then “More” and “AI workshop”.', 'Tap a ready task (Summary, Table of amounts, Translate, Record) or type your own task in the field below and tap the arrow. The result opens on its own screen where you read all of it. “Edit” lets you correct any part of the text, and the field below asks AI to refine it, e.g. “shorter” or “add a row for the keys”. Every change is a new version: the “What changed” box says what was done, and the arrows take you back to an earlier version. In the workshop the original is always shown below the tasks. The document name is at the top, after “AI workshop”: tap it to choose another document. When there is a result, the “Result” tile next to the name opens it, and ✕ on the document closes the workshop.', 'The document stays unchanged. The result enters the archive only when you tap “Save”, as a new PDF in the album you choose. “Share” sends the result as a PDF. “Read” suggests a name, an album, a date and text for search for the document itself; nothing changes until you tap “Apply selected”.', 'Key, model and cost are in Settings → AI processing. Below every result you see what it cost. Before the first send Arhiva asks for consent, because the document goes to the Google Gemini service. While this is a trial, do not send personal or confidential documents.'],
+      ['AI workshop (trial)', 'The AI workshop is a separate place where AI works with your document. Open it with the button with the stars ✨ in the viewer of any document, with the ✨ button next to the “Abeceda / Datum” filters on the home screen, or by selecting: long-press, then “More” and “AI workshop”.', 'Tap a ready task (Summary, Table of amounts, Translate, Template) or type your own task in the field below and tap the arrow. The result opens on its own screen where you read all of it. “Edit” lets you correct any part of the text, and the field below asks AI to refine it, e.g. “shorter” or “add a row for the keys”. Every change is a new version: the “What changed” box says what was done, and the arrows take you back to an earlier version. In the workshop the original is always shown below the tasks. The document name is at the top, after “AI workshop”: tap it to choose another document. When there is a result, the “Result” tile next to the name opens it, and ✕ on the document closes the workshop.', 'The document stays unchanged. The result enters the archive only when you tap “Save”, as a new PDF in the album you choose. “Share” sends the result as a PDF. “Read” suggests a name, an album, a date and text for search for the document itself; nothing changes until you tap “Apply selected”.', 'Key, model and cost are in Settings → AI processing. Below every result you see what it cost. Before the first send Arhiva asks for consent, because the document goes to the Google Gemini service. While this is a trial, do not send personal or confidential documents.'],
       ['Search', 'The magnifier searches the names of albums, images and documents. “Detailed” also searches words inside PDF, Word and Excel documents.', 'Inside an album, search also covers its sub-albums.'],
       ['Home screen shortcut', 'Select one item and tap “Shortcut”. The item opens in Chrome; choose “Add to home screen” from the Chrome menu. The shortcut of a multi-page document shows all pages.'],
       ['Trash', 'Every deletion asks for confirmation first. Deleted items go to the trash (Settings → trash) and wait there for the set number of days, then they are deleted for good. From the trash you can restore an item or delete it right away.', 'Albums do not go to the trash: when you delete an album, its images and documents stay in “All images”.'],
@@ -7873,12 +7885,24 @@ function wsBusyHtml(stopId){
     '<div class="ai-wait-s">' + escapeHtml(t('wsBusyWait')) + '</div></div>' +
     '<button type="button" class="sheet-cta secondary" id="' + stopId + '">' + escapeHtml(t('aiCancel')) + '</button></div>';
 }
+/* „Detalji“ u kartici greške: šifra, razlog završetka i početak odgovora AI — da se uzrok vidi bez nagađanja */
+function wsErrDetails(e){
+  if(!e) return '';
+  const lines = [];
+  if(e.aiCode) lines.push(t('wsErrCode') + ': ' + e.aiCode + (e.aiVars && e.aiVars.code ? ' (' + e.aiVars.code + ')' : ''));
+  if(e.finish) lines.push(t('wsErrFinish') + ': ' + e.finish);
+  if(e.aiVars && e.aiVars.msg) lines.push(String(e.aiVars.msg).slice(0, 400));
+  if(typeof e.raw === 'string') lines.push(t('wsErrRaw', {n:e.raw.length}) + ':\n' + (e.raw.slice(0, 700) || '—') + (e.raw.length > 700 ? ' …' : ''));
+  else if(!e.aiCode && e.message) lines.push(String(e.message).slice(0, 400));
+  if(!lines.length) return '';
+  return '<details class="ws-err-det"><summary>' + escapeHtml(t('wsErrDet')) + '</summary><pre>' + escapeHtml(lines.join('\n')) + '</pre></details>';
+}
 function wsErrFill(box, pfx){
   const e = _ws.err.e, code = e && e.aiCode;
   const toSettings = code === 'aiErrNoKey' || code === 'aiErrKey' || code === 'aiErrModel';
   const retry = !!_ws.err.task && !toSettings && ['aiErrBig', 'aiErrNoText', 'aiErrFile', 'aiErrBlocked'].indexOf(code) < 0;
   box.innerHTML = '<div class="ws-card"><div class="ai-wait-t">' + escapeHtml(t('wsErrTitle')) + '</div>' +
-    '<p class="ai-p ai-err">' + escapeHtml(aiErrText(e)) + '</p>' +
+    '<p class="ai-p ai-err">' + escapeHtml(aiErrText(e)) + '</p>' + wsErrDetails(e) +
     (toSettings ? '<button type="button" class="sheet-cta" id="' + pfx + 'ErrSet">' + escapeHtml(t('aiOpenSettings')) + '</button>' : '') +
     (retry ? '<button type="button" class="sheet-cta" id="' + pfx + 'ErrRetry">' + escapeHtml(t('aiTryAgain')) + '</button>' : '') +
     '<button type="button" class="sheet-cta secondary ai-gap" id="' + pfx + 'ErrClose">' + escapeHtml(t('aiClose')) + '</button></div>';
@@ -7913,7 +7937,7 @@ function wsRender(){
   const tasks = document.getElementById('wsTasks');
   if(!tasks.dataset.built){
     tasks.dataset.built = '1';
-    ['read', 'summary', 'amounts', 'translate', 'record'].forEach(k=>{
+    ['read', 'summary', 'amounts', 'translate', 'template'].forEach(k=>{
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'ws-chip';
@@ -7923,7 +7947,7 @@ function wsRender(){
       tasks.appendChild(b);
     });
   }
-  const TK = {read:'wsTaskRead', summary:'wsTaskSum', amounts:'wsTaskAmounts', translate:'wsTaskTrans', record:'wsTaskRecord'};
+  const TK = {read:'wsTaskRead', summary:'wsTaskSum', amounts:'wsTaskAmounts', translate:'wsTaskTrans', template:'wsTaskTemplate'};
   tasks.querySelectorAll('.ws-chip').forEach(b=>{ b.querySelector('span').textContent = t(TK[b.dataset.task]); b.disabled = !src || busy; });
   /* poruka: rad u toku ili greška (u radionici samo za zadatke pokrenute odavde) */
   const msg = document.getElementById('wsMsg');
@@ -8216,7 +8240,7 @@ function wsTaskTap(k){
     openActionSheet(t('wsTransTitle'), WS_LANGS.map(l=>({icon:'🌐', label:l[1], onClick:()=>wsRun({kind:'translate', label:t('wsTaskTrans') + ' · ' + l[1], langName:l[2]})})));
     return;
   }
-  const key = {summary:'wsTaskSum', amounts:'wsTaskAmounts', record:'wsTaskRecord'}[k];
+  const key = {summary:'wsTaskSum', amounts:'wsTaskAmounts', template:'wsTaskTemplate'}[k];
   wsRun({kind:k, label:t(key)});
 }
 /* polje u radionici = nov zadatak od izvora; polje na ekranu „Rezultat“ = dorada trenutne verzije */
@@ -8251,8 +8275,9 @@ function wsTaskText(task){
       return 'Find every amount of money in the source and put them in one table with the columns: description, date, amount, currency (header texts in the output language). One row per amount, in the order they appear; leave the date cell empty if there is no date. If all amounts share one currency and adding them up makes sense, add a last row with the total. Put a short heading above the table. If there are no amounts, return one paragraph that says so.';
     case 'translate':
       return 'Translate the whole source into ' + task.langName + '. Keep the structure: headings, paragraphs, lists and tables. Translate all text; keep names, numbers, amounts and dates unchanged. The title and the note must also be in ' + task.langName + '.';
-    case 'record':
-      return 'Draft a formal record (in Serbian: zapisnik) based on the source, as a document ready to be signed. If the source is a lease or rental contract, make a handover record of the property (zapisnik o primopredaji): place and date, the parties (landlord and tenant), address of the property, date of handover, meter readings (electricity, water, gas) as blanks, number of keys, condition of the property and the inventory, remarks, and signature lines for both parties. For any other document, make a record of the facts it states, with date, participants and signature lines. Use "________" for everything that must be filled in by hand.';
+    case 'template':
+      /* verzija 74 (umesto „Zapisnik“): šablon od dokumenta — popunjavanje šablona dolazi u 4d */
+      return 'Make a reusable TEMPLATE from the source. Copy all fixed text word for word, in the same language and order as the source: do not translate, shorten, rephrase or correct it. Replace every piece of data that belongs to this particular case or person (names, addresses, personal ID numbers such as JMBG, ID card or passport numbers, phone numbers, e-mail addresses, dates, amounts, account numbers, vehicle registration plates, apartment or property details of this case) with a field in square brackets that names what belongs there, written in ' + wsLangName() + ', for example [Ime i prezime zakupca], [Adresa stana], [Iznos kirije]. Use exactly the same field name every time the same data appears. Keep the structure: headings, paragraphs, lists and tables. The title is "' + t('wsTaskTemplate') + ' – " followed by the kind of document. In "note" say how many different fields there are and remind the user to check the fixed text against the original.';
     default:
       return task.text;
   }
@@ -8337,7 +8362,13 @@ async function wsRun(task){
     aiUsageAdd({model:model.id, name:src.name, inp:r.usage.inp, out:r.usage.out, think:r.usage.think, usd:r.usage.usd});
     if(/SAFETY|PROHIBITED|BLOCKLIST|SPII|RECITATION/.test(r.finish)) throw aiError('aiErrBlocked');
     const res = wsClean(aiParseJson(r.text));
-    if(!res) throw aiError(r.finish === 'MAX_TOKENS' ? 'aiErrCut' : 'aiErrParse');
+    if(!res){
+      /* verzija 74: uz grešku ide i ono što je AI stvarno vratio (kartica greške → „Detalji“) */
+      const er = aiError(r.finish === 'MAX_TOKENS' ? 'aiErrCut' : 'aiErrParse');
+      er.raw = String(r.text || '');
+      er.finish = r.finish || '';
+      throw er;
+    }
     /* „šta je promenjeno“ postoji samo kod dorade; ako ga AI izostavi, piše se bar šta je traženo */
     const change = base ? (res.change || t('wsChangeAsked', {task:task.text})) : '';
     delete res.change;
