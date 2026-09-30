@@ -1215,11 +1215,24 @@ html[data-theme="ponoc"]{
 .ws-src-nm{ font-size:14.5px; font-weight:600; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .ws-src-ch{ flex:none; font-size:12.5px; font-weight:700; color:var(--brass); }
 .ws-lbl{ font-size:12px; color:var(--ink-dim); margin:16px 4px 8px; }
-.ws-tasks{ display:flex; flex-wrap:wrap; gap:8px; }
+.ws-tasks{ display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:var(--ws-gap); }
+/* verzija 80: jedna mera razmaka (--ws-gap) svuda na početnom ekranu radionice; gornji deo stoji, skroluje se samo dokument */
+#aiWs{ --ws-gap:8px; }
+.ws-top{ flex:none; }
+.ws-top .ws-inner{ padding-top:var(--ws-gap); padding-bottom:0; }
+.ws-top .ws-lbl-row{ margin:0 0 var(--ws-gap); min-height:34px; }
+.ws-top #wsMsg:not(:empty){ margin:var(--ws-gap) 0 0; max-height:42vh; max-height:42dvh; overflow-y:auto; }
+.ws-top #wsOrigLbl{ margin:var(--ws-gap) 4px var(--ws-gap); line-height:1.2; }
+.ws-top #wsOrigLbl[hidden]{ display:none; }
+.ws-doc-inner{ padding-top:0; }
+.ws-pills{ display:flex; align-items:center; gap:var(--ws-gap); flex:none; min-width:0; }
+.ws-chip.ws-chip-pill{ height:34px; padding:0 12px; border-radius:17px; border-color:var(--brass-soft); color:var(--brass); font-weight:700; font-size:13px; gap:6px; }
+.ws-tasks .ws-chip{ width:100%; min-width:0; justify-content:center; padding:0 4px; overflow:hidden; text-overflow:ellipsis; }
+.ws-tasks .ws-chip span{ overflow:hidden; text-overflow:ellipsis; }
 /* verzija 75: Moji šabloni; verzija 78: ulaz je pločica u redu „gotovi zadaci“, spisak u prozoru odozdo */
 .ws-lbl-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin:16px 0 8px; }
 .ws-lbl-row .ws-lbl{ margin:0 4px; }
-.ws-tpl-pill{ flex:none; height:32px; padding:0 12px; border-radius:16px; border:1px solid var(--brass-soft); background:var(--surface); color:var(--brass);
+.ws-tpl-pill{ flex:none; height:34px; padding:0 12px; border-radius:17px; border:1px solid var(--brass-soft); background:var(--surface); color:var(--brass);
   font-family:var(--font-ui); font-size:13px; font-weight:700; display:inline-flex; align-items:center; gap:6px; cursor:pointer; white-space:nowrap; }
 .ws-tpl-pill[hidden]{ display:none; }
 .ws-tpl-pill:disabled{ opacity:.4; cursor:default; }
@@ -1409,6 +1422,7 @@ body:has(#aiWs.open) .toast{ bottom:calc(190px + env(safe-area-inset-bottom)); }
 .ws-pick-cr.cur{ color:var(--ink); cursor:default; }
 .ws-pick-cr-sep{ color:var(--ink-dim); font-size:14px; }
 @media (max-width:360px){ .ws-chip{ padding:0 11px; font-size:13px; } .ws-inner{ padding-left:12px; padding-right:12px; } }
+@media (max-width:379px){ .ws-chip.ws-chip-pill, .ws-tpl-pill{ padding:0 9px; font-size:12.5px; gap:4px; } .ws-chip.ws-chip-pill svg, .ws-tpl-pill svg{ width:14px; height:14px; } .ws-lbl-row .ws-lbl{ margin:0 2px; } }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -1659,14 +1673,15 @@ body:has(#aiWs.open) .toast{ bottom:calc(190px + env(safe-area-inset-bottom)); }
 </div>
 <div class="ws-screen" id="aiWs">
   <div class="set-header"><button type="button" class="set-back" id="wsBack" aria-label="nazad"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="set-title ws-path" id="wsTitle"><span class="wp-root" id="wsPathRoot"></span><span class="wp-sep">›</span><button type="button" class="wp-doc" id="wsPathDoc"></button></div><button type="button" class="ws-res-pill" id="wsResPill" hidden></button></div>
-  <div class="ws-body" id="wsBody"><div class="ws-inner">
-    <div class="ws-lbl-row"><div class="ws-lbl" id="wsTasksLbl"></div><button type="button" class="ws-tpl-pill" id="wsTplPill" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"></path><path d="M14 3v5h5"></path><rect x="9" y="11.5" width="7" height="2.6" rx="1"></rect><rect x="9" y="16" width="4.5" height="2.6" rx="1"></rect></svg><span id="wsTplPillTx"></span></button></div>
+  <!-- verzija 80: zamrznut gornji deo (zadaci i natpis „original“); skroluje se samo dokument -->
+  <div class="ws-top" id="wsTop"><div class="ws-inner">
+    <div class="ws-lbl-row"><div class="ws-lbl" id="wsTasksLbl"></div><div class="ws-pills"><button type="button" class="ws-chip ws-chip-pill" id="wsTplTask" data-task="template"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"></path><path d="M14 3v5h5"></path><path d="M10.5 11.5h-1.5v6h1.5"></path><path d="M14.5 11.5h1.5v6h-1.5"></path></svg><span></span></button><button type="button" class="ws-tpl-pill" id="wsTplPill" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"></path><path d="M14 3v5h5"></path><rect x="9" y="11.5" width="7" height="2.6" rx="1"></rect><rect x="9" y="16" width="4.5" height="2.6" rx="1"></rect></svg><span id="wsTplPillTx"></span></button></div></div>
     <div class="ws-tasks" id="wsTasks"></div>
-    <div class="ws-view" id="wsView">
-      <div id="wsMsg"></div>
-      <div class="ws-lbl" id="wsOrigLbl"></div>
-      <div class="ws-orig-card" id="wsOrigCard"><button type="button" class="ws-orig-x" id="wsOrigX"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg></button><div class="ws-orig" id="wsOrig"></div></div>
-    </div>
+    <div id="wsMsg"></div>
+    <div class="ws-lbl" id="wsOrigLbl"></div>
+  </div></div>
+  <div class="ws-body" id="wsBody"><div class="ws-inner ws-doc-inner" id="wsView">
+    <div class="ws-orig-card" id="wsOrigCard"><button type="button" class="ws-orig-x" id="wsOrigX"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg></button><div class="ws-orig" id="wsOrig"></div></div>
   </div></div>
   <div class="ws-bar"><div class="ws-bar-in">
     <div class="ws-status" id="wsStatus"></div>
@@ -2187,7 +2202,7 @@ const I18N = {
     wsTasksLbl: 'gotovi zadaci',
     wsTaskRead: 'Pročitaj',
     wsTaskSum: 'Sažetak',
-    wsTaskAmounts: 'Tabela iznosa',
+    wsTaskAmounts: 'Iznosi',
     wsTaskTrans: 'Prevedi',
     wsTaskTemplate: 'Šablon',
     wsErrDet: 'Detalji',
@@ -2361,7 +2376,7 @@ const I18N = {
       ['Spajanje i izdvajanje', 'Označi dve ili više slika (dugi pritisak), pa u traci dodirni „Više“ i „Spoji u jedan dokument“. Stranice idu redom kojim si ih označio, a naziv, album i rok važenja uzimaju se od prve (rok prelazi na nov dokument). Pre spajanja Arhiva pita za potvrdu. Originali ostaju u albumu; ako ti ne trebaju, označi ih i obriši.', 'Pojedinačnu stranicu izdvajaš na ekranu sa stranicama: dodir na stranicu, pa „Izdvoji kao posebnu sliku“.'],
       ['PDF', 'Sliku, dokument od slika ili više označenih slika pretvaraš u jedan PDF: u pregledu dugmetom PDF, a kod izbora preko „Više“. Zatim biraš da li ga deliš (Viber, e-pošta…) ili čuvaš na telefon.', 'Stranice idu u PDF bez gubitka kvaliteta.', 'Kod PDF fajla na tom mestu je dugme za deljenje: šalje se originalni fajl, bez izmena. Chrome ne dozvoljava deljenje Word i Excel fajlova, pa je kod njih tu dugme za čuvanje na telefon; sačuvan fajl šalješ iz Vibera ili e-pošte (priloži fajl).'],
       ['Rok važenja', 'Dokumentu koji ističe (registracija, pasoš, osiguranje, garancija) upiši rok: u pregledu dodirni dugme sa kalendarom, zatim polje za datum, izaberi datum i dodirni „Sačuvaj“. Isto važi za PDF, Word i Excel. Rok upisuješ i preko izbora: dugi pritisak, pa „Više“ i „Rok važenja“. Upisan rok menjaš i dodirom na oznaku roka ispod naziva ili na olovku pored nje. Rok se vidi i menja i na ekranu sa stranicama. Ispod datuma možeš da upišeš i šta treba uraditi (npr. „obnoviti kod agenta“); ta napomena se vidi u obaveštenju, u rokovima i u pregledu.', 'Kad se rok približi, Arhiva te obavesti jednom, a zatim još po jednom 7 dana pre i kad dokument istekne. Na početnom ekranu se tada pojavi zvonce sa brojem (crveno ako je nešto isteklo). Dodir na zvonce otvara spisak svih rokova: isteklo, uskoro ističe i kasnije.', 'Koliko dana ranije da te upozori biraš u Podešavanja → rok važenja (podrazumevano 30). Obaveštenje vidiš kad otvoriš Arhivu. Kad obnoviš dokument, upiši nov datum; ako rok više nije potreban, dodirni „Ukloni rok“. Rok se čuva u rezervnoj kopiji.'],
-      ['AI radionica (proba)', 'AI radionica je posebno mesto gde AI radi sa tvojim dokumentom. Otvara se dugmetom sa zvezdicama ✨ u pregledu bilo kog dokumenta, tasterom ✨ pored filtera „Abeceda / Datum“ na početnom ekranu ili preko izbora: dugi pritisak, pa „Više“ i „AI radionica“.', 'Dodirni gotov zadatak (Sažetak, Tabela iznosa, Prevedi, Šablon) ili upiši svoj zadatak u polje dole i dodirni strelicu. Rezultat se otvara na posebnom ekranu, gde ga čitaš ceo. „Izmeni“ ti dozvoljava da ispraviš bilo koji deo teksta, a polje dole traži doradu od AI, npr. „skrati“ ili „dodaj red za ključeve“. Svaka izmena je nova verzija: okvir „Šta je promenjeno“ kaže šta je urađeno, a strelicama se vraćaš na raniju verziju. U radionici ispod zadataka uvek vidiš original. Naziv dokumenta stoji gore, iza „AI radionica“: dodir na njega bira drugi dokument. Kad rezultat postoji, desno od naziva je pločica „Rezultat“ koja ga otvara, a ✕ na dokumentu zatvara radionicu.', 'Šablon: stalni tekst ostaje, a podaci slučaja postaju polja u uglastim zagradama, istaknuta u tekstu. Kod Word i Excel dokumenata tekst se preuzima iz originala od reči do reči: AI samo pronalazi podatke (duži dokument čita deo po deo), a Arhiva ih menja poljima. Isto važi za doradu šablona: AI može da doda, vrati u tekst ili preimenuje polje, a sam tekst se menja dugmetom „Izmeni“. Dugme „Polja šablona“ pokazuje sva polja: kad skineš kvačicu, u tekst se vraća podatak iz originala; naziv polja možeš ispraviti. „Sačuvaj šablon“ ga čuva u Arhivi, a u radionici ga nalaziš na pločici „Moji šabloni“ desno od natpisa „gotovi zadaci“, gde ga otvaraš ili brišeš. Šabloni su i u rezervnoj kopiji.', 'Dokument ostaje nepromenjen. Rezultat ulazi u arhivu tek kad dodirneš „Sačuvaj“, i to kao nov PDF u album koji izabereš. „Podeli“ šalje rezultat kao PDF. „Pročitaj“ predlaže naziv, album, rok i tekst za pretragu samog dokumenta; ništa se ne menja dok ne dodirneš „Primeni izabrano“.', 'Ključ, model i trošak su u Podešavanja → AI obrada. Ispod svakog rezultata piše koliko je koštao. Pre prvog slanja Arhiva traži saglasnost, jer dokument ide Google-ovom servisu Gemini. Dok je ovo proba, ne šalji lične i poverljive dokumente.'],
+      ['AI radionica (proba)', 'AI radionica je posebno mesto gde AI radi sa tvojim dokumentom. Otvara se dugmetom sa zvezdicama ✨ u pregledu bilo kog dokumenta, tasterom ✨ pored filtera „Abeceda / Datum“ na početnom ekranu ili preko izbora: dugi pritisak, pa „Više“ i „AI radionica“.', 'Dodirni gotov zadatak (Pročitaj, Sažetak, Iznosi, Prevedi, a gore desno Šablon) ili upiši svoj zadatak u polje dole i dodirni strelicu. Rezultat se otvara na posebnom ekranu, gde ga čitaš ceo. „Izmeni“ ti dozvoljava da ispraviš bilo koji deo teksta, a polje dole traži doradu od AI, npr. „skrati“ ili „dodaj red za ključeve“. Svaka izmena je nova verzija: okvir „Šta je promenjeno“ kaže šta je urađeno, a strelicama se vraćaš na raniju verziju. U radionici ispod zadataka uvek vidiš original: zadaci stoje na vrhu, a pomera se samo dokument. Naziv dokumenta stoji gore, iza „AI radionica“: dodir na njega bira drugi dokument. Kad rezultat postoji, desno od naziva je pločica „Rezultat“ koja ga otvara. ✕ na dokumentu ili korak nazad zatvara samo dokument (nesačuvan rezultat Arhiva prvo nudi da odbaciš), pa biraš drugi. Iz radionice izlaziš strelicom ‹ gore levo, ili korakom nazad kad nijedan dokument nije otvoren.', 'Šablon: stalni tekst ostaje, a podaci slučaja postaju polja u uglastim zagradama, istaknuta u tekstu. Kod Word i Excel dokumenata tekst se preuzima iz originala od reči do reči: AI samo pronalazi podatke (duži dokument čita deo po deo), a Arhiva ih menja poljima. Isto važi za doradu šablona: AI može da doda, vrati u tekst ili preimenuje polje, a sam tekst se menja dugmetom „Izmeni“. Isti iznos koji znači različite stvari (npr. dve kazne od 500 EUR) dobija posebna polja, prema rečima ispred njega, a ista osoba pomenuta više puta ostaje jedno polje. Kartica „Uredi polja šablona“ na vrhu rezultata pokazuje sva polja, a isti prozor otvara i dodir na istaknuto polje u tekstu: kad skineš kvačicu, u tekst se vraća podatak iz originala; naziv polja možeš ispraviti. „Sačuvaj šablon“ ga čuva u Arhivi, a u radionici ga nalaziš na pločici „Moji šabloni“ gore desno, pored „Šablon“, gde ga otvaraš ili brišeš. Šabloni su i u rezervnoj kopiji.', 'Dokument ostaje nepromenjen. Rezultat ulazi u arhivu tek kad dodirneš „Sačuvaj“, i to kao nov PDF u album koji izabereš. „Podeli“ šalje rezultat kao PDF. „Pročitaj“ predlaže naziv, album, rok i tekst za pretragu samog dokumenta; ništa se ne menja dok ne dodirneš „Primeni izabrano“.', 'Ključ, model i trošak su u Podešavanja → AI obrada. Ispod svakog rezultata piše koliko je koštao. Pre prvog slanja Arhiva traži saglasnost, jer dokument ide Google-ovom servisu Gemini. Dok je ovo proba, ne šalji lične i poverljive dokumente.'],
       ['Pretraga', 'Lupa pretražuje nazive albuma, slika i dokumenata. „Detaljno“ traži i reči unutar PDF, Word i Excel dokumenata.', 'U albumu pretraga obuhvata i njegove podalbume.'],
       ['Prečica na početnom ekranu', 'Označi jednu stavku i dodirni „Prečica“. Stavka se otvara u Chrome-u, a iz Chrome menija biraš „Dodaj na početni ekran“. Prečica dokumenta od više stranica lista sve stranice.'],
       ['Korpa', 'Svako brisanje prvo traži potvrdu. Obrisano ide u korpu (Podešavanja → korpa) i tamo čeka zadati broj dana, a zatim se trajno briše. Iz korpe stavku vraćaš ili je odmah trajno brišeš.', 'Albumi ne idu u korpu: kad obrišeš album, njegove slike i dokumenti ostaju u „Sve slike“.'],
@@ -2631,7 +2646,7 @@ const I18N = {
     wsTasksLbl: 'ready tasks',
     wsTaskRead: 'Read',
     wsTaskSum: 'Summary',
-    wsTaskAmounts: 'Table of amounts',
+    wsTaskAmounts: 'Amounts',
     wsTaskTrans: 'Translate',
     wsTaskTemplate: 'Template',
     wsErrDet: 'Details',
@@ -2805,7 +2820,7 @@ const I18N = {
       ['Merging and splitting', 'Select two or more images (long-press), then tap “More” and “Merge into one document”. Pages follow the order you selected them in; the name, album and valid-until date come from the first (the date moves to the new document). Arhiva asks before merging. The originals stay in the album; if you do not need them, select and delete them.', 'To split off a single page, open the pages screen, tap the page and choose “Split off as a separate image”.'],
       ['PDF', 'Turn an image, an image document or several selected images into one PDF: with the PDF button in the viewer, or via “More” when selecting. Then share it (Viber, email…) or save it to the phone.', 'Pages go into the PDF without losing quality.', 'For a PDF file that spot holds a share button: the original file is sent, unchanged. Chrome does not allow sharing Word and Excel files, so for them that button saves the file to the phone; send the saved file from Viber or email (attach file).'],
       ['Valid until', 'For a document that expires (registration, passport, insurance, warranty) set the date: in the viewer tap the calendar button, then the date field, pick the date and tap “Save”. The same works for PDF, Word and Excel. You can also set it when selecting: long-press, then “More” and “Valid until”. Once set, you can also change it by tapping the date label under the name or the pencil next to it. The date is also shown and changed on the pages screen. Under the date you can also write what needs to be done (e.g. “renew with the agent”); the note is shown in the notification, in the dates list and in the viewer.', 'When the date gets close, Arhiva notifies you once, then once more 7 days before and when the document expires. A bell with a number appears on the home screen (red if something has expired). Tap the bell to see all dates: expired, expiring soon and later.', 'How many days in advance you are warned is set in Settings → valid until (30 by default). You see the notification when you open Arhiva. When you renew a document, enter the new date; if the date is no longer needed, tap “Remove date”. The date is saved in the backup.'],
-      ['AI workshop (trial)', 'The AI workshop is a separate place where AI works with your document. Open it with the button with the stars ✨ in the viewer of any document, with the ✨ button next to the “Abeceda / Datum” filters on the home screen, or by selecting: long-press, then “More” and “AI workshop”.', 'Tap a ready task (Summary, Table of amounts, Translate, Template) or type your own task in the field below and tap the arrow. The result opens on its own screen where you read all of it. “Edit” lets you correct any part of the text, and the field below asks AI to refine it, e.g. “shorter” or “add a row for the keys”. Every change is a new version: the “What changed” box says what was done, and the arrows take you back to an earlier version. In the workshop the original is always shown below the tasks. The document name is at the top, after “AI workshop”: tap it to choose another document. When there is a result, the “Result” tile next to the name opens it, and ✕ on the document closes the workshop.', 'Template: the fixed text stays, and the data of the case become fields in square brackets, highlighted in the text. For Word and Excel documents the text is taken from the original word for word: AI only finds the data (a longer document is read part by part), and Arhiva replaces them with fields. The same goes for refining a template: AI can add a field, put it back into the text or rename it, and the text itself is changed with the “Edit” button. The “Template fields” button shows all fields: when you uncheck one, the data from the original goes back into the text; you can correct the field name. “Save template” keeps it in Arhiva, and in the workshop you find it on the “My templates” button to the right of “ready tasks”, where you open or delete it. Templates are also in the backup.', 'The document stays unchanged. The result enters the archive only when you tap “Save”, as a new PDF in the album you choose. “Share” sends the result as a PDF. “Read” suggests a name, an album, a date and text for search for the document itself; nothing changes until you tap “Apply selected”.', 'Key, model and cost are in Settings → AI processing. Below every result you see what it cost. Before the first send Arhiva asks for consent, because the document goes to the Google Gemini service. While this is a trial, do not send personal or confidential documents.'],
+      ['AI workshop (trial)', 'The AI workshop is a separate place where AI works with your document. Open it with the button with the stars ✨ in the viewer of any document, with the ✨ button next to the “Abeceda / Datum” filters on the home screen, or by selecting: long-press, then “More” and “AI workshop”.', 'Tap a ready task (Read, Summary, Amounts, Translate, and Template at the top right) or type your own task in the field below and tap the arrow. The result opens on its own screen where you read all of it. “Edit” lets you correct any part of the text, and the field below asks AI to refine it, e.g. “shorter” or “add a row for the keys”. Every change is a new version: the “What changed” box says what was done, and the arrows take you back to an earlier version. In the workshop the original is always shown below the tasks: the tasks stay at the top and only the document scrolls. The document name is at the top, after “AI workshop”: tap it to choose another document. When there is a result, the “Result” tile next to the name opens it. ✕ on the document or the back gesture closes only the document (Arhiva first offers to discard an unsaved result), so you can choose another. You leave the workshop with the ‹ arrow at the top left, or with the back gesture when no document is open.', 'Template: the fixed text stays, and the data of the case become fields in square brackets, highlighted in the text. For Word and Excel documents the text is taken from the original word for word: AI only finds the data (a longer document is read part by part), and Arhiva replaces them with fields. The same goes for refining a template: AI can add a field, put it back into the text or rename it, and the text itself is changed with the “Edit” button. The same amount with different meanings (e.g. two penalties of 500 EUR) gets separate fields, based on the words before it, while the same person mentioned several times stays one field. The “Edit template fields” card at the top of the result shows all fields, and tapping a highlighted field in the text opens the same window at that field: when you uncheck one, the data from the original goes back into the text; you can correct the field name. “Save template” keeps it in Arhiva, and in the workshop you find it on the “My templates” button at the top right, next to “Template”, where you open or delete it. Templates are also in the backup.', 'The document stays unchanged. The result enters the archive only when you tap “Save”, as a new PDF in the album you choose. “Share” sends the result as a PDF. “Read” suggests a name, an album, a date and text for search for the document itself; nothing changes until you tap “Apply selected”.', 'Key, model and cost are in Settings → AI processing. Below every result you see what it cost. Before the first send Arhiva asks for consent, because the document goes to the Google Gemini service. While this is a trial, do not send personal or confidential documents.'],
       ['Search', 'The magnifier searches the names of albums, images and documents. “Detailed” also searches words inside PDF, Word and Excel documents.', 'Inside an album, search also covers its sub-albums.'],
       ['Home screen shortcut', 'Select one item and tap “Shortcut”. The item opens in Chrome; choose “Add to home screen” from the Chrome menu. The shortcut of a multi-page document shows all pages.'],
       ['Trash', 'Every deletion asks for confirmation first. Deleted items go to the trash (Settings → trash) and wait there for the set number of days, then they are deleted for good. From the trash you can restore an item or delete it right away.', 'Albums do not go to the trash: when you delete an album, its images and documents stay in “All images”.'],
@@ -6185,7 +6200,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 79</div>'+
+    '<div class="settings-hint set-build">verzija 80</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -8025,6 +8040,30 @@ function wsOpen(src){
   wsRenderOrig();
   wsRender();
   pushBack(closeWs);
+  /* verzija 80: otvoren dokument ima svoj korak nazad — zatvara samo dokument, radionica ostaje */
+  if(_ws.src){ _ws.docBack = true; pushBack(closeWsDoc); }
+}
+/* ✕ na dokumentu i korak nazad: zatvara samo dokument (nesačuvan rezultat prvo pita), radionica ostaje na „Izaberi dokument“.
+   Strelica ‹ gore levo (exitAll) posle toga izlazi i iz radionice. */
+function closeWsDoc(){
+  if(!_ws) return;
+  _ws.docBack = false;
+  if(!_ws.src){ setTimeout(()=>{ if(_ws) requestClose(); }, 0); return; }
+  if(_ws.dirty && !_ws.discard){
+    _ws.docBack = true;
+    pushBack(closeWsDoc);
+    askConfirm({icon:'✨', title:t('wsDiscardTitle'), text:t('wsDiscardText'), okIcon:'🗑️', okLabel:t('wsDiscardOk')})
+      .then(yes=>{ if(!_ws) return; if(yes){ _ws.discard = true; requestClose(); } else _ws.exitAll = false; });
+    return;
+  }
+  const exit = !!_ws.exitAll;
+  wsSetSource(null);
+  _ws.discard = false;
+  _ws.exitAll = false;
+  _ws.resOpen = false;
+  wsResScr.classList.remove('open');
+  try{ if(document.activeElement && aiWs.contains(document.activeElement)) document.activeElement.blur(); }catch(e){}
+  if(exit) setTimeout(()=>{ if(_ws) requestClose(); }, 0);
 }
 /* Zatvaranje: nesačuvan rezultat se ne gubi bez pitanja (korak nazad se tada vraća) */
 function closeWs(){
@@ -8042,7 +8081,7 @@ function closeWs(){
   wsResScr.classList.remove('open');
   try{ if(document.activeElement && aiWs.contains(document.activeElement)) document.activeElement.blur(); }catch(e){}
 }
-document.getElementById('wsBack').onclick = ()=>requestClose();
+document.getElementById('wsBack').onclick = ()=>{ if(_ws && _ws.docBack) _ws.exitAll = true; requestClose(); };
 
 function wsDropOrig(){
   if(!_ws) return;
@@ -8057,6 +8096,7 @@ function wsSetSource(src){
   _wsReq++;
   wsDropOrig();
   Object.assign(_ws, {src, vers:[], cur:-1, busy:null, err:null, dirty:false, saved:null, edit:null, tplId:null});
+  if(src && !_ws.docBack){ _ws.docBack = true; pushBack(closeWsDoc); }
   wsAsk.value = '';
   wsFitAsk(wsAsk);
   wsBody.scrollTop = 0;
@@ -8131,18 +8171,20 @@ function wsRender(){
   const tasks = document.getElementById('wsTasks');
   if(!tasks.dataset.built){
     tasks.dataset.built = '1';
-    ['read', 'summary', 'amounts', 'translate', 'template'].forEach(k=>{
+    /* verzija 80: četiri jednake pločice bez ✨; Šablon je u gornjem redu */
+    ['read', 'summary', 'amounts', 'translate'].forEach(k=>{
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'ws-chip';
       b.dataset.task = k;
-      b.innerHTML = WS_SPARK_SVG + '<span></span>';
+      b.innerHTML = '<span></span>';
       b.onclick = ()=>wsTaskTap(k);
       tasks.appendChild(b);
     });
+    document.getElementById('wsTplTask').onclick = ()=>wsTaskTap('template');
   }
   const TK = {read:'wsTaskRead', summary:'wsTaskSum', amounts:'wsTaskAmounts', translate:'wsTaskTrans', template:'wsTaskTemplate'};
-  tasks.querySelectorAll('.ws-chip').forEach(b=>{ b.querySelector('span').textContent = t(TK[b.dataset.task]); b.disabled = !src || busy; });
+  document.querySelectorAll('#wsTasks .ws-chip, #wsTplTask').forEach(b=>{ b.querySelector('span').textContent = t(TK[b.dataset.task]); b.disabled = !src || busy; });
   wsRenderTpls(busy);
   /* poruka: rad u toku ili greška (u radionici samo za zadatke pokrenute odavde) */
   const msg = document.getElementById('wsMsg');
@@ -8174,7 +8216,7 @@ function wsRender(){
 }
 document.getElementById('wsPathDoc').onclick = ()=>{ if(_ws && !_ws.busy) wsOpenPick(); };
 document.getElementById('wsResPill').onclick = ()=>{ if(_ws && _ws.vers.length && !_ws.busy) wrOpen(); };
-/* ✕ na dokumentu: „pogledao sam, odustajem“ — zatvara radionicu (nesačuvan rezultat prvo pita) */
+/* ✕ na dokumentu (verzija 80): zatvara samo dokument; radionica ostaje na „Izaberi dokument“ */
 document.getElementById('wsOrigX').onclick = ()=>requestClose();
 
 /* Original: dokument onakav kakav je u arhivi (samo prikaz) */
