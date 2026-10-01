@@ -1652,18 +1652,22 @@ body:has(#aiWs.open) .toast{ bottom:calc(190px + env(safe-area-inset-bottom)); }
 .inbox-row{ gap:8px; }
 .inbox-row .folder-tile-wide.fw-inline{ height:44px; padding:0 54px 0 8px; border-radius:var(--hdr-r); overflow:hidden; box-shadow:none;
   background:color-mix(in srgb, var(--brass) 10%, var(--bg)); border:1px solid color-mix(in srgb, var(--brass) 38%, var(--line)); }
-.fw-inline .fw-icon{ width:30px; height:30px; background:transparent !important; }
+.fw-inline .fw-icon{ width:26px; height:30px; background:transparent !important; }
 .fw-inline .fw-icon svg{ width:16px; height:16px; }
 .fw-inline .fw-text{ flex:1; }
 .fw-inline .fw-name{ font-size:15.5px; }
 .inbox-row .fw-inline .fw-count{ display:inline; font-family:var(--font-ui); font-size:12px; font-style:normal; font-weight:400; color:var(--ink-dim); margin:0 0 0 2px; letter-spacing:0; }
-.sum-row{ position:relative; display:flex; align-items:center; gap:8px; height:44px; box-sizing:border-box; padding:0 52px 0 14px;
+.sum-row{ position:relative; display:flex; align-items:center; gap:6px; height:44px; box-sizing:border-box; padding:0 46px 0 14px;
   border:1px solid var(--line); border-radius:var(--hdr-r); overflow:hidden; background:var(--bg); }
+.sum-row{ padding-left:8px; }
+.sum-icon{ flex:none; width:26px; height:30px; margin-right:4px; display:flex; align-items:center; justify-content:center; }
+.sum-icon svg{ stroke:var(--brass); width:16px; height:16px; fill:none; }
 .sum-row .album-summary{ flex:1; min-width:0; font-size:16px !important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .sum-row .sum-right{ gap:0; }
 .sum-row .sort-seg{ gap:2px; padding:2px; }
-.sum-row .sort-btn{ font-size:12.5px; letter-spacing:0; text-transform:none; padding:4px 0; min-width:44px; text-align:center; }
+.sum-row .sort-btn{ font-size:12.5px; letter-spacing:0; text-transform:none; padding:4px 0; min-width:40px; text-align:center; }
 .sum-row.narrow .cp-w{ display:none; }
+.sum-row.narrow{ gap:4px; } .sum-row.narrow .sum-icon{ margin-right:6px; } .sum-row.narrow .count-part{ margin-left:0; }
 #wsSaveSheet .sheet, #wsPickSheet .sheet, #wsFldSheet .sheet{ max-height:92vh; max-height:92dvh; overflow-y:auto; overscroll-behavior:contain; box-sizing:border-box; }
 #wsSaveSheet.sheet-full .sheet, #wsFldSheet.sheet-full .sheet{ max-height:none; height:100vh; height:100dvh; border-radius:0; border-top:none; }
 /* verzija 86: „Sačuvaj šablon“ uvek vidljivo na dnu ekrana polja, i kad ima 40+ polja */
@@ -4989,6 +4993,11 @@ function render(){
   /* v100: red „Svi albumi“ u okviru iste visine kao „Sve slike“; radionica je zeleni završetak okvira */
   const summaryRow = document.createElement('div');
   summaryRow.className = 'sum-row';
+  const sumIcon = document.createElement('span');
+  sumIcon.className = 'sum-icon';
+  sumIcon.setAttribute('aria-hidden','true');
+  sumIcon.innerHTML = folderIconSvg();
+  summaryRow.appendChild(sumIcon);
   summaryRow.appendChild(label);
   inboxRow.appendChild(summaryRow);
 
