@@ -1110,6 +1110,10 @@ html[data-theme="ponoc"]{
 .mf-ico{ position:relative; width:112px; height:132px; border-radius:18px; background:var(--surface); border:1px solid var(--line);
   display:flex; align-items:center; justify-content:center; color:var(--brass); box-shadow:0 10px 30px rgba(0,0,0,.12); }
 .mf-ico svg{ width:62px; height:62px; }
+.mf-ico svg.ftic{ width:70px; height:84px; }
+.thumb-box.pdf-thumb svg.ftic{ width:38%; height:auto; max-width:64px; }
+.trash-thumb svg.ftic{ width:40%; height:auto; }
+.ws-src-th svg.ftic{ width:62%; height:auto; }
 .mf-ico .mf-ext{ position:absolute; left:50%; bottom:14px; transform:translateX(-50%); font-family:var(--font-ui); font-size:12px; font-weight:800;
   letter-spacing:.6px; color:var(--on-accent); background:var(--accent); border-radius:6px; padding:2px 7px; max-width:90px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
 .mf-kind{ margin-top:18px; font-family:var(--font-ui); font-size:17px; font-weight:700; color:var(--ink); }
@@ -2703,7 +2707,7 @@ const I18N = {
       ['Albumi i podalbumi', 'Novi album praviš ikonicom fascikle sa plusom na vrhu početnog ekrana. U albumu ista ikonica pravi podalbum.', 'Dugi pritisak na album otvara izbor: zakači na vrh, preimenuj, naslovna slika, premesti ili izbriši. Redosled albuma menjaš prevlačenjem ručke u uglu. Naziv albuma menjaš i olovkom pored naslova kad si u albumu.', 'Iznad naslova albuma je putanja, npr. „Arhiva › Album › Podalbum“: uvek vidiš gde si. Dodir na „Arhiva“ vodi na početni ekran, a dodir na naziv albuma u taj album.'],
       ['Dodavanje', 'Ikonica slike sa plusom dodaje sa telefona: iz galerije (više slika odjednom), slikanjem ili kao dokument (PDF, Word, Excel…). Svaka izabrana slika postaje posebna stavka.', 'Ono što dodaš dok si u albumu (iz galerije, slikanjem ili kao dokument) ide pravo u taj album.'],
       ['Dokument od više stranica', 'U meniju za dodavanje izaberi „Dokument od više stranica“. Slikaj stranicu po stranicu ili izaberi više slika iz galerije, upiši naziv i dodirni „Sačuvaj“.', 'Redosled menjaš prevlačenjem ručke u uglu stranice, a ✕ uklanja stranicu. U mreži se vidi prva stranica sa oznakom broja stranica.'],
-      ['Pregled i listanje', 'Dodir na bilo koju stavku (sliku, PDF, Word, Excel) otvara isti pregled. Prevlačenjem levo i desno ili strelicama listaš stranice, a posle poslednje stranice prelaziš na sledeću stavku, istim redom kao u albumu. Kod slike i PDF-a jedan dodir sakriva ili vraća dugmad.', 'Dva prsta uvećavaju sliku ili stranicu PDF-a (do 5 puta), a uvećanu pomeraš jednim prstom. Dvostruki dodir uvećava na tom mestu ili vraća ceo prikaz.', 'PDF se prikazuje stranicu po stranicu. Word i Excel imaju karticu sa dugmetom „Otvori“: tekst ili tabela (sa listovima) otvaraju se u Arhivi, a A− i A+ menjaju veličinu slova. Za zaključan PDF i ostale vrste fajlova „Otvori“ nudi deljenje ili čuvanje na telefon (Word i Excel samo čuvanje).', 'Gornji red dugmadi je isti za sve: ✨ (AI), kalendar (rok važenja), PDF ili deljenje, korpa. Dugme sa stranicama (samo kod slika) dodaje nove stranice ili menja njihov redosled. Olovka pored naziva menja naziv; isto radi i „Više“ → „Preimenuj“ kod izbora.'],
+      ['Pregled i listanje', 'Dodir na bilo koju stavku (sliku, PDF, Word, Excel) otvara isti pregled. Prevlačenjem levo i desno ili strelicama listaš stranice, a posle poslednje stranice prelaziš na sledeću stavku, istim redom kao u albumu. Kod slike i PDF-a jedan dodir sakriva ili vraća dugmad.', 'Dva prsta uvećavaju sliku ili stranicu PDF-a (do 5 puta), a uvećanu pomeraš jednim prstom. Dvostruki dodir uvećava na tom mestu ili vraća ceo prikaz.', 'PDF se prikazuje stranicu po stranicu. Word i Excel imaju karticu sa dugmetom „Otvori“: tekst ili tabela (sa listovima) otvaraju se u Arhivi, a A− i A+ menjaju veličinu slova. Za zaključan PDF i ostale vrste fajlova „Otvori“ nudi deljenje ili čuvanje na telefon (Word i Excel samo čuvanje).', 'Gornji red dugmadi je isti za sve: ✨ (AI), kalendar (rok važenja), PDF ili deljenje, korpa. Dugme sa stranicama (samo kod slika) dodaje nove stranice ili menja njihov redosled. Olovka pored naziva menja naziv; isto radi i „Više“ → „Preimenuj“ kod izbora.', 'Fajlove prepoznaješ po boji oznake na ikonici: PDF je crven, Word plav, Excel zelen, ostale vrste sive.'],
       ['Spajanje i izdvajanje', 'Označi dve ili više slika (dugi pritisak), pa u traci dodirni „Više“ i „Spoji u jedan dokument“. Stranice idu redom kojim si ih označio, a naziv, album i rok važenja uzimaju se od prve (rok prelazi na nov dokument). Pre spajanja Arhiva pita za potvrdu. Originali ostaju u albumu; ako ti ne trebaju, označi ih i obriši.', 'Pojedinačnu stranicu izdvajaš na ekranu sa stranicama: dodir na stranicu, pa „Izdvoji kao posebnu sliku“.'],
       ['PDF', 'Sliku, dokument od slika ili više označenih slika pretvaraš u jedan PDF: u pregledu dugmetom PDF, a kod izbora preko „Više“. Zatim biraš da li ga deliš (Viber, e-pošta…) ili čuvaš na telefon.', 'Stranice idu u PDF bez gubitka kvaliteta.', 'Kod PDF fajla na tom mestu je dugme za deljenje: šalje se originalni fajl, bez izmena. Chrome ne dozvoljava deljenje Word i Excel fajlova, pa je kod njih tu dugme za čuvanje na telefon; sačuvan fajl šalješ iz Vibera ili e-pošte (priloži fajl).'],
       ['Rok važenja', 'Dokumentu koji ističe (registracija, pasoš, osiguranje, garancija) upiši rok: u pregledu dodirni dugme sa kalendarom, zatim polje za datum, izaberi datum i dodirni „Sačuvaj“. Isto važi za PDF, Word i Excel. Rok upisuješ i preko izbora: dugi pritisak, pa „Više“ i „Rok važenja“. Upisan rok menjaš i dodirom na oznaku roka ispod naziva ili na olovku pored nje. Rok se vidi i menja i na ekranu sa stranicama. Ispod datuma možeš da upišeš i šta treba uraditi (npr. „obnoviti kod agenta“); ta napomena se vidi u obaveštenju, u rokovima i u pregledu.', 'Kad se rok približi, Arhiva te obavesti jednom, a zatim još po jednom 7 dana pre i kad dokument istekne. Na početnom ekranu se tada pojavi zvonce sa brojem (crveno ako je nešto isteklo). Dodir na zvonce otvara spisak svih rokova: isteklo, uskoro ističe i kasnije.', 'Koliko dana ranije da te upozori biraš u Podešavanja → rok važenja (podrazumevano 30). Obaveštenje vidiš kad otvoriš Arhivu. Kad obnoviš dokument, upiši nov datum; ako rok više nije potreban, dodirni „Ukloni rok“. Rok se čuva u rezervnoj kopiji.'],
@@ -3198,7 +3202,7 @@ const I18N = {
       ['Albums and sub-albums', 'Create a new album with the folder-plus icon at the top of the home screen. Inside an album the same icon creates a sub-album.', 'Long-press an album for options: pin to top, rename, cover image, move or delete. Drag the handle in the corner to change the album order. You can also rename an album with the pencil next to its title inside the album.', 'Above the album title is the path, e.g. “Arhiva › Album › Sub-album”, so you always see where you are. Tap “Arhiva” to go to the home screen, or an album name to go to that album.'],
       ['Adding', 'The image-plus icon adds from the phone: from the gallery (several images at once), by taking a photo, or as a document (PDF, Word, Excel…). Every picked image becomes a separate item.', 'What you add while inside an album (from the gallery, by taking a photo or as a document) goes straight into that album.'],
       ['Multi-page document', 'In the add menu choose “Multi-page document”. Photograph page by page or pick several images from the gallery, type a name and tap “Save”.', 'Drag the handle in the corner of a page to change the order; ✕ removes a page. The grid shows the first page with the page count.'],
-      ['Viewing and paging', 'Tap any item (image, PDF, Word, Excel) to open the same viewer. Swipe left and right or use the arrows to turn pages; after the last page you move on to the next item, in the same order as in the album. For an image or a PDF, one tap hides or shows the buttons.', 'Two fingers zoom an image or a PDF page (up to 5 times); move the zoomed view with one finger. A double tap zooms in at that spot or returns to the full view.', 'A PDF is shown page by page. Word and Excel show a card with an “Open” button: the text or the table (with its sheets) opens inside Arhiva, and A− and A+ change the text size. For a locked PDF and other file types “Open” offers sharing or saving to the phone (Word and Excel: saving only).', 'The top row of buttons is the same for everything: ✨ (AI), calendar (valid until), PDF or share, trash. The pages button (images only) adds new pages or changes their order. The pencil next to the name renames the item; “More” → “Rename” does the same when selecting.'],
+      ['Viewing and paging', 'Tap any item (image, PDF, Word, Excel) to open the same viewer. Swipe left and right or use the arrows to turn pages; after the last page you move on to the next item, in the same order as in the album. For an image or a PDF, one tap hides or shows the buttons.', 'Two fingers zoom an image or a PDF page (up to 5 times); move the zoomed view with one finger. A double tap zooms in at that spot or returns to the full view.', 'A PDF is shown page by page. Word and Excel show a card with an “Open” button: the text or the table (with its sheets) opens inside Arhiva, and A− and A+ change the text size. For a locked PDF and other file types “Open” offers sharing or saving to the phone (Word and Excel: saving only).', 'The top row of buttons is the same for everything: ✨ (AI), calendar (valid until), PDF or share, trash. The pages button (images only) adds new pages or changes their order. The pencil next to the name renames the item; “More” → “Rename” does the same when selecting.', 'You can tell files apart by the colored tag on the icon: PDF is red, Word blue, Excel green, other types gray.'],
       ['Merging and splitting', 'Select two or more images (long-press), then tap “More” and “Merge into one document”. Pages follow the order you selected them in; the name, album and valid-until date come from the first (the date moves to the new document). Arhiva asks before merging. The originals stay in the album; if you do not need them, select and delete them.', 'To split off a single page, open the pages screen, tap the page and choose “Split off as a separate image”.'],
       ['PDF', 'Turn an image, an image document or several selected images into one PDF: with the PDF button in the viewer, or via “More” when selecting. Then share it (Viber, email…) or save it to the phone.', 'Pages go into the PDF without losing quality.', 'For a PDF file that spot holds a share button: the original file is sent, unchanged. Chrome does not allow sharing Word and Excel files, so for them that button saves the file to the phone; send the saved file from Viber or email (attach file).'],
       ['Valid until', 'For a document that expires (registration, passport, insurance, warranty) set the date: in the viewer tap the calendar button, then the date field, pick the date and tap “Save”. The same works for PDF, Word and Excel. You can also set it when selecting: long-press, then “More” and “Valid until”. Once set, you can also change it by tapping the date label under the name or the pencil next to it. The date is also shown and changed on the pages screen. Under the date you can also write what needs to be done (e.g. “renew with the agent”); the note is shown in the notification, in the dates list and in the viewer.', 'When the date gets close, Arhiva notifies you once, then once more 7 days before and when the document expires. A bell with a number appears on the home screen (red if something has expired). Tap the bell to see all dates: expired, expiring soon and later.', 'How many days in advance you are warned is set in Settings → valid until (30 by default). You see the notification when you open Arhiva. When you renew a document, enter the new date; if the date is no longer needed, tap “Remove date”. The date is saved in the backup.'],
@@ -4369,6 +4373,22 @@ function maybeAutoCover(catId, item){
 function folderIconSvg(){
   return '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 012-2h4l2 2.5h8a2 2 0 012 2V17a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>';
 }
+/* v96: ikonica fajla po vrsti — beli list sa savijenim uglom i obojenom oznakom (PDF crven, Word plav, Excel zelen).
+   Boje su iste u svim temama da se vrsta prepozna na prvi pogled. Nisu logotipi proizvođača. */
+function fileTypeOf(it){ return it.type === 'pdf' ? 'pdf' : String(it.ext || '').toLowerCase().replace(/^\./, ''); }
+function fileTypeIcon(ext){
+  ext = String(ext || '').toLowerCase();
+  const col = ext === 'pdf' ? '#D0392F' : (ext === 'docx' || ext === 'doc' || ext === 'odt' || ext === 'rtf') ? '#2F6FC9'
+    : (ext === 'xlsx' || ext === 'xls' || ext === 'csv' || ext === 'ods') ? '#23874F' : '#6B6F76';
+  const lbl = (ext ? ext.toUpperCase() : 'FAJL').slice(0, 4);
+  const tw = 8 + lbl.length * 5.6;
+  return '<svg class="ftic" width="40" height="48" viewBox="-1 0 41 48" aria-hidden="true">'+
+    '<path d="M6 1.5h20.5L36 11v33a2.5 2.5 0 0 1-2.5 2.5h-27A2.5 2.5 0 0 1 4 44V4a2.5 2.5 0 0 1 2-2.5z" fill="#F4F4F0" stroke="#CFCFC8" stroke-width="0.8"/>'+
+    '<path d="M26.5 1.5V9a2 2 0 0 0 2 2H36z" fill="#CFCFC8"/>'+
+    '<rect x="10" y="16" width="20" height="2.4" rx="1.2" fill="#D6D6D0"/><rect x="10" y="21.5" width="15" height="2.4" rx="1.2" fill="#D6D6D0"/>'+
+    '<rect x="0" y="29" width="'+tw.toFixed(1)+'" height="12" rx="2.5" fill="'+col+'"/>'+
+    '<text x="'+(tw/2).toFixed(1)+'" y="37.7" text-anchor="middle" font-family="Roboto,Arial,sans-serif" font-size="8" font-weight="700" letter-spacing="0.3" fill="#FFFFFF">'+lbl+'</text></svg>';
+}
 function pdfIconSvg(){
   return '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>';
 }
@@ -5066,7 +5086,7 @@ function buildCard(item, indexNumber){
   corner.className = 'corner';
   if(isPdf || isDoc || !item.thumb){
     if(!isPdf && !isDoc) thumbBox.className = 'thumb-box pdf-thumb';
-    thumbBox.innerHTML = pdfIconSvg() + '<span class="pdf-label">'+(isPdf ? 'PDF' : (isDoc ? (item.ext || 'FAJL') : 'SLIKA'))+'</span>';
+    thumbBox.innerHTML = (isPdf || isDoc) ? fileTypeIcon(fileTypeOf(item)) : pdfIconSvg() + '<span class="pdf-label">SLIKA</span>';
     thumbBox.appendChild(corner);
   }else{
     const img = document.createElement('img');
@@ -5318,7 +5338,7 @@ function showModalFile(item){
   document.getElementById('modalLoad').hidden = true;
   setModalSrc('');
   const ext = fileExtOf(item);
-  document.getElementById('mfIco').innerHTML = pdfIconSvg() + (ext ? '<span class="mf-ext">' + escapeHtml(ext.toUpperCase()) + '</span>' : '');
+  document.getElementById('mfIco').innerHTML = fileTypeIcon(ext);
   document.getElementById('mfKind').textContent = t(fileKindKey(ext));
   const p = (item.pages || [])[0];
   document.getElementById('mfMeta').textContent = fmtFileSize(p && p.size);   /* vrsta je već na ikonici */
@@ -6489,7 +6509,7 @@ function renderTrashList(){
     const left = trashDaysLeft(it);
     const inner = it.type === 'image'
       ? (it.thumb ? '<img src="'+it.thumb+'" alt="">' : pdfIconSvg() + '<span>SLIKA</span>')
-      : pdfIconSvg() + '<span>' + escapeHtml(it.type === 'pdf' ? 'PDF' : (it.ext || 'DOK')) + '</span>';
+      : fileTypeIcon(fileTypeOf(it));
     cell.innerHTML = '<div class="trash-thumb">'+inner+'<span class="trash-check">'+(trashSel.has(it.id)?'\u2713':'')+'</span></div>'+
       '<div class="trash-name">'+escapeHtml(it.name)+'</div>'+
       '<div class="trash-left">'+(left === 0 ? 'briše se danas' : 'još '+left+(left===1?' dan':' dana'))+'</div>';
@@ -6613,7 +6633,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 95</div>'+
+    '<div class="settings-hint set-build">verzija 96</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -8528,8 +8548,7 @@ function wsSetSource(src){
 }
 function wsThumbHtml(it){
   if(it.thumb) return '<span class="ws-src-th"><img src="' + it.thumb + '" alt=""></span>';
-  const lbl = it.type === 'pdf' ? 'PDF' : (it.type === 'doc' ? (it.ext || 'DOK') : '');
-  return '<span class="ws-src-th">' + (lbl ? escapeHtml(lbl) : pdfIconSvg()) + '</span>';
+  return '<span class="ws-src-th">' + ((it.type === 'pdf' || it.type === 'doc') ? fileTypeIcon(fileTypeOf(it)) : pdfIconSvg()) + '</span>';
 }
 /* kartica „radim…“ i kartica greške — iste u radionici i na ekranu „Rezultat“ */
 function wsBusyHtml(stopId){
