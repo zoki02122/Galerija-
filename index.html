@@ -1599,6 +1599,10 @@ body:has(#aiWs.open) .toast{ bottom:calc(190px + env(safe-area-inset-bottom)); }
 .ws-pick-cr.cur{ color:var(--ink); cursor:default; }
 .ws-pick-cr-sep{ color:var(--ink-dim); font-size:14px; }
 @media (max-width:360px){ .ws-chip{ padding:0 11px; font-size:13px; } .ws-inner{ padding-left:12px; padding-right:12px; } }
+/* verzija 90: duži nazivi („Napravi šablon“) — natpis „gotovi zadaci“ se sklanja, dugmad dele red na jednake delove */
+.ws-top .ws-lbl-row #wsTasksLbl{ display:none; }
+.ws-top .ws-lbl-row .ws-pills{ flex:1; }
+.ws-top .ws-lbl-row .ws-pills > button{ flex:1 1 0; min-width:0; justify-content:center; white-space:nowrap; }
 @media (max-width:379px){ .ws-chip.ws-chip-pill, .ws-tpl-pill{ padding:0 9px; font-size:12.5px; gap:4px; } .ws-chip.ws-chip-pill svg, .ws-tpl-pill svg{ width:14px; height:14px; } .ws-lbl-row .ws-lbl{ margin:0 2px; } }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
