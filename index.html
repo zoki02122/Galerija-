@@ -1199,6 +1199,11 @@ html[data-theme="ponoc"]{
 /* ===== verzija 71: AI radionica (korak 4c) — ekran iznad pregleda (50) i čitača (53), ispod donjih prozora (55) ===== */
 .ws-screen{ display:none; position:fixed; inset:0; z-index:54; background:var(--bg); flex-direction:column; }
 .ws-screen.open{ display:flex; }
+/* verzija 86: prozor rada preko celog ekrana; polja šablona i čuvanje šablona preko celog ekrana (ništa iza) */
+.ws-busy-scr{ justify-content:center; align-items:center; }
+.ws-busy-in{ width:100%; max-width:560px; box-sizing:border-box; padding:16px; }
+.sheet-bg.sheet-full{ background:var(--bg); align-items:stretch; }
+.sheet-bg.sheet-full .sheet{ max-width:560px; border-top:none; max-height:none; height:100%; height:100dvh; }
 .ws-screen .set-header{ position:relative; flex:none; }
 .ws-body{ flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
 .ws-inner{ max-width:560px; margin:0 auto; padding:14px 14px 22px; }
@@ -1503,6 +1508,7 @@ body:has(#aiWs.open) .toast{ bottom:calc(190px + env(safe-area-inset-bottom)); }
 .sort-btn .sb-short{ display:none; }
 @media (max-width:370px){ .sort-btn .sb-full{ display:none; } .sort-btn .sb-short{ display:inline; } }
 #wsSaveSheet .sheet, #wsPickSheet .sheet, #wsFldSheet .sheet{ max-height:92vh; max-height:92dvh; overflow-y:auto; overscroll-behavior:contain; box-sizing:border-box; }
+#wsSaveSheet.sheet-full .sheet, #wsFldSheet.sheet-full .sheet{ max-height:none; height:100vh; height:100dvh; border-radius:0; border-top:none; }
 #wsSaveSheet .sheet-input{ margin-bottom:14px; }
 .ws-pick-list{ margin-top:10px; }
 .ws-pick-row{ display:flex; align-items:center; gap:12px; padding:9px 2px; border-bottom:1px solid var(--line-soft); cursor:pointer; }
@@ -1819,6 +1825,8 @@ body:has(#aiWs.open) .toast{ bottom:calc(190px + env(safe-area-inset-bottom)); }
     </div>
   </div></div>
 </div>
+<!-- verzija 86: dok AI radi vidi se samo prozor rada, ništa iza njega -->
+<div class="ws-screen ws-busy-scr" id="wsBusyScr"><div class="ws-busy-in" id="wsBusyIn"></div></div>
 <!-- verzija 82: popunjavanje šablona -->
 <div class="ws-screen" id="wsFill">
   <div class="set-header"><button type="button" class="set-back" id="wfBack"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h2 class="set-title" id="wfTitle"></h2><div class="ur-btns"><button type="button" class="ur-btn" id="wfUndo" disabled><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"></path><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"></path></svg></button><button type="button" class="ur-btn" id="wfRedo" disabled><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"></path><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"></path></svg></button></div></div>
@@ -2435,9 +2443,12 @@ const I18N = {
     wsSaveTpl: 'Sačuvaj šablon',
     wsSaveTplTitle: 'Sačuvaj šablon',
     wsSaveTplName: 'naziv šablona',
-    wsSaveTplHint: 'Šablon se čuva u Arhivi, ne kao PDF. Nalaziš ga u AI radionici, u „Moji šabloni“. Polja bez kvačice ostaju stalni tekst.',
-    wsSaveTplHintUpd: 'Menja se sačuvan šablon „{name}“. Polja bez kvačice ostaju stalni tekst.',
+    wsSaveTplHint: 'Šablon ide u „Moji šabloni“ u AI radionici. Odatle ga popunjavaš za svaki nov slučaj.',
+    wsSaveTplHintUpd: 'Menja se sačuvan šablon „{name}“.',
     wsTplSaved: 'Šablon je sačuvan.',
+    wsTplNoFields: 'U dokumentu nisam našao podatke koji bi postali polja, pa šablon nije napravljen.',
+    wsTplDiscardTitle: 'Odbaci šablon?',
+    wsTplDiscardText: 'Šablon još nije sačuvan. Ako ga odbaciš, moraćeš ponovo da ga napraviš.',
     wsTplSaveErr: 'Šablon nije sačuvan. Pokušaj ponovo.',
     wsStatusTplSaved: 'Sačuvano u „Moji šabloni“: „{name}“.',
     wsTplLbl: 'Moji šabloni ({n})',
@@ -2916,9 +2927,12 @@ const I18N = {
     wsSaveTpl: 'Save template',
     wsSaveTplTitle: 'Save template',
     wsSaveTplName: 'template name',
-    wsSaveTplHint: 'The template is kept in Arhiva, not as a PDF. You find it in the AI workshop, under “My templates”. Unchecked fields stay fixed text.',
-    wsSaveTplHintUpd: 'The saved template “{name}” is updated. Unchecked fields stay fixed text.',
+    wsSaveTplHint: 'The template goes to “My templates” in the AI workshop. From there you fill it in for each new case.',
+    wsSaveTplHintUpd: 'The saved template “{name}” is updated.',
     wsTplSaved: 'Template saved.',
+    wsTplNoFields: 'I found no data in the document that could become fields, so no template was made.',
+    wsTplDiscardTitle: 'Discard template?',
+    wsTplDiscardText: 'The template is not saved yet. If you discard it, you will have to make it again.',
     wsTplSaveErr: 'The template was not saved. Try again.',
     wsStatusTplSaved: 'Saved in “My templates”: “{name}”.',
     wsTplLbl: 'My templates ({n})',
@@ -8301,6 +8315,7 @@ function closeWs(){
   _ws = null;
   aiWs.classList.remove('open');
   wsResScr.classList.remove('open');
+  wsRenderBusy();
   try{ if(document.activeElement && aiWs.contains(document.activeElement)) document.activeElement.blur(); }catch(e){}
 }
 document.getElementById('wsBack').onclick = ()=>{ if(_ws && _ws.docBack) _ws.exitAll = true; requestClose(); };
@@ -8415,9 +8430,6 @@ function wsRender(){
   const msg = document.getElementById('wsMsg');
   if(!src){
     msg.innerHTML = '<div class="ws-hint">' + escapeHtml(t('wsHintNoSrc')) + '</div>';
-  }else if(busy && _ws.busy.where === 'ws'){
-    msg.innerHTML = wsBusyHtml('wsStop');
-    document.getElementById('wsStop').onclick = wsCancel;
   }else if(_ws.err && _ws.err.where === 'ws'){
     wsErrFill(msg, 'ws');
   }else{
@@ -8437,7 +8449,34 @@ function wsRender(){
   wsAsk.disabled = !src || busy;
   document.getElementById('wsSend').disabled = !src || busy;
   document.getElementById('wsSend').setAttribute('aria-label', t('wsSend'));
+  wsRenderBusy();
   if(_ws.resOpen) wrRender();
+}
+/* verzija 86: dok AI radi, vidi se samo prozor rada (krug, deo i od n, Otkaži) — ništa iza njega.
+   Korak nazad za to vreme = Otkaži. Kad rad završi, taj korak se skida (wsBusyEnd), da ne ostane zaostao. */
+function wsRenderBusy(){
+  const scr = document.getElementById('wsBusyScr'), box = document.getElementById('wsBusyIn');
+  if(_ws && _ws.busy){
+    box.innerHTML = wsBusyHtml('wsStop');
+    document.getElementById('wsStop').onclick = ()=>{ wsCancel(); wsBusyEnd(); };
+    scr.classList.add('open');
+    try{ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }catch(e){}
+  }else{
+    scr.classList.remove('open');
+    box.innerHTML = '';
+  }
+}
+function wsBusyBackCloser(){
+  if(!_ws) return;
+  _ws.busyBack = false;
+  if(_ws.busy) wsCancel();
+}
+function wsBusyStart(){
+  if(_ws && !_ws.busyBack){ _ws.busyBack = true; pushBack(wsBusyBackCloser); }
+}
+function wsBusyEnd(then){
+  if(_ws && _ws.busyBack){ _ws.busyBack = false; requestCloseThen(then || (()=>{})); }
+  else if(then) then();
 }
 document.getElementById('wsPathDoc').onclick = ()=>{ if(_ws && !_ws.busy) wsOpenPick(); };
 document.getElementById('wsResPill').onclick = ()=>{ if(_ws && _ws.vers.length && !_ws.busy) wrOpen(); };
@@ -8609,10 +8648,7 @@ function wrRender(){
   eb.disabled = busy;
   /* poruka */
   const msg = document.getElementById('wrMsg');
-  if(busy && _ws.busy.where === 'res'){
-    msg.innerHTML = wsBusyHtml('wrStop');
-    document.getElementById('wrStop').onclick = wsCancel;
-  }else if(_ws.err && _ws.err.where === 'res'){
+  if(_ws.err && _ws.err.where === 'res'){
     wsErrFill(msg, 'wr');
   }else msg.innerHTML = '';
   /* verzije */
@@ -8778,14 +8814,17 @@ function wsFldWord(n){
   if(appLang() === 'en') return n === 1 ? 'field' : 'fields';
   return (n % 10 === 1 && n % 100 !== 11) ? 'polje' : 'polja';
 }
-function wsOpenFields(focusKey){
+function wsOpenFields(focusKey, flow){
   if(!_ws || _ws.busy) return;
   const v = _ws.vers[_ws.cur];
   if(!v || !v.res.tpl || !v.res.fields || !v.res.fields.length) return;
-  _wsFld = {draft:v.res.fields.map(f=>({name:f.name, orig:f.name, example:f.example, kind:f.kind, on:f.on !== false, on0:f.on !== false})), discard:false};
+  _wsFld = {draft:v.res.fields.map(f=>({name:f.name, orig:f.name, example:f.example, kind:f.kind, on:f.on !== false, on0:f.on !== false})), discard:false,
+    flow:!!flow, isNew:!!(flow && !_ws.tplId), saved:false};
   document.getElementById('wsFldTitle').textContent = t('wsFldTitle');
   document.getElementById('wsFldLead').textContent = t('wsFldLead');
-  document.getElementById('wsFldOk').textContent = t('wsFldOk');
+  /* verzija 86: na putu šablona dugme na dnu je odmah „Sačuvaj šablon“ (nema više „Primeni“ pa posebnog čuvanja) */
+  document.getElementById('wsFldOk').textContent = flow ? t('wsSaveTpl') : t('wsFldOk');
+  wsFldSheet.classList.toggle('sheet-full', !!flow);
   wsFldBuild();
   wsFldSheet.classList.add('open');
   wsFldSheet.querySelector('.sheet').scrollTop = 0;
@@ -8804,14 +8843,24 @@ document.getElementById('wrPaper').addEventListener('click', (e)=>{
 });
 function wsFldChanged(){ return !!_wsFld && _wsFld.draft.some(f=>f.on !== f.on0 || wsFldName(f.name) !== f.orig); }
 function closeWsFld(){
-  if(_wsFld && !_wsFld.discard && wsFldChanged()){
+  /* verzija 86: nov šablon se ne gubi bez pitanja; sačuvan šablon pita samo ako je nešto promenjeno */
+  if(_wsFld && !_wsFld.discard && (wsFldChanged() || (_wsFld.flow && _wsFld.isNew))){
     pushBack(closeWsFld);
-    askConfirm({icon:'✏️', title:t('wsFldDiscardTitle'), text:t('wsFldDiscardText'), okIcon:'🗑️', okLabel:t('wsDiscardOk')})
+    const nw = _wsFld.flow && _wsFld.isNew;
+    askConfirm({icon:'✏️', title:t(nw ? 'wsTplDiscardTitle' : 'wsFldDiscardTitle'), text:t(nw ? 'wsTplDiscardText' : 'wsFldDiscardText'), okIcon:'🗑️', okLabel:t('wsDiscardOk')})
       .then(yes=>{ if(yes && _wsFld){ _wsFld.discard = true; requestClose(); } });
     return;
   }
+  const flow = !!(_wsFld && _wsFld.flow);
   _wsFld = null;
   wsFldSheet.classList.remove('open');
+  wsFldSheet.classList.remove('sheet-full');
+  /* put šablona je završen (sačuvan ili odbačen): šablon živi u „Moji šabloni“, radionica ostaje bez rezultata */
+  if(flow && _ws){
+    _ws.vers = []; _ws.cur = -1; _ws.dirty = false; _ws.edit = null;
+    if(_ws.resOpen){ _ws.resOpen = false; wsResScr.classList.remove('open'); }
+    wsRender();
+  }
   try{ if(document.activeElement && wsFldSheet.contains(document.activeElement)) document.activeElement.blur(); }catch(e){}
 }
 /* verzija 81: jedan red po polju — kvačica, naziv (dodir ili olovka = kucanje u istom redu), vrsta; ispod podatak iz originala */
@@ -8913,8 +8962,21 @@ document.getElementById('wsFldOk').onclick = ()=>{
     if(msg && !bad) bad = f;
   });
   if(bad){ try{ bad._row.scrollIntoView({block:'center'}); }catch(e){} return; }
+  /* verzija 86: na putu šablona polja se primene pri čuvanju; prozor polja ostaje ispod (nazad sa čuvanja vraća na polja) */
+  if(_wsFld.flow){ wsOpenSave(wsFldMakeRes(v).res); return; }
   if(!wsFldChanged()){ _wsFld.discard = true; requestClose(); return; }
-  /* nova verzija: preimenovanja u tekstu (u dva koraka, da zamena naziva A↔B ne pomeša polja), zatim kvačice */
+  const {res, change} = wsFldMakeRes(v);
+  _ws.vers.push({label:t('wsFldLabel'), res, usage:{inp:0, out:0, think:0, usd:0}, model:null, change});
+  _ws.cur = _ws.vers.length - 1;
+  _ws.dirty = true;
+  _wsFld.discard = true;
+  requestClose();
+  wrBody.scrollTop = 0;
+  wsRender();
+  toast(t('wsNewVer', {n:_ws.cur + 1}));
+};
+/* polja iz prozora → nov rezultat: preimenovanja u tekstu (u dva koraka, da zamena naziva A↔B ne pomeša polja), zatim kvačice */
+function wsFldMakeRes(v){
   const res = wsResClone(v.res);
   const ren = new Map();
   _wsFld.draft.forEach((f, i)=>{ const nm = wsFldName(f.name); if(nm !== f.orig) ren.set(wsFldKey(f.orig), {i, nm}); });
@@ -8929,15 +8991,21 @@ document.getElementById('wsFldOk').onclick = ()=>{
   const renL = _wsFld.draft.filter(f=>wsFldName(f.name) !== f.orig).map(f=>f.orig + ' → ' + wsFldName(f.name));
   const change = [offL.length ? t('wsFldOff', {list:offL.join(', ')}) : '', onL.length ? t('wsFldOn', {list:onL.join(', ')}) : '',
     renL.length ? t('wsFldRen', {list:renL.join(', ')}) : ''].filter(Boolean).join(' ');
-  _ws.vers.push({label:t('wsFldLabel'), res, usage:{inp:0, out:0, think:0, usd:0}, model:null, change});
-  _ws.cur = _ws.vers.length - 1;
-  _ws.dirty = true;
-  _wsFld.discard = true;
-  requestClose();
-  wrBody.scrollTop = 0;
+  return {res, change};
+}
+/* verzija 86: put novog šablona posle AI — odmah „Polja šablona“; bez polja nema šablona */
+function wsTplFlowStart(){
+  if(!_ws) return;
+  const v = _ws.vers[_ws.cur];
   wsRender();
-  toast(t('wsNewVer', {n:_ws.cur + 1}));
-};
+  if(!v || !v.res.tpl || !v.res.fields || !v.res.fields.length){
+    _ws.vers = []; _ws.cur = -1; _ws.dirty = false;
+    wsRender();
+    toast(t('wsTplNoFields'));
+    return;
+  }
+  wsOpenFields(null, true);
+}
 /* ---------- Moji šabloni (verzija 75) ----------
    Zapis u postojećem skladištu meta (bez promene verzije baze): {key:'tpl:<id>', tpl:{id, name, title, blocks, fields:[{name, example, kind}],
    sourceId, createdAt, updatedAt}}. Čuva se ono što korisnik vidi: polja bez kvačice su već stalni tekst, u spisku su samo polja.
@@ -8956,10 +9024,11 @@ function wsSavedText(){
   const sv = _ws.saved;
   return sv.tpl ? t('wsStatusTplSaved', {name:sv.name}) : t('wsStatusSaved', {name:sv.name, album:sv.album});
 }
-async function tplSaveFromWs(name){
+async function tplSaveFromWs(name, resIn){
   if(!_ws) return;
-  const ws = _ws, v = ws.vers[ws.cur];
-  if(!v || !v.res.tpl) return;
+  const ws = _ws, v0 = ws.vers[ws.cur];
+  const v = resIn ? {res:resIn} : v0;
+  if(!v0 || !v || !v.res.tpl) return;
   try{
     const view = wsResView(v.res), now = Date.now();
     const old = ws.tplId ? (await tplAllRaw()).find(r=>r.tpl.id === ws.tplId) : null;
@@ -8982,7 +9051,11 @@ async function tplSaveFromWs(name){
       ws.tplId = tpl.id;
       ws.dirty = false;
       ws.saved = {name, tpl:true};
-      wsRender();
+      /* verzija 86: posle čuvanja zatvara se prozor polja i otvara „Moji šabloni“, gde je nov šablon prvi */
+      if(_wsFld && _wsFld.flow){
+        _wsFld.saved = true; _wsFld.discard = true;
+        requestCloseThen(()=>{ wsRender(); wsOpenTplSheet(); });
+      }else wsRender();
     }
     toast(t('wsTplSaved'));
   }catch(e){ console.error(e); toast(t('wsTplSaveErr')); }
@@ -9046,7 +9119,8 @@ async function wsOpenTpl(tp){
   _ws.saved = {name:tp.name, tpl:true};
   _ws.dirty = false;
   wsRender();
-  wrOpen();
+  /* verzija 86: sačuvan šablon se otvara na istom ekranu „Polja šablona“ (bez ekrana Rezultat) */
+  wsOpenFields(null, true);
 }
 async function wsDelTpl(tp){
   if(!_ws || _ws.busy) return;
@@ -9582,6 +9656,7 @@ async function wsRun(task){
   const model = aiModel();
   _ws.busy = {ctrl, label:task.label, model:model.name, where};
   _ws.err = null;
+  wsBusyStart();
   wsRender();
   if(where === 'res') wrBody.scrollTop = 0;
   else wsBody.scrollTop = 0;
@@ -9597,8 +9672,7 @@ async function wsRun(task){
       if(req !== _wsReq) return;
       if(g.none){
         _ws.busy = null;
-        wsRender();
-        toast(g.msg || t('wsTplChgNone'));
+        wsBusyEnd(()=>{ wsRender(); toast(g.msg || t('wsTplChgNone')); });
         return;
       }
       res = g.res; usage = g.usage; rmodel = g.model; schemaRej = g.schemaRej; res.change = g.change;
@@ -9637,14 +9711,20 @@ async function wsRun(task){
     if(task.kind === 'custom'){ wsAsk.value = ''; wsFitAsk(wsAsk); }
     if(task.kind === 'refine'){ wrAsk.value = ''; wsFitAsk(wrAsk); }
     wrBody.scrollTop = 0;
-    if(_ws.resOpen) wsRender();
-    else{ wsRender(); wrOpen(); }
-    toast(t('wsNewVer', {n:_ws.cur + 1}));
+    const ws = _ws;
+    wsBusyEnd(()=>{
+      if(_ws !== ws) return;
+      /* verzija 86: nov šablon ide pravo na „Polja šablona“ (bez ekrana Rezultat) */
+      if(task.kind === 'template'){ wsTplFlowStart(); return; }
+      if(_ws.resOpen) wsRender();
+      else{ wsRender(); wrOpen(); }
+      toast(t('wsNewVer', {n:_ws.cur + 1}));
+    });
   }catch(e){
     if(req !== _wsReq || !_ws) return;
     _ws.busy = null;
     if(!(e && e.name === 'AbortError')){ console.error(e); _ws.err = {e, task, where}; }
-    wsRender();
+    wsBusyEnd(()=>wsRender());
   }
 }
 
@@ -9986,10 +10066,13 @@ document.getElementById('wsShare').onclick = ()=>{ if(_ws && !_ws.busy && !_ws.e
 const wsSaveSheet = document.getElementById('wsSaveSheet');
 const wsSaveName = document.getElementById('wsSaveName');
 const wsSaveAlb = document.getElementById('wsSaveAlb');
-const closeWsSave = ()=>{ wsSaveSheet.classList.remove('open'); try{ if(document.activeElement && wsSaveSheet.contains(document.activeElement)) document.activeElement.blur(); }catch(e){} };
-function wsOpenSave(){
+const closeWsSave = ()=>{ wsSaveSheet.classList.remove('open'); wsSaveSheet.classList.remove('sheet-full'); try{ if(document.activeElement && wsSaveSheet.contains(document.activeElement)) document.activeElement.blur(); }catch(e){} };
+function wsOpenSave(tplRes){
   const v = _ws && _ws.vers[_ws.cur];
   if(!v || _ws.busy || _ws.edit) return;
+  if(!(tplRes && tplRes.tpl)) tplRes = null;
+  wsSaveSheet._tplRes = tplRes;
+  wsSaveSheet.classList.toggle('sheet-full', !!tplRes);
   document.getElementById('wsSaveTitle').textContent = t('wsSaveTitle');
   document.getElementById('wsSaveNameLbl').textContent = t('wsSaveNameLbl');
   document.getElementById('wsSaveAlbLbl').textContent = t('wsSaveAlbLbl');
@@ -10007,7 +10090,7 @@ function wsOpenSave(){
     document.getElementById('wsSaveNameLbl').textContent = t('wsSaveTplName');
     document.getElementById('wsSaveHint').textContent = cur ? t('wsSaveTplHintUpd', {name:cur.name}) : t('wsSaveTplHint');
     document.getElementById('wsSaveOk').textContent = t('wsSaveTpl');
-    wsSaveName.value = (cur && cur.name) || v.res.title || t('wsTaskTemplate');
+    wsSaveName.value = (cur && cur.name) || (tplRes || v.res).title || t('wsTaskTemplate');
     snapshotField(wsSaveName);
     wsSaveSheet.classList.add('open');
     pushBack(closeWsSave);
@@ -10026,13 +10109,13 @@ function wsOpenSave(){
 }
 wireBackspace(wsSaveName);
 wsSaveName.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ e.preventDefault(); wsSaveName.blur(); } });
-document.getElementById('wsSave').onclick = wsOpenSave;
+document.getElementById('wsSave').onclick = ()=>wsOpenSave();
 document.getElementById('wsSaveBack').onclick = ()=>requestClose();
 wsSaveSheet.onclick = (e)=>{ if(e.target === wsSaveSheet) requestClose(); };
 document.getElementById('wsSaveOk').onclick = ()=>{
   const name = wsSaveName.value.replace(/\s+/g, ' ').trim();
   if(!name){ toast(t('wsSaveNameEmpty')); return; }
-  if(wsSaveSheet.dataset.tpl){ requestCloseThen(()=>tplSaveFromWs(name)); return; }
+  if(wsSaveSheet.dataset.tpl){ const r = wsSaveSheet._tplRes || null; requestCloseThen(()=>tplSaveFromWs(name, r)); return; }
   const albumId = wsSaveAlb.value || null;
   if(wsSaveSheet.dataset.fill){ requestCloseThen(()=>wfMakeDoc(name, albumId)); return; }
   if(wsSaveSheet.dataset.edit){ requestCloseThen(()=>weMakeDoc(name, albumId)); return; }
