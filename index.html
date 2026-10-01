@@ -1328,7 +1328,8 @@ html[data-theme="ponoc"]{
 /* verzija 90: „Popuni šablon“ i „Nov izbor polja“ jedno ispod drugog (duži nazivi, staje i na 340 px) */
 .ws-tpl-acts{ flex:1 0 100%; display:flex; flex-direction:column; gap:10px; padding:14px 4px 0 10px; }
 #wsTplSheet .ws-tpl-acts .ws-tpl-fill, .ws-tpl-acts .ws-tpl-edit{ height:52px; border-radius:16px; font-size:16.5px; font-weight:700; justify-content:center; gap:8px; padding:0 10px; }
-#wsTplSheet .ws-tpl-acts .ws-tpl-fill{ flex:none; background:var(--brass); border-color:var(--brass); color:var(--bg); }
+/* v99: obrubljeno, da puno zeleno ostane samo glavno dugme gore (Nov šablon) */
+#wsTplSheet .ws-tpl-acts .ws-tpl-fill{ flex:none; background:transparent; border:1.5px solid var(--brass); color:var(--brass); }
 .ws-tpl-acts .ws-tpl-edit{ flex:none; display:inline-flex; align-items:center; border:1px solid var(--brass-soft); background:var(--surface-2); color:var(--ink); font-family:var(--font-ui); cursor:pointer; white-space:nowrap; }
 .ws-tpl-acts .ws-tpl-fill svg, .ws-tpl-acts .ws-tpl-edit svg{ width:19px; height:19px; flex:none; }
 .ws-tpl-edit:disabled{ opacity:.45; cursor:default; }
@@ -6720,7 +6721,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 98</div>'+
+    '<div class="settings-hint set-build">verzija 99</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
