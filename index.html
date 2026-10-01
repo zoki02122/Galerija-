@@ -1331,6 +1331,36 @@ html[data-theme="ponoc"]{
 .ur-btn:disabled{ opacity:.3; cursor:default; }
 .we-tx-ur{ margin-left:auto; }
 #weSheet .sheet-head h3{ flex:1; min-width:0; }
+/* verzija 89: Popuni šablon — zamrznut vrh (naziv + brojač, izvori za AI + Napravi dokument), dole napomena za AI */
+.wf-top{ flex:none; background:var(--bg); border-bottom:1px solid var(--line); }
+.wf-top-in{ max-width:560px; margin:0 auto; padding:10px 14px; display:flex; flex-direction:column; gap:var(--ws-gap, 8px); box-sizing:border-box; }
+.wf-top .wf-head{ padding:8px 12px; gap:10px; }
+.wf-top .wf-head .ws-tpl-ic{ width:32px; height:32px; }
+.wf-head-nm{ flex:1; min-width:0; font-size:15px; font-weight:700; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.wf-cnt{ flex:none; font-size:13px; font-weight:700; color:var(--ink-dim); padding:3px 9px; border-radius:10px; border:1px solid var(--line); font-variant-numeric:tabular-nums; }
+.wf-cnt.full{ color:var(--brass); border-color:var(--brass-soft); }
+.wf-tools{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)) minmax(0, 1.5fr); gap:var(--ws-gap, 8px); }
+.wf-tool{ height:58px; min-width:0; border:1px solid var(--line); border-radius:14px; background:var(--surface); color:var(--ink); display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:3px; padding:0 2px; cursor:pointer; font-family:var(--font-ui); font-size:12px; font-weight:600; }
+.wf-tool svg{ color:var(--brass); flex:none; }
+.wf-tool span{ max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.wf-tool:active{ border-color:var(--brass-soft); }
+.wf-tool:disabled{ opacity:.45; }
+.wf-tools .pg-btn.wf-make{ grid-column:auto; width:100%; height:58px; margin:0; padding:0 8px; font-size:13.5px; line-height:1.2; gap:6px; white-space:normal; text-align:left; }
+.wf-tools .pg-btn.wf-make span{ min-width:0; }
+.wf-tools .pg-btn.wf-make svg{ color:inherit; flex:none; }
+.wf-tools .pg-btn.wf-make:disabled{ opacity:.4; cursor:default; }
+.wf-bar .wf-ai-res{ margin:0 2px 8px; }
+.wf-bar .wf-ai-err{ margin:0 0 8px; padding:10px 12px; border-radius:14px; border:1px solid color-mix(in srgb, var(--danger) 40%, var(--line)); background:var(--surface-2); }
+.wf-bar .wf-ai-err .sheet-cta{ margin:0; }
+.wf-bar .wf-ai-srcs{ flex-direction:row; flex-wrap:nowrap; overflow-x:auto; gap:8px; margin:0 0 8px; padding-top:6px; }
+.wf-bar .wf-ai-src{ position:relative; flex:none; width:52px; height:52px; padding:0; border-radius:10px; overflow:visible; border:1px solid var(--line); background:var(--surface-2); }
+.wf-bar .wf-ai-src > img, .wf-bar .wf-ai-src > .ws-src-th{ width:100%; height:100%; border-radius:9px; object-fit:cover; }
+.wf-bar .wf-ai-x{ position:absolute; top:-6px; right:-6px; width:22px; height:22px; border-radius:11px; background:var(--ink); color:var(--bg); padding:0; }
+.wf-ask textarea{ height:46px; }
+.wf-ask .ws-send svg{ color:inherit; }
+#wsFill.wf-typing .wf-bar{ display:none; }
+@media (max-width:379px){ .wf-tools .pg-btn.wf-make svg{ display:none; } .wf-tools .pg-btn.wf-make{ text-align:center; padding:0 6px; } }
 /* verzija 84: Izmeni Word */
 .ws-chip.ws-chip-dim{ opacity:.45; }
 .we-head{ display:flex; align-items:center; gap:10px; padding:10px 12px; margin:0 0 12px; background:var(--surface); border:1px solid var(--line); border-radius:14px; }
@@ -1860,20 +1890,28 @@ body:has(#aiWs.open) .toast{ bottom:calc(190px + env(safe-area-inset-bottom)); }
 <!-- verzija 82: popunjavanje šablona -->
 <div class="ws-screen" id="wsFill">
   <div class="set-header"><button type="button" class="set-back" id="wfBack"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h2 class="set-title" id="wfTitle"></h2><div class="ur-btns"><button type="button" class="ur-btn" id="wfUndo" disabled><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"></path><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"></path></svg></button><button type="button" class="ur-btn" id="wfRedo" disabled><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"></path><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"></path></svg></button></div></div>
-  <div class="ws-body" id="wfBody"><div class="ws-inner">
+  <!-- v89: zamrznut vrh — naziv i brojač u jednom redu; izvori za AI i Napravi dokument -->
+  <div class="wf-top"><div class="wf-top-in">
     <div class="wf-head" id="wfHead"></div>
+    <div class="wf-tools">
+      <button type="button" class="wf-tool" id="wfAiCam"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg><span id="wfAiCamLbl"></span></button>
+      <button type="button" class="wf-tool" id="wfAiGal"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"></rect><circle cx="9" cy="10" r="1.8"></circle><path d="M20.5 16l-5-5-8.5 8.5"></path></svg><span id="wfAiGalLbl"></span></button>
+      <button type="button" class="wf-tool" id="wfAiArh"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5h17v12h-17z"></path><path d="M2.5 4.5h19v3h-19z"></path><path d="M10 11.5h4"></path></svg><span id="wfAiArhLbl"></span></button>
+      <button type="button" class="pg-btn pg-save wf-make" id="wfMake"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"></path><path d="M14 3v5h5"></path><polyline points="9 14 11.5 16.5 16 12"></polyline></svg><span id="wfMakeLbl"></span></button>
+    </div>
+  </div></div>
+  <div class="ws-body" id="wfBody"><div class="ws-inner">
     <p class="wf-lead" id="wfLead"></p>
-    <div class="wf-ai" id="wfAi"></div>
-    <input id="wfCam" type="file" accept="image/*" capture="environment" hidden>
-    <input id="wfGal" type="file" accept="image/*" multiple hidden>
     <div id="wfDone"></div>
     <div class="wf-list" id="wfList"></div>
   </div></div>
-  <div class="ws-bar"><div class="ws-bar-in">
-    <div class="ws-status" id="wfStatus"></div>
-    <button type="button" class="pg-btn pg-save wf-make" id="wfMake"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"></path><path d="M14 3v5h5"></path><polyline points="9 14 11.5 16.5 16 12"></polyline></svg><span id="wfMakeLbl"></span></button>
-  </div></div>
+  <!-- v89: dole napomena / podaci za AI (kao polje za zadatak u radionici); sklanja se dok se kuca u polje šablona -->
+  <div class="ws-bar wf-bar" id="wfBar"><div class="ws-bar-in" id="wfAi"></div></div>
+  <input id="wfCam" type="file" accept="image/*" capture="environment" hidden>
+  <input id="wfGal" type="file" accept="image/*" multiple hidden>
 </div>
+<!-- v89: dok AI popunjava, samo prozor rada -->
+<div class="ws-screen ws-busy-scr" id="wfBusyScr"><div class="ws-busy-in" id="wfBusyIn"></div></div>
 <!-- verzija 84: Izmeni Word -->
 <div class="ws-screen" id="wsEditW">
   <div class="set-header"><button type="button" class="set-back" id="weBack"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h2 class="set-title" id="weTitle"></h2><div class="ur-btns"><button type="button" class="ur-btn" id="weUndo" disabled><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"></path><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"></path></svg></button><button type="button" class="ur-btn" id="weRedo" disabled><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"></path><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"></path></svg></button></div></div>
@@ -2504,16 +2542,18 @@ const I18N = {
     weOnlyWord: 'Izmena za sada radi samo za Word (.docx). Za ostale dokumente upiši zadatak svojim rečima; nastaje nov PDF.',
     weLocked: 'Word je zaključan lozinkom i ne može se menjati u Arhivi.', weOpenErr: 'Word ne može da se otvori za izmenu.', weEmpty: 'U ovom Word-u nema teksta za izmenu.',
     wfAiTitle: 'Popuni pomoću AI', wfAiSub: 'Slika lične karte, pasoša ili dokument iz Arhive. AI upisuje samo u prazna polja.',
-    wfAiCam: 'Slikaj', wfAiGal: 'Iz galerije', wfAiArh: 'Iz Arhive', wfAiRemove: 'Ukloni izvor', wfAiImg: 'Slika {n}',
-    wfAiNotePh: 'Napomena ili podaci svojim rečima (nije obavezno), npr. „prva slika je zakupac, druga supruga“',
+    wfAiCam: 'Slikaj', wfAiGal: 'Galerija', wfAiArh: 'Arhiva', wfCnt: '{k} / {n}',
+    wfAiNotePh1: 'Dodaj napomenu (nije obavezno), npr. „prva slika je zakupac“',
+    wfAiBusySub: 'Izvora: {n} · {model}', wfAiRemove: 'Ukloni izvor', wfAiImg: 'Slika {n}',
+    wfAiNotePh: 'Podaci svojim rečima za AI, npr. „zakupac Petar Petrović, tel. 063…“',
     wfAiGo: 'Popuni polja', wfAiBusy: 'AI čita izvore i popunjava polja…', wfAiMax: 'Najviše {n} izvora odjednom.',
     wfAiPickTitle: 'Dokument iz Arhive', wfMarkAi: 'AI', wfMarkMiss: 'AI nije pronašao',
     wfAiNoEmpty: 'Sva polja su već popunjena.',
     wfAiDone: 'AI je popunio polja: {n}. Nije pronašao: {miss}. Proveri podatke pre pravljenja dokumenta. · {usd}',
     wfAiNone: 'AI nije pronašao podatke za prazna polja. · {usd}',
     wfHeadWord: 'Word · polja: {n}', wfHeadPdf: 'PDF · polja: {n}',
-    wfLeadWord: 'Upiši podatke. Nastaje nov Word sa izgledom originala; menja se samo tekst polja. Šablon ostaje isti.',
-    wfLeadPdf: 'Upiši podatke. Nastaje nov PDF dokument. Šablon ostaje isti.',
+    wfLeadWord: 'Upiši podatke u polja ili ih prepusti AI-ju: Slikaj, Galerija ili Arhiva gore (npr. lična karta), ili podaci svojim rečima dole, pa ✨. AI upisuje samo u prazna polja. Nastaje nov Word sa izgledom originala; šablon ostaje isti.',
+    wfLeadPdf: 'Upiši podatke u polja ili ih prepusti AI-ju: Slikaj, Galerija ili Arhiva gore (npr. lična karta), ili podaci svojim rečima dole, pa ✨. AI upisuje samo u prazna polja. Nastaje nov PDF; šablon ostaje isti.',
     wfPh: 'npr. {ex}', wfNoFields: 'Ovaj šablon nema polja.',
     wfMake: 'Napravi dokument', wfStCount: 'Popunjeno {k} od {n} polja.', wfStDone: 'Napravljeno: „{name}“.',
     wfEmptyTitle: 'Nisu popunjena sva polja', wfEmptyText: 'Prazno polja: {n}. Na tim mestima u dokumentu biće crta za ručni upis.', wfEmptyOk: 'Napravi ipak',
@@ -2988,16 +3028,18 @@ const I18N = {
     weOnlyWord: 'Editing works only for Word (.docx) for now. For other documents type a task in your own words; a new PDF is made.',
     weLocked: 'The Word file is password-protected and cannot be edited in Arhiva.', weOpenErr: 'The Word file cannot be opened for editing.', weEmpty: 'This Word file has no text to edit.',
     wfAiTitle: 'Fill in with AI', wfAiSub: 'A photo of an ID card, a passport or a document from Arhiva. AI writes only into empty fields.',
-    wfAiCam: 'Camera', wfAiGal: 'Gallery', wfAiArh: 'From Arhiva', wfAiRemove: 'Remove source', wfAiImg: 'Photo {n}',
-    wfAiNotePh: 'Note or data in your own words (optional), e.g. “the first photo is the tenant, the second the spouse”',
+    wfAiCam: 'Camera', wfAiGal: 'Gallery', wfAiArh: 'Arhiva', wfCnt: '{k} / {n}',
+    wfAiNotePh1: 'Add a note (optional), e.g. “the first photo is the tenant”',
+    wfAiBusySub: 'Sources: {n} · {model}', wfAiRemove: 'Remove source', wfAiImg: 'Photo {n}',
+    wfAiNotePh: 'Data in your own words for AI, e.g. “tenant Peter Smith, phone 063…”',
     wfAiGo: 'Fill in fields', wfAiBusy: 'AI is reading the sources and filling in the fields…', wfAiMax: 'At most {n} sources at once.',
     wfAiPickTitle: 'Document from Arhiva', wfMarkAi: 'AI', wfMarkMiss: 'AI did not find it',
     wfAiNoEmpty: 'All fields are already filled in.',
     wfAiDone: 'AI filled in fields: {n}. Not found: {miss}. Check the data before making the document. · {usd}',
     wfAiNone: 'AI did not find data for the empty fields. · {usd}',
     wfHeadWord: 'Word · fields: {n}', wfHeadPdf: 'PDF · fields: {n}',
-    wfLeadWord: 'Enter the data. A new Word file is made with the original layout; only the field text changes. The template stays the same.',
-    wfLeadPdf: 'Enter the data. A new PDF document is made. The template stays the same.',
+    wfLeadWord: 'Enter the data in the fields or leave it to AI: Camera, Gallery or Arhiva at the top (e.g. an ID card), or data in your own words at the bottom, then ✨. AI writes only into empty fields. A new Word file is made with the original layout; the template stays the same.',
+    wfLeadPdf: 'Enter the data in the fields or leave it to AI: Camera, Gallery or Arhiva at the top (e.g. an ID card), or data in your own words at the bottom, then ✨. AI writes only into empty fields. A new PDF is made; the template stays the same.',
     wfPh: 'e.g. {ex}', wfNoFields: 'This template has no fields.',
     wfMake: 'Make document', wfStCount: '{k} of {n} fields filled in.', wfStDone: 'Made: “{name}”.',
     wfEmptyTitle: 'Not all fields are filled in', wfEmptyText: 'Empty fields: {n}. Those places in the document will get a line to fill in by hand.', wfEmptyOk: 'Make anyway',
@@ -6458,7 +6500,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 88</div>'+
+    '<div class="settings-hint set-build">verzija 89</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -10462,9 +10504,9 @@ function wfOpen(tp){
   document.getElementById('wfTitle').textContent = t('wfTitle');
   document.getElementById('wfBack').setAttribute('aria-label', t('wfBackLbl'));
   const head = document.getElementById('wfHead');
-  head.innerHTML = '<span class="ws-tpl-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"></path><path d="M14 3v5h5"></path><rect x="9" y="11.5" width="7" height="2.6" rx="1"></rect><rect x="9" y="16" width="4.5" height="2.6" rx="1"></rect></svg></span><span class="ws-tpl-tx"><b></b><small></small></span>';
+  head.innerHTML = '<span class="ws-tpl-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"></path><path d="M14 3v5h5"></path><rect x="9" y="11.5" width="7" height="2.6" rx="1"></rect><rect x="9" y="16" width="4.5" height="2.6" rx="1"></rect></svg></span><b class="wf-head-nm"></b><span class="wf-cnt" id="wfCnt"></span>';
   head.querySelector('b').textContent = tp.name || tp.title || '';
-  head.querySelector('small').textContent = t(tp.file ? 'wfHeadWord' : 'wfHeadPdf', {n:(tp.fields || []).length});
+  ['Cam', 'Gal', 'Arh'].forEach(k=>{ document.getElementById('wfAi' + k + 'Lbl').textContent = t('wfAi' + k); });
   document.getElementById('wfLead').textContent = t(tp.file ? 'wfLeadWord' : 'wfLeadPdf');
   const list = document.getElementById('wfList');
   list.innerHTML = '';
@@ -10477,7 +10519,11 @@ function wfOpen(tp){
     row.querySelector('.wf-name').textContent = f.name;
     row.querySelector('.wf-kind').textContent = t('wsFldKind_' + (WS_FLD_KINDS.indexOf(f.kind) >= 0 ? f.kind : 'text'));
     const inp = row.querySelector('input');
-    inp.inputMode = {phone:'tel', email:'email', amount:'decimal', date:'decimal'}[f.kind] || 'text';
+    /* v89: tastatura prema vrsti polja; brojevi samo kad je primer iz originala sav od cifara (JMBG, broj LK…),
+       da tastatura sa ciframa nikad ne spreči upis slova ili kose crte */
+    const digitsOnly = /^\d[\d ]*$/.test(String(f.example || '').trim());
+    inp.inputMode = {phone:'tel', email:'email', amount:'decimal', date:'decimal'}[f.kind] ||
+      ((f.kind === 'idnum' || f.kind === 'text') && digitsOnly ? 'numeric' : 'text');
     inp.enterKeyHint = i < fields.length - 1 ? 'next' : 'done';
     inp.placeholder = f.example ? t('wfPh', {ex:f.example}) : '';
     wireBackspace(inp);
@@ -10509,6 +10555,12 @@ function wfOpen(tp){
   document.getElementById('wfBody').scrollTop = 0;
   pushBack(wfClose);
 }
+/* v89: dok se kuca u polje šablona, donja traka za AI se sklanja (tastatura i traka bi pojele pola ekrana) */
+(function(){
+  const scr = document.getElementById('wsFill'), list = document.getElementById('wfList');
+  list.addEventListener('focusin', (e)=>{ if(e.target.classList.contains('wf-in')) scr.classList.add('wf-typing'); });
+  list.addEventListener('focusout', ()=>{ setTimeout(()=>{ const a = document.activeElement; if(!(a && a.classList && a.classList.contains('wf-in'))) scr.classList.remove('wf-typing'); }, 0); });
+})();
 function wfSyncInputs(){
   if(!_wf) return;
   (_wf.tp.fields || []).forEach((f, i)=>{
@@ -10524,9 +10576,8 @@ function wfStatus(){
   const n = (_wf.tp.fields || []).length;
   let k = 0;
   (_wf.tp.fields || []).forEach((f, i)=>{ const inp = document.getElementById('wfIn' + i); if(inp && inp.value.trim()) k++; });
-  const st = document.getElementById('wfStatus');
-  st.classList.toggle('saved', !!_wf.done);
-  st.textContent = _wf.done ? t('wfStDone', {name:_wf.done.name}) : t('wfStCount', {k, n});
+  const cnt = document.getElementById('wfCnt');
+  if(cnt){ cnt.textContent = t('wfCnt', {k, n}); cnt.classList.toggle('full', n > 0 && k === n); }
   document.getElementById('wfMake').disabled = _wf.busy || !!_wf.ai.busy || !n;
   if(_wf.hist){
     const busy = _wf.busy || !!_wf.ai.busy;
@@ -10539,6 +10590,7 @@ function wfRenderDone(){
   const box = document.getElementById('wfDone');
   if(!_wf || !_wf.done){ box.innerHTML = ''; return; }
   const d = _wf.done;
+  document.getElementById('wfBody').scrollTop = 0;
   box.innerHTML = '<div class="wf-done"><div class="wf-done-hd"><span class="wf-ok">✓</span><span class="ws-tpl-tx"><b></b><small></small></span></div>' +
     (d.lost ? '<p class="wf-warn"></p>' : '') +
     '<div class="wf-done-btns"><button type="button" class="pg-btn" id="wfDl"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"></path><polyline points="7 10 12 15 17 10"></polyline><path d="M5 19h14"></path></svg><span></span></button>' +
@@ -10564,7 +10616,8 @@ function wfClose(){
   if(_wf.ai.busy){ try{ _wf.ai.busy.ctrl.abort(); }catch(e){} }
   wfAiDropSrc();
   _wf = null;
-  wfScr.classList.remove('open');
+  wfRenderBusy();
+  wfScr.classList.remove('open', 'wf-typing');
   try{ if(document.activeElement && wfScr.contains(document.activeElement)) document.activeElement.blur(); }catch(e){}
 }
 document.getElementById('wfBack').onclick = ()=>requestClose();
@@ -11192,58 +11245,79 @@ function wfAiPrompt(tp, empty, filled, note, nSrc){
   out.push('USER NOTE:\n"""\n' + (note || '(none)') + '\n"""');
   return out.join('\n\n');
 }
+/* v89: dole je samo ono što ide AI-ju: izabrani izvori (sličice sa ✕), napomena ili podaci svojim rečima i dugme za slanje.
+   Slikaj / Galerija / Arhiva su u zamrznutom vrhu. Dok AI radi, vidi se samo prozor rada (wfRenderBusy). */
 function wfAiRender(){
   const box = document.getElementById('wfAi');
-  if(!_wf){ box.innerHTML = ''; return; }
+  if(!_wf){ box.innerHTML = ''; wfRenderBusy(); return; }
   const a = _wf.ai, busy = !!a.busy;
-  let h = '<div class="wf-ai-hd">' + WS_SPARK_SVG + '<span><b>' + escapeHtml(t('wfAiTitle')) + '</b><small>' + escapeHtml(t('wfAiSub')) + '</small></span></div>' +
-    '<div class="wf-ai-tiles">' +
-      '<button type="button" class="ws-chip" id="wfAiCam"' + (busy ? ' disabled' : '') + '><span>' + escapeHtml(t('wfAiCam')) + '</span></button>' +
-      '<button type="button" class="ws-chip" id="wfAiGal"' + (busy ? ' disabled' : '') + '><span>' + escapeHtml(t('wfAiGal')) + '</span></button>' +
-      '<button type="button" class="ws-chip" id="wfAiArh"' + (busy ? ' disabled' : '') + '><span>' + escapeHtml(t('wfAiArh')) + '</span></button></div>';
-  if(a.src.length){
-    h += '<div class="wf-ai-srcs">' + a.src.map((s, i)=>'<div class="wf-ai-src">' +
-      (s.url ? '<img alt="" src="' + escapeHtml(s.url) + '">' : wsThumbHtml(s.item)) +
-      '<span class="wf-ai-src-nm"></span><button type="button" class="wf-ai-x" data-i="' + i + '"' + (busy ? ' disabled' : '') + ' aria-label="' + escapeHtml(t('wfAiRemove')) + '">' +
-      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg></button></div>').join('') + '</div>';
-  }
-  h += '<textarea id="wfAiNote" class="sheet-input wf-ai-note" rows="2" maxlength="1500" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"' + (busy ? ' disabled' : '') + '></textarea>';
-  if(busy){
-    h += '<div class="ai-wait wf-ai-wait"><span class="ai-spin"></span><div class="ai-wait-t">' + escapeHtml(t('wfAiBusy')) + '</div>' +
-      '<div class="ai-wait-s">' + escapeHtml(a.busy.model) + '</div></div>' +
-      '<button type="button" class="sheet-cta secondary" id="wfAiStop">' + escapeHtml(t('aiCancel')) + '</button>';
-  }else if(a.err){
+  let h = '';
+  if(a.err){
     const code = a.err.aiCode;
     const toSet = code === 'aiErrNoKey' || code === 'aiErrKey' || code === 'aiErrModel';
     h += '<div class="wf-ai-err"><div class="ai-wait-t">' + escapeHtml(t('wsErrTitle')) + '</div><p class="ai-p ai-err">' + escapeHtml(aiErrText(a.err)) + '</p>' + wsErrDetails(a.err) +
       (toSet ? '<button type="button" class="sheet-cta" id="wfAiSet">' + escapeHtml(t('aiOpenSettings')) + '</button>' : '') +
       '<button type="button" class="sheet-cta secondary ai-gap" id="wfAiErrX">' + escapeHtml(t('aiClose')) + '</button></div>';
-  }else{
-    h += '<button type="button" class="sheet-cta wf-ai-go" id="wfAiGo"' + (a.src.length || a.note.trim() ? '' : ' disabled') + '>' + WS_SPARK_SVG + '<span>' + escapeHtml(t('wfAiGo')) + '</span></button>';
-    if(a.last) h += '<p class="wf-ai-res">' + escapeHtml(a.last) + '</p>';
+  }else if(a.last){
+    h += '<p class="wf-ai-res">' + escapeHtml(a.last) + '</p>';
   }
-  box.innerHTML = h;
-  box.querySelectorAll('.wf-ai-src-nm').forEach((el, i)=>{ el.textContent = a.src[i].name; });
+  if(a.src.length){
+    h += '<div class="wf-ai-srcs">' + a.src.map((s, i)=>'<div class="wf-ai-src">' +
+      (s.url ? '<img alt="" src="' + escapeHtml(s.url) + '">' : wsThumbHtml(s.item)) +
+      '<button type="button" class="wf-ai-x" data-i="' + i + '" aria-label="' + escapeHtml(t('wfAiRemove')) + '">' +
+      '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg></button></div>').join('') + '</div>';
+  }
+  h += '<div class="ws-ask wf-ask"><textarea id="wfAiNote" rows="1" maxlength="1500" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>' +
+    '<button type="button" class="ws-send" id="wfAiGo"' + (a.src.length || a.note.trim() ? '' : ' disabled') + '>SEND</button></div>';
+  box.innerHTML = h.replace('SEND', WS_SPARK_SVG);
   const note = document.getElementById('wfAiNote');
   note.value = a.note;
-  note.placeholder = t('wfAiNotePh');
+  note.placeholder = t(a.src.length ? 'wfAiNotePh1' : 'wfAiNotePh');
+  document.getElementById('wfAiGo').setAttribute('aria-label', t('wfAiGo'));
   wireBackspace(note);
-  note.addEventListener('input', ()=>{ if(!_wf) return; _wf.ai.note = note.value; const go = document.getElementById('wfAiGo'); if(go) go.disabled = !(_wf.ai.src.length || note.value.trim()); });
+  const fit = ()=>{ note.style.height = 'auto'; note.style.height = Math.min(Math.max(note.scrollHeight + 2, 46), 120) + 'px'; };
+  fit();
+  note.addEventListener('input', ()=>{ if(!_wf) return; _wf.ai.note = note.value; fit(); const go = document.getElementById('wfAiGo'); if(go) go.disabled = !(_wf.ai.src.length || note.value.trim()); });
   const on = (id, fn)=>{ const el = document.getElementById(id); if(el) el.onclick = fn; };
-  on('wfAiCam', ()=>document.getElementById('wfCam').click());
-  on('wfAiGal', ()=>document.getElementById('wfGal').click());
-  on('wfAiArh', ()=>wsOpenPick(it=>wfAiAddDoc(it)));
   on('wfAiGo', wfAiRun);
-  on('wfAiStop', ()=>{ if(_wf && _wf.ai.busy){ try{ _wf.ai.busy.ctrl.abort(); }catch(e){} } });
   on('wfAiErrX', ()=>{ if(_wf){ _wf.ai.err = null; wfAiRender(); } });
   on('wfAiSet', ()=>{ if(_wf){ _wf.ai.err = null; wfAiRender(); } openSettings(); openSettingsSub('ai'); });
   box.querySelectorAll('.wf-ai-x').forEach(b=>{ b.onclick = ()=>{
-    if(!_wf) return;
+    if(!_wf || _wf.ai.busy) return;
     const s = _wf.ai.src.splice(Number(b.dataset.i), 1)[0];
     if(s && s.url){ try{ URL.revokeObjectURL(s.url); }catch(e){} }
     wfAiRender();
   }; });
+  ['wfAiCam', 'wfAiGal', 'wfAiArh'].forEach(id=>{ document.getElementById(id).disabled = busy; });
+  wfRenderBusy();
 }
+document.getElementById('wfAiCam').onclick = ()=>{ if(_wf && !_wf.ai.busy && !wfAiFull()) document.getElementById('wfCam').click(); };
+document.getElementById('wfAiGal').onclick = ()=>{ if(_wf && !_wf.ai.busy && !wfAiFull()) document.getElementById('wfGal').click(); };
+document.getElementById('wfAiArh').onclick = ()=>{ if(_wf && !_wf.ai.busy && !wfAiFull()) wsOpenPick(it=>wfAiAddDoc(it)); };
+/* prozor rada preko celog ekrana; korak nazad za to vreme = Otkaži (isto kao šablon u v86) */
+function wfRenderBusy(){
+  const scr = document.getElementById('wfBusyScr'), box = document.getElementById('wfBusyIn');
+  const a = _wf && _wf.ai;
+  if(a && a.busy){
+    if(!scr.classList.contains('open')){
+      box.innerHTML = '<div class="ws-card ws-busy"><div class="ai-wait"><span class="ai-spin"></span>' +
+        '<div class="ai-wait-t">' + escapeHtml(t('wfAiBusy')) + '</div>' +
+        '<div class="ai-wait-s">' + escapeHtml(t('wfAiBusySub', {n:a.src.length, model:a.busy.model})) + '</div>' +
+        '<div class="ai-wait-s">' + escapeHtml(t('wsBusyWait')) + '</div></div>' +
+        '<button type="button" class="sheet-cta secondary" id="wfAiStop">' + escapeHtml(t('aiCancel')) + '</button></div>';
+      document.getElementById('wfAiStop').onclick = ()=>{ wfAiStop(); wfBusyEnd(); };
+      scr.classList.add('open');
+      try{ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }catch(e){}
+    }
+  }else{
+    scr.classList.remove('open');
+    box.innerHTML = '';
+  }
+}
+function wfAiStop(){ if(_wf && _wf.ai.busy){ try{ _wf.ai.busy.ctrl.abort(); }catch(e){} } }
+function wfBusyBackCloser(){ if(!_wf) return; _wf.busyBack = false; wfAiStop(); }
+function wfBusyStart(){ if(_wf && !_wf.busyBack){ _wf.busyBack = true; pushBack(wfBusyBackCloser); } }
+function wfBusyEnd(){ if(_wf && _wf.busyBack){ _wf.busyBack = false; requestCloseThen(()=>{}); } }
 function wfAiFull(){
   if(_wf.ai.src.length >= WF_AI_MAX){ toast(t('wfAiMax', {n:WF_AI_MAX})); return true; }
   return false;
@@ -11309,9 +11383,9 @@ async function wfAiRun(){
   a.busy = {ctrl, model:model.name};
   a.err = null;
   a.last = '';
+  wfBusyStart();
   wfAiRender();
   wfStatus();
-  document.getElementById('wfAi').scrollIntoView({block:'start', behavior:'smooth'});
   try{
     const parts = [];
     let total = 0;
@@ -11359,7 +11433,7 @@ async function wfAiRun(){
     if(_wf !== wf) return;
     if(!(e && e.name === 'AbortError')){ console.error(e); a.err = e; }
   }finally{
-    if(_wf === wf){ a.busy = null; wfAiRender(); wfStatus(); }
+    if(_wf === wf){ a.busy = null; wfBusyEnd(); wfAiRender(); wfStatus(); }
   }
 }
 
