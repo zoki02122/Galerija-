@@ -7077,6 +7077,14 @@ function wireBackspace(el, onRestore){
      označenog teksta umesto celog izbora, polje se isprazni kako je korisnik i hteo */
   el.addEventListener('focus', ()=>{ snapshotField(el); pristineArmed.add(el); setTimeout(()=>{ try{ el.select(); }catch(e){} }, 0); });
   el.addEventListener('blur', ()=>{ pristineArmed.delete(el); });
+  /* v86: zaštita važi SAMO ako je u trenutku brisanja ceo tekst zaista označen.
+     Kad korisnik drugim dodirom postavi kursor (npr. iza poslednjeg slova), brisanje ide slovo po slovo. */
+  el.addEventListener('beforeinput', ()=>{
+    if(!pristineArmed.has(el)) return;
+    let whole = false;
+    try{ whole = el.value.length > 0 && el.selectionStart === 0 && el.selectionEnd === el.value.length; }catch(e){}
+    if(!whole) pristineArmed.delete(el);
+  });
   el.addEventListener('input', (e)=>{
     if(!pristineArmed.has(el)) return;
     pristineArmed.delete(el);
