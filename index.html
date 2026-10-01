@@ -1274,7 +1274,7 @@ html[data-theme="ponoc"]{
 #wsTplSheet .sheet-head h3{ font-size:22px; }
 #wsTplSheet .ws-tpls{ gap:12px; }
 #wsTplSheet .ws-tpl{ flex-wrap:wrap; align-items:center; gap:0; padding:12px 8px 14px 4px; border-radius:18px; }
-#wsTplSheet .ws-tpl-open{ padding:4px 6px 4px 10px; gap:12px; }
+#wsTplSheet .ws-tpl-open{ padding:4px 6px 4px 10px; gap:12px; cursor:default; }
 #wsTplSheet .ws-tpl-ic{ width:46px; height:46px; border-radius:13px; }
 #wsTplSheet .ws-tpl-ic svg{ width:24px; height:24px; }
 #wsTplSheet .ws-tpl-tx{ gap:4px; }
@@ -1951,6 +1951,7 @@ body:has(#aiWs.open) .toast{ bottom:calc(190px + env(safe-area-inset-bottom)); }
 <div class="sheet-bg" id="wsTplSheet">
   <div class="sheet">
     <div class="sheet-head"><button class="back-btn" id="wsTplBack" type="button"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h3 id="wsTplTitle"></h3></div>
+    <div class="ibox" id="wsTplInfo"></div>
     <div class="ws-tpls" id="wsTpls"></div>
   </div>
 </div>
@@ -2527,6 +2528,8 @@ const I18N = {
     wsSaveTplName: 'naziv šablona',
     wsSaveTplHint: 'Šablon ide u „Moji šabloni“ u AI radionici. Odatle ga popunjavaš za svaki nov slučaj.',
     wsSaveTplHintUpd: 'Nov šablon se čuva pored šablona „{name}“, koji ostaje kakav je.',
+    wsTplInfoDoc: 'Ovo su šabloni napravljeni od dokumenta „{name}“. „Popuni šablon“ pravi nov dokument, a šablon ostaje isti. Za drugačiji izbor polja dodirni „Napravi šablon“: polja se otvaraju odmah, iz prvog čitanja, bez ponovnog slanja AI-ju. Postojeći šabloni ostaju kakvi su, a nov se čuva pored njih.',
+    wsTplInfoAll: 'Ovo su svi tvoji šabloni. „Popuni šablon“ pravi nov dokument, a šablon ostaje isti. Nov šablon praviš kad otvoriš dokument i dodirneš „Napravi šablon“.',
     wsTplSaved: 'Šablon je sačuvan.',
     wsTplNoFields: 'U dokumentu nisam našao podatke koji bi postali polja, pa šablon nije napravljen.',
     wsTplDiscardTitle: 'Odbaci šablon?',
@@ -2584,8 +2587,8 @@ const I18N = {
     wsTplDeleted: 'Šablon je obrisan.',
     wsFldTitle: 'Polja šablona',
     wsFldLead: 'Označi podatke koji se menjaju za svaki nov slučaj. Neoznačeni ostaju kao u originalu. Dodir na red uključuje ili isključuje kvačicu.',
-    wsFldLeadNew: 'Praviš nov šablon od istog dokumenta. Označi podatke koji se menjaju za svaki nov slučaj; neoznačeni ostaju kao u originalu. Šablon „{name}“ ostaje kakav je, a nov se čuva pored njega u „Moji šabloni“.',
-    wsFldTitleNew: 'Nov izbor polja', wsSaveTplNew: 'Sačuvaj kao nov šablon', wsFldSame: 'Nisi promenio nijednu kvačicu, pa bi nov šablon bio isti kao „{name}“.',
+    wsFldLeadNew: 'Ovaj dokument već ima šablon „{name}“. On ostaje kakav je, a ovde praviš nov, sa drugačijim izborom polja; čuva se pored njega u „Moji šabloni“. Označi podatke koji se menjaju za svaki nov slučaj; neoznačeni ostaju kao u originalu.',
+    wsFldTitleNew: 'Nov izbor polja', wsSaveTplNew: 'Sačuvaj kao nov šablon', wsFldSame: 'Ovakav izbor polja već postoji u šablonu „{name}“. Promeni bar jednu kvačicu.',
     wsTaskTplBtn: 'Napravi šablon', iboxHide: 'Sakrij objašnjenje', iboxShow: 'Prikaži objašnjenje',
     wsFldEx: 'u dokumentu piše:',
     wsFldNoEx: 'u dokumentu nema podatka, pa polje ostaje',
@@ -2651,7 +2654,7 @@ const I18N = {
       ['Spajanje i izdvajanje', 'Označi dve ili više slika (dugi pritisak), pa u traci dodirni „Više“ i „Spoji u jedan dokument“. Stranice idu redom kojim si ih označio, a naziv, album i rok važenja uzimaju se od prve (rok prelazi na nov dokument). Pre spajanja Arhiva pita za potvrdu. Originali ostaju u albumu; ako ti ne trebaju, označi ih i obriši.', 'Pojedinačnu stranicu izdvajaš na ekranu sa stranicama: dodir na stranicu, pa „Izdvoji kao posebnu sliku“.'],
       ['PDF', 'Sliku, dokument od slika ili više označenih slika pretvaraš u jedan PDF: u pregledu dugmetom PDF, a kod izbora preko „Više“. Zatim biraš da li ga deliš (Viber, e-pošta…) ili čuvaš na telefon.', 'Stranice idu u PDF bez gubitka kvaliteta.', 'Kod PDF fajla na tom mestu je dugme za deljenje: šalje se originalni fajl, bez izmena. Chrome ne dozvoljava deljenje Word i Excel fajlova, pa je kod njih tu dugme za čuvanje na telefon; sačuvan fajl šalješ iz Vibera ili e-pošte (priloži fajl).'],
       ['Rok važenja', 'Dokumentu koji ističe (registracija, pasoš, osiguranje, garancija) upiši rok: u pregledu dodirni dugme sa kalendarom, zatim polje za datum, izaberi datum i dodirni „Sačuvaj“. Isto važi za PDF, Word i Excel. Rok upisuješ i preko izbora: dugi pritisak, pa „Više“ i „Rok važenja“. Upisan rok menjaš i dodirom na oznaku roka ispod naziva ili na olovku pored nje. Rok se vidi i menja i na ekranu sa stranicama. Ispod datuma možeš da upišeš i šta treba uraditi (npr. „obnoviti kod agenta“); ta napomena se vidi u obaveštenju, u rokovima i u pregledu.', 'Kad se rok približi, Arhiva te obavesti jednom, a zatim još po jednom 7 dana pre i kad dokument istekne. Na početnom ekranu se tada pojavi zvonce sa brojem (crveno ako je nešto isteklo). Dodir na zvonce otvara spisak svih rokova: isteklo, uskoro ističe i kasnije.', 'Koliko dana ranije da te upozori biraš u Podešavanja → rok važenja (podrazumevano 30). Obaveštenje vidiš kad otvoriš Arhivu. Kad obnoviš dokument, upiši nov datum; ako rok više nije potreban, dodirni „Ukloni rok“. Rok se čuva u rezervnoj kopiji.'],
-      ['AI radionica (proba)', 'AI radionica je posebno mesto gde AI radi sa tvojim dokumentom. Otvara se dugmetom sa zvezdicama ✨ u pregledu bilo kog dokumenta, tasterom ✨ pored filtera „Abeceda / Datum“ na početnom ekranu ili preko izbora: dugi pritisak, pa „Više“ i „AI radionica“.', 'Dodirni gotov zadatak (Izmeni, Sažetak, Iznosi, Prevedi, a gore desno Napravi šablon) ili upiši svoj zadatak u polje dole i dodirni strelicu. Dok AI radi, na ekranu je samo prozor rada; „Otkaži“ ili korak nazad prekida rad. Rezultat se otvara na posebnom ekranu, gde ga čitaš ceo. „Izmeni“ ti dozvoljava da ispraviš bilo koji deo teksta, a polje dole traži doradu od AI, npr. „skrati“ ili „dodaj red za ključeve“. Svaka izmena je nova verzija: okvir „Šta je promenjeno“ kaže šta je urađeno, a strelicama se vraćaš na raniju verziju. U radionici ispod zadataka uvek vidiš original: zadaci stoje na vrhu, a pomera se samo dokument. Naziv dokumenta stoji gore, iza „AI radionica“: dodir na njega bira drugi dokument. Kad rezultat postoji, desno od naziva je pločica „Rezultat“ koja ga otvara. ✕ na dokumentu ili korak nazad zatvara samo dokument (nesačuvan rezultat Arhiva prvo nudi da odbaciš), pa biraš drugi. Iz radionice izlaziš strelicom ‹ gore levo, ili korakom nazad kad nijedan dokument nije otvoren.', 'Šablon: dodirni „Napravi šablon“ gore desno. Dok AI čita dokument, na ekranu je samo prozor rada (kod dužeg dokumenta „Čitam deo 1 od 6…“); „Otkaži“ ili korak nazad prekida rad. Stalni tekst ostaje, a podaci slučaja postaju polja. Kod Word i Excel dokumenata tekst se preuzima iz originala od reči do reči: AI samo pronalazi podatke, a Arhiva ih menja poljima. Isti iznos koji znači različite stvari (npr. dve kazne od 500 EUR) dobija posebna polja, a ista osoba pomenuta više puta ostaje jedno polje. Zatim se odmah otvara ekran „Polja šablona“: za svako polje vidiš njegov naziv, vrstu i šta u dokumentu piše. Polje sa kvačicom popunjavaš za svaki nov slučaj, a kad skineš kvačicu, podatak iz originala ostaje stalni tekst. Dodir bilo gde na red uključuje ili isključuje kvačicu. Objašnjenje na vrhu ekrana sakrivaš strelicom; dodir na tanak red sa ⓘ ga ponovo otvara. Dugme „Sačuvaj šablon“ na dnu pita za naziv i čuva šablon, a zatim se otvara „Moji šabloni“, gde je nov šablon prvi. Korak nazad pre čuvanja nudi da odbaciš šablon. „Moji šabloni“ (pločica gore desno, pored „Šablon“) otvara spisak na sredini ekrana. Uz svaki šablon su dva dugmeta: „Popuni šablon“ pravi nov dokument, a „Nov izbor polja“ pravi nov šablon od istog dokumenta, sa drugačije označenim poljima. Sačuvan šablon se nikad ne menja: nov se čuva pored njega („… (2)“), dugmetom „Sačuvaj kao nov šablon“. Šablon koji ti više ne treba obrišeš korpom. Korpa briše šablon. Šabloni su i u rezervnoj kopiji.', 'Popunjavanje: u „Moji šabloni“ dodirni „Popuni šablon“ ispod šablona. Za svako polje upiši podatak (sivo je primer iz originala). Telefon se sam svede na cifre, e-pošta na mala slova, a iznos bez valute dobija valutu iz primera. „Napravi dokument“ pita za naziv i album i pravi nov dokument u Arhivi: šablon od Word-a daje Word sa izgledom originala (menja se samo tekst polja), ostali šabloni daju PDF. Polje koje ostaviš prazno postaje crta za ručni upis. Naziv šablona, brojač popunjenih polja i dugmad Slikaj · Galerija · Arhiva · Napravi dokument stoje gore i ne pomeraju se; pomeraju se samo polja. Tastatura se prilagođava polju (telefon, brojevi, e-pošta), a taster „Dalje“ vodi u sledeće polje. Umesto kucanja podatke može da upiše AI: gore slikaj ličnu kartu ili pasoš (može i obe strane, i više osoba), izaberi sliku iz galerije ili dokument iz Arhive. Izabrano se vidi dole kao sličice sa ✕. U polje dole možeš da dopišeš napomenu, npr. „prva slika je zakupac, druga supruga“, ili same podatke svojim rečima, bez slike, pa dodirni ✨. Dok kucaš u polje šablona, donja traka se skloni. Dok AI radi, na ekranu je samo prozor rada; „Otkaži“ ili korak nazad prekida rad. AI upisuje samo u prazna polja; ono što si ti upisao ne dira. Polje koje je popunio AI ima oznaku „AI“, a polje koje nije našao „AI nije pronašao“. Proveri podatke pre pravljenja dokumenta. Strelice gore desno (↶ poništi, ↷ vrati) vraćaju polja korak po korak; jedan korak unazad posle AI vraća sva polja kakva su bila pre AI. Izvori idu Google-ovom servisu Gemini i ne čuvaju se u Arhivi. Šablon ostaje isti, pa ga popunjavaš koliko god puta hoćeš. Word se ne može deliti iz Chrome-a: dugmetom „Sačuvaj na telefon“ ga preuzmeš i pošalješ kao prilog; PDF može odmah „Podeli“.', 'Izmeni (Word): menja tekst Word dokumenta, a izgled ostaje kao u originalu. Dodirni pasus ili ćeliju tabele, ispravi tekst i dodirni „Primeni“. „Otkaži“ (ili korak nazad) zatvara prozor bez ikakve izmene, pa pasus možeš slobodno samo da pogledaš. „Dodaj pasus ispod“ dodaje nov pasus istog stila, „Obriši pasus“ ga uklanja, a „Vrati kao u originalu“ poništava izmenu. Izmenjeni pasusi su označeni. Strelice gore desno (↶ poništi, ↷ vrati) idu korak po korak kroz sve izmene. I u prozoru pasusa, dok kucaš, ↶ ↷ vraćaju kucanje reč po reč. „Sačuvaj kao nov dokument“ pravi nov Word („… – izmena 1“) u albumu originala. Pravilo Arhive: sadržaj originala se nikad ne menja — svaka izmena teksta, ručna ili pomoću AI, daje nov dokument. Naziv, album i rok menjaš na samom dokumentu. Za PDF i slike izmena za sada ide zadatkom svojim rečima (nastaje nov PDF).', 'Dokument ostaje nepromenjen. Rezultat ulazi u arhivu tek kad dodirneš „Sačuvaj“, i to kao nov PDF u album koji izabereš. „Podeli“ šalje rezultat kao PDF. „Pročitaj (AI)“ (označi dokument → „Više“) predlaže naziv, album, rok i tekst za pretragu samog dokumenta; ništa se ne menja dok ne dodirneš „Primeni izabrano“.', 'Ključ, model i trošak su u Podešavanja → AI obrada. Ispod svakog rezultata piše koliko je koštao. Pre prvog slanja Arhiva traži saglasnost, jer dokument ide Google-ovom servisu Gemini. Dok je ovo proba, ne šalji lične i poverljive dokumente.'],
+      ['AI radionica (proba)', 'AI radionica je posebno mesto gde AI radi sa tvojim dokumentom. Otvara se dugmetom sa zvezdicama ✨ u pregledu bilo kog dokumenta, tasterom ✨ pored filtera „Abeceda / Datum“ na početnom ekranu ili preko izbora: dugi pritisak, pa „Više“ i „AI radionica“.', 'Dodirni gotov zadatak (Izmeni, Sažetak, Iznosi, Prevedi, a gore desno Napravi šablon) ili upiši svoj zadatak u polje dole i dodirni strelicu. Dok AI radi, na ekranu je samo prozor rada; „Otkaži“ ili korak nazad prekida rad. Rezultat se otvara na posebnom ekranu, gde ga čitaš ceo. „Izmeni“ ti dozvoljava da ispraviš bilo koji deo teksta, a polje dole traži doradu od AI, npr. „skrati“ ili „dodaj red za ključeve“. Svaka izmena je nova verzija: okvir „Šta je promenjeno“ kaže šta je urađeno, a strelicama se vraćaš na raniju verziju. U radionici ispod zadataka uvek vidiš original: zadaci stoje na vrhu, a pomera se samo dokument. Naziv dokumenta stoji gore, iza „AI radionica“: dodir na njega bira drugi dokument. Kad rezultat postoji, desno od naziva je pločica „Rezultat“ koja ga otvara. ✕ na dokumentu ili korak nazad zatvara samo dokument (nesačuvan rezultat Arhiva prvo nudi da odbaciš), pa biraš drugi. Iz radionice izlaziš strelicom ‹ gore levo, ili korakom nazad kad nijedan dokument nije otvoren.', 'Šablon: dodirni „Napravi šablon“ gore desno. Dok AI čita dokument, na ekranu je samo prozor rada (kod dužeg dokumenta „Čitam deo 1 od 6…“); „Otkaži“ ili korak nazad prekida rad. Stalni tekst ostaje, a podaci slučaja postaju polja. Kod Word i Excel dokumenata tekst se preuzima iz originala od reči do reči: AI samo pronalazi podatke, a Arhiva ih menja poljima. Isti iznos koji znači različite stvari (npr. dve kazne od 500 EUR) dobija posebna polja, a ista osoba pomenuta više puta ostaje jedno polje. Zatim se odmah otvara ekran „Polja šablona“: za svako polje vidiš njegov naziv, vrstu i šta u dokumentu piše. Polje sa kvačicom popunjavaš za svaki nov slučaj, a kad skineš kvačicu, podatak iz originala ostaje stalni tekst. Dodir bilo gde na red uključuje ili isključuje kvačicu. Objašnjenje na vrhu ekrana sakrivaš strelicom; dodir na tanak red sa ⓘ ga ponovo otvara. Dugme „Sačuvaj šablon“ na dnu pita za naziv i čuva šablon, a zatim se otvara „Moji šabloni“, gde je nov šablon prvi. Korak nazad pre čuvanja nudi da odbaciš šablon. „Moji šabloni“ (pločica gore desno, pored „Šablon“) otvara spisak na sredini ekrana. Kad je dokument otvoren, tu su šabloni napravljeni od njega (bez dokumenta: svi šabloni). Uz svaki šablon je „Popuni šablon“, koje pravi nov dokument. Za drugačiji izbor polja istog dokumenta ponovo dodirni „Napravi šablon“: AI čita dokument samo prvi put, a posle se polja otvaraju odmah iz tog čitanja, sva označena, bez troška. Sačuvan šablon se nikad ne menja: nov se čuva pored njega („… (2)“), dugmetom „Sačuvaj kao nov šablon“. Šablon koji ti više ne treba obrišeš korpom. Korpa briše šablon. Šabloni su i u rezervnoj kopiji.', 'Popunjavanje: u „Moji šabloni“ dodirni „Popuni šablon“ ispod šablona. Za svako polje upiši podatak (sivo je primer iz originala). Telefon se sam svede na cifre, e-pošta na mala slova, a iznos bez valute dobija valutu iz primera. „Napravi dokument“ pita za naziv i album i pravi nov dokument u Arhivi: šablon od Word-a daje Word sa izgledom originala (menja se samo tekst polja), ostali šabloni daju PDF. Polje koje ostaviš prazno postaje crta za ručni upis. Naziv šablona, brojač popunjenih polja i dugmad Slikaj · Galerija · Arhiva · Napravi dokument stoje gore i ne pomeraju se; pomeraju se samo polja. Tastatura se prilagođava polju (telefon, brojevi, e-pošta), a taster „Dalje“ vodi u sledeće polje. Umesto kucanja podatke može da upiše AI: gore slikaj ličnu kartu ili pasoš (može i obe strane, i više osoba), izaberi sliku iz galerije ili dokument iz Arhive. Izabrano se vidi dole kao sličice sa ✕. U polje dole možeš da dopišeš napomenu, npr. „prva slika je zakupac, druga supruga“, ili same podatke svojim rečima, bez slike, pa dodirni ✨. Dok kucaš u polje šablona, donja traka se skloni. Dok AI radi, na ekranu je samo prozor rada; „Otkaži“ ili korak nazad prekida rad. AI upisuje samo u prazna polja; ono što si ti upisao ne dira. Polje koje je popunio AI ima oznaku „AI“, a polje koje nije našao „AI nije pronašao“. Proveri podatke pre pravljenja dokumenta. Strelice gore desno (↶ poništi, ↷ vrati) vraćaju polja korak po korak; jedan korak unazad posle AI vraća sva polja kakva su bila pre AI. Izvori idu Google-ovom servisu Gemini i ne čuvaju se u Arhivi. Šablon ostaje isti, pa ga popunjavaš koliko god puta hoćeš. Word se ne može deliti iz Chrome-a: dugmetom „Sačuvaj na telefon“ ga preuzmeš i pošalješ kao prilog; PDF može odmah „Podeli“.', 'Izmeni (Word): menja tekst Word dokumenta, a izgled ostaje kao u originalu. Dodirni pasus ili ćeliju tabele, ispravi tekst i dodirni „Primeni“. „Otkaži“ (ili korak nazad) zatvara prozor bez ikakve izmene, pa pasus možeš slobodno samo da pogledaš. „Dodaj pasus ispod“ dodaje nov pasus istog stila, „Obriši pasus“ ga uklanja, a „Vrati kao u originalu“ poništava izmenu. Izmenjeni pasusi su označeni. Strelice gore desno (↶ poništi, ↷ vrati) idu korak po korak kroz sve izmene. I u prozoru pasusa, dok kucaš, ↶ ↷ vraćaju kucanje reč po reč. „Sačuvaj kao nov dokument“ pravi nov Word („… – izmena 1“) u albumu originala. Pravilo Arhive: sadržaj originala se nikad ne menja — svaka izmena teksta, ručna ili pomoću AI, daje nov dokument. Naziv, album i rok menjaš na samom dokumentu. Za PDF i slike izmena za sada ide zadatkom svojim rečima (nastaje nov PDF).', 'Dokument ostaje nepromenjen. Rezultat ulazi u arhivu tek kad dodirneš „Sačuvaj“, i to kao nov PDF u album koji izabereš. „Podeli“ šalje rezultat kao PDF. „Pročitaj (AI)“ (označi dokument → „Više“) predlaže naziv, album, rok i tekst za pretragu samog dokumenta; ništa se ne menja dok ne dodirneš „Primeni izabrano“.', 'Ključ, model i trošak su u Podešavanja → AI obrada. Ispod svakog rezultata piše koliko je koštao. Pre prvog slanja Arhiva traži saglasnost, jer dokument ide Google-ovom servisu Gemini. Dok je ovo proba, ne šalji lične i poverljive dokumente.'],
       ['Pretraga', 'Lupa pretražuje nazive albuma, slika i dokumenata. „Detaljno“ traži i reči unutar PDF, Word i Excel dokumenata.', 'U albumu pretraga obuhvata i njegove podalbume.'],
       ['Prečica na početnom ekranu', 'Označi jednu stavku i dodirni „Prečica“. Stavka se otvara u Chrome-u, a iz Chrome menija biraš „Dodaj na početni ekran“. Prečica dokumenta od više stranica lista sve stranice.'],
       ['Korpa', 'Svako brisanje prvo traži potvrdu. Obrisano ide u korpu (Podešavanja → korpa) i tamo čeka zadati broj dana, a zatim se trajno briše. Iz korpe stavku vraćaš ili je odmah trajno brišeš.', 'Albumi ne idu u korpu: kad obrišeš album, njegove slike i dokumenti ostaju u „Sve slike“.'],
@@ -3016,6 +3019,8 @@ const I18N = {
     wsSaveTplName: 'template name',
     wsSaveTplHint: 'The template goes to “My templates” in the AI workshop. From there you fill it in for each new case.',
     wsSaveTplHintUpd: 'The new template is saved next to “{name}”, which stays as it is.',
+    wsTplInfoDoc: 'These are the templates made from the document “{name}”. “Fill in template” makes a new document, and the template stays the same. For a different field selection tap “Make template”: the fields open right away, from the first reading, without sending to AI again. Existing templates stay as they are, and the new one is saved next to them.',
+    wsTplInfoAll: 'These are all your templates. “Fill in template” makes a new document, and the template stays the same. To make a new template, open a document and tap “Make template”.',
     wsTplSaved: 'Template saved.',
     wsTplNoFields: 'I found no data in the document that could become fields, so no template was made.',
     wsTplDiscardTitle: 'Discard template?',
@@ -3073,8 +3078,8 @@ const I18N = {
     wsTplDeleted: 'Template deleted.',
     wsFldTitle: 'Template fields',
     wsFldLead: 'Check the data that changes for every new case. Unchecked data stays as in the original. Tap a row to check or uncheck it.',
-    wsFldLeadNew: 'You are making a new template from the same document. Check the data that changes for every new case; unchecked data stays as in the original. The template “{name}” stays as it is, and the new one is saved next to it in “My templates”.',
-    wsFldTitleNew: 'New field selection', wsSaveTplNew: 'Save as new template', wsFldSame: 'You have not changed any checkmark, so the new template would be the same as “{name}”.',
+    wsFldLeadNew: 'This document already has the template “{name}”. It stays as it is; here you make a new one with a different field selection, saved next to it in “My templates”. Check the data that changes for every new case; unchecked data stays as in the original.',
+    wsFldTitleNew: 'New field selection', wsSaveTplNew: 'Save as new template', wsFldSame: 'This field selection already exists in the template “{name}”. Change at least one checkmark.',
     wsTaskTplBtn: 'Make template', iboxHide: 'Hide explanation', iboxShow: 'Show explanation',
     wsFldEx: 'the document says:',
     wsFldNoEx: 'no data in the document, so it stays a field',
@@ -3140,7 +3145,7 @@ const I18N = {
       ['Merging and splitting', 'Select two or more images (long-press), then tap “More” and “Merge into one document”. Pages follow the order you selected them in; the name, album and valid-until date come from the first (the date moves to the new document). Arhiva asks before merging. The originals stay in the album; if you do not need them, select and delete them.', 'To split off a single page, open the pages screen, tap the page and choose “Split off as a separate image”.'],
       ['PDF', 'Turn an image, an image document or several selected images into one PDF: with the PDF button in the viewer, or via “More” when selecting. Then share it (Viber, email…) or save it to the phone.', 'Pages go into the PDF without losing quality.', 'For a PDF file that spot holds a share button: the original file is sent, unchanged. Chrome does not allow sharing Word and Excel files, so for them that button saves the file to the phone; send the saved file from Viber or email (attach file).'],
       ['Valid until', 'For a document that expires (registration, passport, insurance, warranty) set the date: in the viewer tap the calendar button, then the date field, pick the date and tap “Save”. The same works for PDF, Word and Excel. You can also set it when selecting: long-press, then “More” and “Valid until”. Once set, you can also change it by tapping the date label under the name or the pencil next to it. The date is also shown and changed on the pages screen. Under the date you can also write what needs to be done (e.g. “renew with the agent”); the note is shown in the notification, in the dates list and in the viewer.', 'When the date gets close, Arhiva notifies you once, then once more 7 days before and when the document expires. A bell with a number appears on the home screen (red if something has expired). Tap the bell to see all dates: expired, expiring soon and later.', 'How many days in advance you are warned is set in Settings → valid until (30 by default). You see the notification when you open Arhiva. When you renew a document, enter the new date; if the date is no longer needed, tap “Remove date”. The date is saved in the backup.'],
-      ['AI workshop (trial)', 'The AI workshop is a separate place where AI works with your document. Open it with the button with the stars ✨ in the viewer of any document, with the ✨ button next to the “Abeceda / Datum” filters on the home screen, or by selecting: long-press, then “More” and “AI workshop”.', 'Tap a ready task (Edit, Summary, Amounts, Translate, and Template at the top right) or type your own task in the field below and tap the arrow. While AI works, only the progress window is on the screen; “Cancel” or going back stops the work. The result opens on its own screen where you read all of it. “Edit” lets you correct any part of the text, and the field below asks AI to refine it, e.g. “shorter” or “add a row for the keys”. Every change is a new version: the “What changed” box says what was done, and the arrows take you back to an earlier version. In the workshop the original is always shown below the tasks: the tasks stay at the top and only the document scrolls. The document name is at the top, after “AI workshop”: tap it to choose another document. When there is a result, the “Result” tile next to the name opens it. ✕ on the document or the back gesture closes only the document (Arhiva first offers to discard an unsaved result), so you can choose another. You leave the workshop with the ‹ arrow at the top left, or with the back gesture when no document is open.', 'Template: tap “Template” at the top right. While AI reads the document, only the progress window is on the screen (for a longer document “Reading part 1 of 6…”); “Cancel” or going back stops the work. The fixed text stays, and the data of the case become fields. For Word and Excel documents the text is taken from the original word for word: AI only finds the data, and Arhiva replaces them with fields. The same amount with different meanings (e.g. two penalties of 500 EUR) gets separate fields, while the same person mentioned several times stays one field. Then the “Template fields” screen opens right away: for each field you see its name, its type and what the document says. A checked field is filled in for each new case, and when you uncheck it, the data from the original stays fixed text. Tapping anywhere on a row checks or unchecks it. Hide the explanation at the top with the arrow; tapping the thin row with ⓘ opens it again. The “Save template” button at the bottom asks for a name and saves the template, and then “My templates” opens with the new template first. Going back before saving offers to discard the template. “My templates” (the button at the top right, next to “Template”) opens the list in the middle of the screen. Each template has two buttons: “Fill in template” makes a new document, and “New field selection” makes a new template from the same document, with differently checked fields. A saved template is never changed: the new one is saved next to it (“… (2)”) with “Save as new template”. Delete a template you no longer need with the bin. The bin deletes the template. Templates are also in the backup.', 'Filling in: in “My templates” tap “Fill in template” under a template. Enter the data for each field (the grey text is an example from the original). A phone number is reduced to digits, an e-mail to lower case, and an amount without a currency gets the currency from the example. “Make document” asks for a name and an album and makes a new document in Arhiva: a template from Word gives a Word file with the original layout (only the field text changes), other templates give a PDF. A field you leave empty becomes a line to fill in by hand. The template name, the counter of filled fields and the Camera · Gallery · Arhiva · Make document buttons stay at the top and do not scroll; only the fields scroll. The keyboard matches the field (phone, numbers, e-mail), and the “Next” key moves to the next field. Instead of typing, AI can fill in the data: at the top take a photo of an ID card or passport (both sides and several people are fine), pick a photo from the gallery or a document from Arhiva. What you picked is shown at the bottom as thumbnails with ✕. In the field at the bottom you can add a note, e.g. “the first photo is the tenant, the second the spouse”, or the data itself in your own words without a photo, then tap ✨. While you type in a template field, the bottom bar steps aside. While AI works, only the progress window is on the screen; “Cancel” or going back stops the work. AI writes only into empty fields; what you typed stays. A field filled in by AI is marked “AI”, and a field it could not find “AI did not find it”. Check the data before making the document. The arrows at the top right (↶ undo, ↷ redo) step the fields back and forward; one step back after AI restores all fields as they were before AI. The sources go to the Google Gemini service and are not kept in Arhiva. The template stays the same, so you can fill it in as many times as you like. Chrome cannot share a Word file: download it with “Save to phone” and send it as an attachment; a PDF can be shared right away with “Share”.', 'Edit (Word): changes the text of a Word document while the layout stays as in the original. Tap a paragraph or a table cell, correct the text and tap “Apply”. “Cancel” (or going back) closes the window without any change, so you can just look at a paragraph. “Add paragraph below” adds a new paragraph in the same style, “Delete paragraph” removes it, and “Restore as in the original” undoes the change. Changed paragraphs are marked. The arrows at the top right (↶ undo, ↷ redo) step through all changes one by one. In the paragraph window, while you type, ↶ ↷ step back and forward word by word. “Save as a new document” makes a new Word file (“… – edit 1”) in the original’s album. Arhiva’s rule: the content of the original is never changed — every text change, by hand or with AI, gives a new document. You change the name, album and date on the document itself. For PDFs and photos editing is done for now with a task in your own words (a new PDF is made).', 'The document stays unchanged. The result enters the archive only when you tap “Save”, as a new PDF in the album you choose. “Share” sends the result as a PDF. “Read (AI)” (select the document → “More”) suggests a name, an album, a date and text for search for the document itself; nothing changes until you tap “Apply selected”.', 'Key, model and cost are in Settings → AI processing. Below every result you see what it cost. Before the first send Arhiva asks for consent, because the document goes to the Google Gemini service. While this is a trial, do not send personal or confidential documents.'],
+      ['AI workshop (trial)', 'The AI workshop is a separate place where AI works with your document. Open it with the button with the stars ✨ in the viewer of any document, with the ✨ button next to the “Abeceda / Datum” filters on the home screen, or by selecting: long-press, then “More” and “AI workshop”.', 'Tap a ready task (Edit, Summary, Amounts, Translate, and Make template at the top right) or type your own task in the field below and tap the arrow. While AI works, only the progress window is on the screen; “Cancel” or going back stops the work. The result opens on its own screen where you read all of it. “Edit” lets you correct any part of the text, and the field below asks AI to refine it, e.g. “shorter” or “add a row for the keys”. Every change is a new version: the “What changed” box says what was done, and the arrows take you back to an earlier version. In the workshop the original is always shown below the tasks: the tasks stay at the top and only the document scrolls. The document name is at the top, after “AI workshop”: tap it to choose another document. When there is a result, the “Result” tile next to the name opens it. ✕ on the document or the back gesture closes only the document (Arhiva first offers to discard an unsaved result), so you can choose another. You leave the workshop with the ‹ arrow at the top left, or with the back gesture when no document is open.', 'Template: tap “Template” at the top right. While AI reads the document, only the progress window is on the screen (for a longer document “Reading part 1 of 6…”); “Cancel” or going back stops the work. The fixed text stays, and the data of the case become fields. For Word and Excel documents the text is taken from the original word for word: AI only finds the data, and Arhiva replaces them with fields. The same amount with different meanings (e.g. two penalties of 500 EUR) gets separate fields, while the same person mentioned several times stays one field. Then the “Template fields” screen opens right away: for each field you see its name, its type and what the document says. A checked field is filled in for each new case, and when you uncheck it, the data from the original stays fixed text. Tapping anywhere on a row checks or unchecks it. Hide the explanation at the top with the arrow; tapping the thin row with ⓘ opens it again. The “Save template” button at the bottom asks for a name and saves the template, and then “My templates” opens with the new template first. Going back before saving offers to discard the template. “My templates” (the button at the top right, next to “Template”) opens the list in the middle of the screen. When a document is open, it shows the templates made from it (without a document: all templates). Each template has “Fill in template”, which makes a new document. For a different field selection of the same document tap “Make template” again: AI reads the document only the first time, and afterwards the fields open right away from that reading, all checked, at no cost. A saved template is never changed: the new one is saved next to it (“… (2)”) with “Save as new template”. Delete a template you no longer need with the bin. The bin deletes the template. Templates are also in the backup.', 'Filling in: in “My templates” tap “Fill in template” under a template. Enter the data for each field (the grey text is an example from the original). A phone number is reduced to digits, an e-mail to lower case, and an amount without a currency gets the currency from the example. “Make document” asks for a name and an album and makes a new document in Arhiva: a template from Word gives a Word file with the original layout (only the field text changes), other templates give a PDF. A field you leave empty becomes a line to fill in by hand. The template name, the counter of filled fields and the Camera · Gallery · Arhiva · Make document buttons stay at the top and do not scroll; only the fields scroll. The keyboard matches the field (phone, numbers, e-mail), and the “Next” key moves to the next field. Instead of typing, AI can fill in the data: at the top take a photo of an ID card or passport (both sides and several people are fine), pick a photo from the gallery or a document from Arhiva. What you picked is shown at the bottom as thumbnails with ✕. In the field at the bottom you can add a note, e.g. “the first photo is the tenant, the second the spouse”, or the data itself in your own words without a photo, then tap ✨. While you type in a template field, the bottom bar steps aside. While AI works, only the progress window is on the screen; “Cancel” or going back stops the work. AI writes only into empty fields; what you typed stays. A field filled in by AI is marked “AI”, and a field it could not find “AI did not find it”. Check the data before making the document. The arrows at the top right (↶ undo, ↷ redo) step the fields back and forward; one step back after AI restores all fields as they were before AI. The sources go to the Google Gemini service and are not kept in Arhiva. The template stays the same, so you can fill it in as many times as you like. Chrome cannot share a Word file: download it with “Save to phone” and send it as an attachment; a PDF can be shared right away with “Share”.', 'Edit (Word): changes the text of a Word document while the layout stays as in the original. Tap a paragraph or a table cell, correct the text and tap “Apply”. “Cancel” (or going back) closes the window without any change, so you can just look at a paragraph. “Add paragraph below” adds a new paragraph in the same style, “Delete paragraph” removes it, and “Restore as in the original” undoes the change. Changed paragraphs are marked. The arrows at the top right (↶ undo, ↷ redo) step through all changes one by one. In the paragraph window, while you type, ↶ ↷ step back and forward word by word. “Save as a new document” makes a new Word file (“… – edit 1”) in the original’s album. Arhiva’s rule: the content of the original is never changed — every text change, by hand or with AI, gives a new document. You change the name, album and date on the document itself. For PDFs and photos editing is done for now with a task in your own words (a new PDF is made).', 'The document stays unchanged. The result enters the archive only when you tap “Save”, as a new PDF in the album you choose. “Share” sends the result as a PDF. “Read (AI)” (select the document → “More”) suggests a name, an album, a date and text for search for the document itself; nothing changes until you tap “Apply selected”.', 'Key, model and cost are in Settings → AI processing. Below every result you see what it cost. Before the first send Arhiva asks for consent, because the document goes to the Google Gemini service. While this is a trial, do not send personal or confidential documents.'],
       ['Search', 'The magnifier searches the names of albums, images and documents. “Detailed” also searches words inside PDF, Word and Excel documents.', 'Inside an album, search also covers its sub-albums.'],
       ['Home screen shortcut', 'Select one item and tap “Shortcut”. The item opens in Chrome; choose “Add to home screen” from the Chrome menu. The shortcut of a multi-page document shows all pages.'],
       ['Trash', 'Every deletion asks for confirmation first. Deleted items go to the trash (Settings → trash) and wait there for the set number of days, then they are deleted for good. From the trash you can restore an item or delete it right away.', 'Albums do not go to the trash: when you delete an album, its images and documents stay in “All images”.'],
@@ -8929,10 +8934,10 @@ function wsOpenFields(focusKey, flow){
   if(!v || !v.res.tpl || !v.res.fields || !v.res.fields.length) return;
   _wsFld = {draft:v.res.fields.map(f=>({name:f.name, orig:f.name, example:f.example, kind:f.kind, on:f.on !== false, on0:f.on !== false})), discard:false,
     flow:!!flow, isNew:!!(flow && !_ws.tplId), saved:false};
-  /* verzija 90: sačuvan šablon se nikad ne menja — „Nov izbor polja“ pravi nov šablon pored njega */
-  const base = (flow && _ws.tplId) ? _tpls.find(x=>x.id === _ws.tplId) : null;
-  _wsFld.base = base || null;
-  document.getElementById('wsFldTitle').textContent = t(base ? 'wsFldTitleNew' : 'wsFldTitle');
+  /* verzija 90: sačuvan šablon se nikad ne menja; kad dokument već ima šablon, nov se čuva pored njega */
+  const base = flow ? (tplForDoc()[0] || null) : null;
+  _wsFld.base = base;
+  document.getElementById('wsFldTitle').textContent = t('wsFldTitle');
   iboxSet(document.getElementById('wsFldLead'), base ? t('wsFldLeadNew', {name:base.name || ''}) : t('wsFldLead'));
   /* verzija 86: na putu šablona dugme na dnu je odmah „Sačuvaj šablon“ (nema više „Primeni“ pa posebnog čuvanja) */
   document.getElementById('wsFldOk').textContent = flow ? t(base ? 'wsSaveTplNew' : 'wsSaveTpl') : t('wsFldOk');
@@ -9044,7 +9049,11 @@ document.getElementById('wsFldOk').onclick = ()=>{
   if(bad){ try{ bad._row.scrollIntoView({block:'center'}); }catch(e){} return; }
   /* verzija 86: na putu šablona polja se primene pri čuvanju; prozor polja ostaje ispod (nazad sa čuvanja vraća na polja) */
   if(_wsFld.flow){
-    if(_wsFld.base && !wsFldChanged()){ toast(t('wsFldSame', {name:_wsFld.base.name || ''})); return; }
+    /* isti izbor polja kao postojeći šablon ovog dokumenta → nema novog šablona */
+    const key = (arr)=>arr.map(x=>wsFldKey(x)).sort().join('\u0001');
+    const mine = key(_wsFld.draft.filter(f=>f.on || !f.example).map(f=>wsFldName(f.name)));
+    const same = tplForDoc().find(tp=>key((tp.fields || []).map(f=>f.name)) === mine);
+    if(same){ toast(t('wsFldSame', {name:same.name || ''})); return; }
     wsOpenSave(wsFldMakeRes(v).res); return;
   }
   if(!wsFldChanged()){ _wsFld.discard = true; requestClose(); return; }
@@ -9087,7 +9096,28 @@ function wsTplFlowStart(){
     toast(t('wsTplNoFields'));
     return;
   }
+  /* verzija 90: prvo čitanje (sva polja, kako ih je AI našao) ide uz šablon, da se nov izbor polja pravi bez ponovnog slanja */
+  _ws.tplFull = {title:v.res.title || '', blocks:JSON.parse(JSON.stringify(v.res.blocks || [])),
+    fields:v.res.fields.map(f=>({name:f.name, example:f.example || '', kind:f.kind || 'text'}))};
   wsOpenFields(null, true);
+}
+/* verzija 90: šabloni otvorenog dokumenta (najnoviji prvi); bez dokumenta — svi */
+function tplForDoc(){
+  const src = _ws && _ws.src;
+  return src ? _tpls.filter(tp=>tp.sourceId === src.id) : _tpls;
+}
+/* „Napravi šablon“ na dokumentu koji već ima šablon: polja iz prvog čitanja, odmah, bez AI */
+async function wsTplFromFull(full){
+  if(!_ws || _ws.busy) return;
+  if(_ws.dirty){
+    const yes = await askConfirm({icon:'✨', title:t('wsDiscardTitle'), text:t('wsDiscardText'), okIcon:'🗑️', okLabel:t('wsDiscardOk')});
+    if(!yes || !_ws) return;
+  }
+  const res = {tpl:true, title:full.title || '', blocks:JSON.parse(JSON.stringify(full.blocks || [])), note:''};
+  res.fields = wsSyncFields(res, full.fields || [], null);
+  _ws.vers = [{label:t('wsTaskTemplate'), res, usage:{inp:0, out:0, think:0, usd:0}, model:null, change:''}];
+  _ws.cur = 0; _ws.tplId = null; _ws.saved = null; _ws.dirty = false; _ws.err = null;
+  wsTplFlowStart();
 }
 /* ---------- Moji šabloni (verzija 75) ----------
    Zapis u postojećem skladištu meta (bez promene verzije baze): {key:'tpl:<id>', tpl:{id, name, title, blocks, fields:[{name, example, kind}],
@@ -9128,6 +9158,7 @@ async function tplSaveFromWs(name, resIn){
       name, title:view.title || '', blocks:JSON.parse(JSON.stringify(view.blocks)),
       fields:(v.res.fields || []).filter(f=>f.on !== false || !f.example).map(f=>({name:f.name, example:f.example || '', kind:f.kind || 'text'})),
       sourceId:(ws.src && ws.src.id) || (old && old.tpl.sourceId) || null, file,
+      full:ws.tplFull ? JSON.parse(JSON.stringify(ws.tplFull)) : null,
       createdAt:now, updatedAt:now};
     await tplPut(tpl);
     await tplLoad();
@@ -9146,8 +9177,9 @@ async function tplSaveFromWs(name, resIn){
 }
 const wsTplSheet = document.getElementById('wsTplSheet');
 function wsOpenTplSheet(){
-  if(!_ws || _ws.busy || !_tpls.length) return;
+  if(!_ws || _ws.busy || !tplForDoc().length) return;
   document.getElementById('wsTplTitle').textContent = t('wsTplTitle');
+  iboxSet(document.getElementById('wsTplInfo'), _ws.src ? t('wsTplInfoDoc', {name:_ws.src.name || ''}) : t('wsTplInfoAll'));
   wsRenderTpls(false);
   wsTplSheet.classList.add('open');
   wsTplSheet.querySelector('.sheet').scrollTop = 0;
@@ -9159,35 +9191,32 @@ document.getElementById('wsTplBack').onclick = ()=>requestClose();
 wsTplSheet.onclick = (e)=>{ if(e.target === wsTplSheet) requestClose(); };
 function wsRenderTpls(busy){
   const pill = document.getElementById('wsTplPill'), box = document.getElementById('wsTpls');
-  pill.hidden = !_tpls.length;
+  pill.hidden = !tplForDoc().length;
   pill.disabled = !!busy;
-  document.getElementById('wsTplPillTx').textContent = t('wsTplPill', {n:_tpls.length});
-  pill.setAttribute('aria-label', t('wsTplLbl', {n:_tpls.length}));
+  document.getElementById('wsTplPillTx').textContent = t('wsTplPill', {n:tplForDoc().length});
+  pill.setAttribute('aria-label', t('wsTplLbl', {n:tplForDoc().length}));
+  const list = tplForDoc();
   box.innerHTML = '';
-  if(!_tpls.length) return;
-  _tpls.forEach(tp=>{
+  if(!list.length) return;
+  list.forEach(tp=>{
     const row = document.createElement('div');
     row.className = 'ws-tpl';
     const d = new Date(tp.updatedAt || tp.createdAt || Date.now());
     row.innerHTML = '<button type="button" class="ws-tpl-open"><span class="ws-tpl-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"></path><path d="M14 3v5h5"></path><rect x="9" y="11.5" width="7" height="2.6" rx="1"></rect><rect x="9" y="16" width="4.5" height="2.6" rx="1"></rect></svg></span>' +
       '<span class="ws-tpl-tx"><b></b><small></small></span></button>' +
       '<button type="button" class="ws-tpl-del"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 20 7"></polyline><path d="M6 7l1 13h10l1-13"></path><path d="M9 7V4h6v3"></path></svg></button>' +
-      '<div class="ws-tpl-acts"><button type="button" class="ws-tpl-fill"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"></path><line x1="13.5" y1="6.5" x2="17.5" y2="10.5"></line></svg><span></span></button>' +
-      '<button type="button" class="ws-tpl-edit"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l2 2 4-4"></path><line x1="13" y1="7" x2="20" y2="7"></line><path d="M4 16l2 2 4-4"></path><line x1="13" y1="16" x2="20" y2="16"></line></svg><span></span></button></div>';
+      '<div class="ws-tpl-acts"><button type="button" class="ws-tpl-fill"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"></path><line x1="13.5" y1="6.5" x2="17.5" y2="10.5"></line></svg><span></span></button></div>';
     row.querySelector('b').textContent = tp.name || tp.title || '';
     row.querySelector('small').textContent = t('wsTplMeta', {n:(tp.fields || []).length, date:d.getDate() + '.' + (d.getMonth() + 1) + '.' + d.getFullYear() + '.'});
     const op = row.querySelector('.ws-tpl-open'), del = row.querySelector('.ws-tpl-del'), fill = row.querySelector('.ws-tpl-fill');
-    const ed = row.querySelector('.ws-tpl-edit');
-    op.disabled = del.disabled = fill.disabled = ed.disabled = busy;
-    ed.querySelector('span').textContent = t('wsTplEdit');
-    ed.setAttribute('aria-label', t('wsTplEdit') + ': ' + (tp.name || ''));
+    del.disabled = fill.disabled = busy;
+    /* verzija 90: naziv nije dugme; jedini put do izbora polja je „Napravi šablon“ */
+    op.tabIndex = -1;
     /* verzija 82: „Popuni“ — nov dokument od šablona */
     fill.querySelector('span').textContent = t('wfFill');
     fill.setAttribute('aria-label', t('wfFill') + ': ' + (tp.name || ''));
     fill.onclick = ()=>{ if(wsTplSheet.classList.contains('open')) requestCloseThen(()=>wfOpen(tp)); else wfOpen(tp); };
     del.setAttribute('aria-label', t('wsTplDel') + ': ' + (tp.name || ''));
-    op.onclick = ()=>{ if(wsTplSheet.classList.contains('open')) requestCloseThen(()=>wsOpenTpl(tp)); else wsOpenTpl(tp); };
-    ed.onclick = op.onclick;
     del.onclick = ()=>wsDelTpl(tp);
     box.appendChild(row);
   });
@@ -9221,7 +9250,7 @@ async function wsDelTpl(tp){
     await tplLoad();
     if(_ws && _ws.tplId === tp.id){ _ws.tplId = null; if(_ws.saved && _ws.saved.tpl){ _ws.saved = null; _ws.dirty = !!_ws.vers.length; } }
     if(_ws) wsRender();
-    if(wsTplSheet.classList.contains('open')){ if(_tpls.length) wsRenderTpls(false); else requestClose(); }
+    if(wsTplSheet.classList.contains('open')){ if(tplForDoc().length) wsRenderTpls(false); else requestClose(); }
     toast(t('wsTplDeleted'));
   }catch(e){ console.error(e); toast(t('wsTplSaveErr')); }
 }
@@ -9243,7 +9272,17 @@ async function tplMergeBackup(list){
     if(old && (old.updatedAt || 0) >= (x.updatedAt || 0)) continue;
     res.tpl = true;
     const fields = wsSyncFields(res, wsCleanFields({fields:x.fields}), null).map(f=>({name:f.name, example:f.example, kind:f.kind}));
-    await tplPut({id:x.id, name:String(x.name || res.title || 'Šablon').slice(0, 200), title:res.title, blocks:res.blocks, fields,
+    /* verzija 90: prvo čitanje dokumenta (sva polja) — za nov izbor polja bez ponovnog slanja AI-ju */
+    let full = null;
+    if(x.full && typeof x.full === 'object'){
+      const fr = wsClean({title:x.full.title, blocks:x.full.blocks, note:''});
+      if(fr){
+        fr.tpl = true;
+        const ff = wsSyncFields(fr, wsCleanFields({fields:x.full.fields}), null).map(f=>({name:f.name, example:f.example, kind:f.kind}));
+        if(ff.length) full = {title:fr.title, blocks:fr.blocks, fields:ff};
+      }
+    }
+    await tplPut({id:x.id, name:String(x.name || res.title || 'Šablon').slice(0, 200), title:res.title, blocks:res.blocks, fields, full,
       sourceId:typeof x.sourceId === 'string' ? x.sourceId : null, file:tplFileOk(x.file), createdAt:x.createdAt || Date.now(), updatedAt:x.updatedAt || Date.now()});
     have.set(x.id, {updatedAt:x.updatedAt || Date.now()});
     n++;
@@ -9259,6 +9298,10 @@ function wsTaskTap(k){
   if(k === 'translate'){
     openActionSheet(t('wsTransTitle'), WS_LANGS.map(l=>({icon:'🌐', label:l[1], onClick:()=>wsRun({kind:'translate', label:t('wsTaskTrans') + ' · ' + l[1], langName:l[2]})})));
     return;
+  }
+  if(k === 'template'){
+    const had = tplForDoc().find(tp=>tp.full && tp.full.blocks && tp.full.fields && tp.full.fields.length);
+    if(had){ wsTplFromFull(had.full); return; }
   }
   const key = {summary:'wsTaskSum', amounts:'wsTaskAmounts', template:'wsTaskTemplate'}[k];
   wsRun({kind:k, label:t(key)});
@@ -10186,9 +10229,10 @@ function wsOpenSave(tplRes){
   if(isTpl){
     document.getElementById('wsSaveTitle').textContent = t('wsSaveTplTitle');
     document.getElementById('wsSaveNameLbl').textContent = t('wsSaveTplName');
-    document.getElementById('wsSaveHint').textContent = cur ? t('wsSaveTplHintUpd', {name:cur.name}) : t('wsSaveTplHint');
+    const base = (_wsFld && _wsFld.base) || cur;
+    document.getElementById('wsSaveHint').textContent = base ? t('wsSaveTplHintUpd', {name:base.name}) : t('wsSaveTplHint');
     document.getElementById('wsSaveOk').textContent = t('wsSaveTpl');
-    wsSaveName.value = cur ? tplUniqueName(cur.name || '') : ((tplRes || v.res).title || t('wsTaskTemplate'));
+    wsSaveName.value = base ? tplUniqueName(base.name || '') : ((tplRes || v.res).title || t('wsTaskTemplate'));
     snapshotField(wsSaveName);
     wsSaveSheet.classList.add('open');
     pushBack(closeWsSave);
