@@ -1746,9 +1746,11 @@ body:has(#aiWs.open) .toast{ bottom:calc(190px + env(safe-area-inset-bottom)); }
 #wsTplSheet .sheet-head{ display:flex; align-items:center; }
 #wsTplSheet .ws-tpl-hsp{ flex:1; }
 #wsTplSheet .sheet-head .ws-tpl-ibtn{ width:48px; height:48px; border-radius:50%; }
-#wsTplSheet .ws-chip.ws-tpl-make-btn svg{ color:inherit; width:19px; height:19px; }
-#wsTplSheet .ws-chip.ws-tpl-make-btn{ flex:1; min-width:0; height:52px; border-radius:16px; border:1px solid var(--brass); background:var(--brass); color:var(--bg);
-  font-size:16.5px; font-weight:700; gap:8px; justify-content:center; padding:0 10px; white-space:nowrap; }
+#wsTplSheet .ws-chip.ws-tpl-make-btn svg{ color:var(--brass); width:19px; height:19px; }
+/* v100: blago osenčeno, isto kao „Sve slike“ na početnom ekranu */
+#wsTplSheet .ws-chip.ws-tpl-make-btn{ flex:1; min-width:0; height:52px; border-radius:16px; border:1px solid color-mix(in srgb, var(--brass) 38%, var(--line));
+  background:color-mix(in srgb, var(--brass) 10%, var(--bg)); color:var(--ink); box-shadow:none;
+  font-size:16.5px; font-weight:600; gap:8px; justify-content:center; padding:0 10px; white-space:nowrap; }
 #wsTplSheet .ws-chip.ws-tpl-make-btn:disabled{ opacity:.45; }
 .ws-tpl-ibtn{ flex:none; width:52px; height:52px; border-radius:16px; border:1px solid var(--brass-soft); background:var(--surface-2); color:var(--brass);
   display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; }
