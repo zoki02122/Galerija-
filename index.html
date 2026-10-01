@@ -125,6 +125,14 @@
     white-space:normal;overflow-wrap:anywhere;min-width:0;}
   .crumb .crumb-count{font-family:var(--font-num);font-size:11px;letter-spacing:0.5px;color:var(--ink-dim);white-space:nowrap;flex:none;}
   .header-actions{display:flex;align-items:center;gap:10px;}
+  .path-bar{display:flex;align-items:center;gap:6px;min-width:0;white-space:nowrap;overflow:hidden;
+    border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px 2px;margin-bottom:2px;
+    font-family:var(--font-ui);font-size:13px;line-height:1.3;}
+  .path-bar .path-lnk{flex:0 1 auto;min-width:0;max-width:38%;overflow:hidden;text-overflow:ellipsis;background:none;border:0;padding:4px 0;margin:-4px 0;
+    font:inherit;color:var(--ink-dim);cursor:pointer;}
+  .path-bar .path-sep{flex:none;color:var(--ink-faint);opacity:.7;}
+  .path-bar .path-cur{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;color:var(--ink);font-weight:600;}
+  .album-row1 .crumb .here{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .album-row2-right{display:flex;align-items:center;gap:12px;flex:none;}
   /* na uskim telefonima veliki broj stavki prelazi u dva reda umesto da se preklopi sa ikonicama */
   .album-row2 > #crumbCount{white-space:normal;min-width:0;flex:1 1 auto;line-height:1.2;}
@@ -2533,6 +2541,7 @@ const I18N = {
     wsPickDocs: 'Dokumenti',
     wsPickRecent: 'Poslednji',
     wsPickCount: 'stavki: {n}',
+    pathLabel: 'Gde se nalaziš', pathInbox: 'Sve slike',
     wsPickAlbEmpty: 'Album je prazan.',
     wsSaveTitle: 'Sačuvaj u arhivu',
     wsSaveNameLbl: 'naziv novog dokumenta',
@@ -2691,7 +2700,7 @@ const I18N = {
     guideTileSub: 'kako se koristi Arhiva',
     guideIntro: 'Dodirni naslov da otvoriš objašnjenje.',
     guide: [
-      ['Albumi i podalbumi', 'Novi album praviš ikonicom fascikle sa plusom na vrhu početnog ekrana. U albumu ista ikonica pravi podalbum.', 'Dugi pritisak na album otvara izbor: zakači na vrh, preimenuj, naslovna slika, premesti ili izbriši. Redosled albuma menjaš prevlačenjem ručke u uglu. Naziv albuma menjaš i olovkom pored naslova kad si u albumu.'],
+      ['Albumi i podalbumi', 'Novi album praviš ikonicom fascikle sa plusom na vrhu početnog ekrana. U albumu ista ikonica pravi podalbum.', 'Dugi pritisak na album otvara izbor: zakači na vrh, preimenuj, naslovna slika, premesti ili izbriši. Redosled albuma menjaš prevlačenjem ručke u uglu. Naziv albuma menjaš i olovkom pored naslova kad si u albumu.', 'Iznad naslova albuma je putanja, npr. „Arhiva › Album › Podalbum“: uvek vidiš gde si. Dodir na „Arhiva“ vodi na početni ekran, a dodir na naziv albuma u taj album.'],
       ['Dodavanje', 'Ikonica slike sa plusom dodaje sa telefona: iz galerije (više slika odjednom), slikanjem ili kao dokument (PDF, Word, Excel…). Svaka izabrana slika postaje posebna stavka.', 'Ono što dodaš dok si u albumu (iz galerije, slikanjem ili kao dokument) ide pravo u taj album.'],
       ['Dokument od više stranica', 'U meniju za dodavanje izaberi „Dokument od više stranica“. Slikaj stranicu po stranicu ili izaberi više slika iz galerije, upiši naziv i dodirni „Sačuvaj“.', 'Redosled menjaš prevlačenjem ručke u uglu stranice, a ✕ uklanja stranicu. U mreži se vidi prva stranica sa oznakom broja stranica.'],
       ['Pregled i listanje', 'Dodir na bilo koju stavku (sliku, PDF, Word, Excel) otvara isti pregled. Prevlačenjem levo i desno ili strelicama listaš stranice, a posle poslednje stranice prelaziš na sledeću stavku, istim redom kao u albumu. Kod slike i PDF-a jedan dodir sakriva ili vraća dugmad.', 'Dva prsta uvećavaju sliku ili stranicu PDF-a (do 5 puta), a uvećanu pomeraš jednim prstom. Dvostruki dodir uvećava na tom mestu ili vraća ceo prikaz.', 'PDF se prikazuje stranicu po stranicu. Word i Excel imaju karticu sa dugmetom „Otvori“: tekst ili tabela (sa listovima) otvaraju se u Arhivi, a A− i A+ menjaju veličinu slova. Za zaključan PDF i ostale vrste fajlova „Otvori“ nudi deljenje ili čuvanje na telefon (Word i Excel samo čuvanje).', 'Gornji red dugmadi je isti za sve: ✨ (AI), kalendar (rok važenja), PDF ili deljenje, korpa. Dugme sa stranicama (samo kod slika) dodaje nove stranice ili menja njihov redosled. Olovka pored naziva menja naziv; isto radi i „Više“ → „Preimenuj“ kod izbora.'],
@@ -3027,6 +3036,7 @@ const I18N = {
     wsPickDocs: 'Documents',
     wsPickRecent: 'Recent',
     wsPickCount: 'items: {n}',
+    pathLabel: 'Where you are', pathInbox: 'All images',
     wsPickAlbEmpty: 'The album is empty.',
     wsSaveTitle: 'Save to the archive',
     wsSaveNameLbl: 'name of the new document',
@@ -3185,7 +3195,7 @@ const I18N = {
     guideTileSub: 'how to use Arhiva',
     guideIntro: 'Tap a title to open the explanation.',
     guide: [
-      ['Albums and sub-albums', 'Create a new album with the folder-plus icon at the top of the home screen. Inside an album the same icon creates a sub-album.', 'Long-press an album for options: pin to top, rename, cover image, move or delete. Drag the handle in the corner to change the album order. You can also rename an album with the pencil next to its title inside the album.'],
+      ['Albums and sub-albums', 'Create a new album with the folder-plus icon at the top of the home screen. Inside an album the same icon creates a sub-album.', 'Long-press an album for options: pin to top, rename, cover image, move or delete. Drag the handle in the corner to change the album order. You can also rename an album with the pencil next to its title inside the album.', 'Above the album title is the path, e.g. “Arhiva › Album › Sub-album”, so you always see where you are. Tap “Arhiva” to go to the home screen, or an album name to go to that album.'],
       ['Adding', 'The image-plus icon adds from the phone: from the gallery (several images at once), by taking a photo, or as a document (PDF, Word, Excel…). Every picked image becomes a separate item.', 'What you add while inside an album (from the gallery, by taking a photo or as a document) goes straight into that album.'],
       ['Multi-page document', 'In the add menu choose “Multi-page document”. Photograph page by page or pick several images from the gallery, type a name and tap “Save”.', 'Drag the handle in the corner of a page to change the order; ✕ removes a page. The grid shows the first page with the page count.'],
       ['Viewing and paging', 'Tap any item (image, PDF, Word, Excel) to open the same viewer. Swipe left and right or use the arrows to turn pages; after the last page you move on to the next item, in the same order as in the album. For an image or a PDF, one tap hides or shows the buttons.', 'Two fingers zoom an image or a PDF page (up to 5 times); move the zoomed view with one finger. A double tap zooms in at that spot or returns to the full view.', 'A PDF is shown page by page. Word and Excel show a card with an “Open” button: the text or the table (with its sheets) opens inside Arhiva, and A− and A+ change the text size. For a locked PDF and other file types “Open” offers sharing or saving to the phone (Word and Excel: saving only).', 'The top row of buttons is the same for everything: ✨ (AI), calendar (valid until), PDF or share, trash. The pages button (images only) adds new pages or changes their order. The pencil next to the name renames the item; “More” → “Rename” does the same when selecting.'],
@@ -4347,6 +4357,8 @@ async function legacyExportBackup(){
 }
 function newCatId(){ return 'alb_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
 function catById(id){ return categories.find(c=>c.id===id) || null; }
+function stavkeTxt(n){ const d=n%10, h=n%100;
+  return n+' '+((d===1&&h!==11)?'stavka':(d>=2&&d<=4&&(h<12||h>14))?'stavke':'stavki'); }
 function catLabel(id){ const c = catById(id); return c ? c.name : ''; }
 function maybeAutoCover(catId, item){
   if(!catId || !item || item.type !== 'image') return;
@@ -4396,6 +4408,33 @@ function parentCloser(parentId){
   f.isAlbumCloser = true;
   return f;
 }
+/* Traka putanje iznad naslova albuma (v95): Arhiva › album › podalbum; raniji delovi vode tamo */
+function pathGo(target){
+  const step = ()=>{ if(currentFolder === target || backStack.length === 0) return; requestCloseThen(step); };
+  step();
+}
+function buildPathBar(curCat){
+  const bar = document.createElement('nav');
+  bar.className = 'path-bar';
+  bar.setAttribute('aria-label', t('pathLabel'));
+  const parts = [{label:'Arhiva', target:null}];
+  if(currentFolder === INBOX) parts.push({label:t('pathInbox'), target:INBOX});
+  else if(curCat){
+    const par = curCat.parent ? catById(curCat.parent) : null;
+    if(par) parts.push({label:par.name, target:par.id});
+    parts.push({label:curCat.name, target:curCat.id});
+  }
+  parts.forEach((p, i)=>{
+    if(i){ const sp = document.createElement('span'); sp.className = 'path-sep'; sp.textContent = '›'; sp.setAttribute('aria-hidden','true'); bar.appendChild(sp); }
+    const last = i === parts.length - 1;
+    const el = document.createElement(last ? 'span' : 'button');
+    el.className = last ? 'path-cur' : 'path-lnk';
+    el.textContent = p.label;
+    if(!last){ el.type = 'button'; el.onclick = (e)=>{ e.stopPropagation(); pathGo(p.target); }; }
+    bar.appendChild(el);
+  });
+  return bar;
+}
 function openSubalbum(sub){
   currentFolder = sub.id; searchEl.value=''; pushBack(parentCloser(sub.parent)); render();
 }
@@ -4431,9 +4470,9 @@ const buildFolderTile = (cat, groupCats, onOpen)=>{
   tile.className = isList ? 'folder-tile-row' : 'folder-tile';
   const coverInner = (coverItem && coverItem.thumb) ? '<img src="'+coverItem.thumb+'">' : folderIconSvg();
   if(isList){
-    tile.innerHTML = '<div class="ftile-cover">'+coverInner+'</div><div class="fr-text"><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+count+' '+(count===1?'stavka':'stavki')+'</span></div>';
+    tile.innerHTML = '<div class="ftile-cover">'+coverInner+'</div><div class="fr-text"><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+stavkeTxt(count)+'</span></div>';
   }else{
-    tile.innerHTML = '<div class="ftile-cover">'+coverInner+'</div><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+count+' '+(count===1?'stavka':'stavki')+'</span>';
+    tile.innerHTML = '<div class="ftile-cover">'+coverInner+'</div><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+stavkeTxt(count)+'</span>';
   }
   if(cat.pinned){
     const pin = document.createElement('div');
@@ -4607,7 +4646,7 @@ function render(){
     const subs = curCat && !curCat.parent ? childrenOf(curCat.id) : [];
     const filtered = albumItemsFor(currentFolder, q);
     const totalHere = currentFolder === INBOX ? items.filter(i=>!i.category).length : countDeep(currentFolder);
-    crumbCount.textContent = totalHere + (totalHere===1 ? ' stavka' : ' stavki');
+    crumbCount.textContent = stavkeTxt(totalHere);
     contentArea.innerHTML = '';
 
     /* Red 1: nazad + ceo naziv albuma (ceo red je dugme za izlaz). Red 2: broj stavki + sortiranje */
@@ -4615,6 +4654,7 @@ function render(){
     albumHead.style.cssText = 'display:flex;flex-direction:column;gap:10px;margin-bottom:16px;';
     const nameRow = document.createElement('div');
     nameRow.style.cssText = 'display:flex;align-items:center;gap:10px;';
+    nameRow.className = 'album-row1';
     nameRow.appendChild(crumb);
     /* lupa i novi podalbum idu u drugi red (uz broj stavki), da naziv ima vise mesta */
     const albumTools = document.createElement('div');
@@ -4650,6 +4690,7 @@ function render(){
       }
       nameRow.appendChild(albumAdd);
     }
+    if(!selectionMode) albumHead.appendChild(buildPathBar(curCat));
     albumHead.appendChild(nameRow);
     const sortRow = document.createElement('div');
     sortRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:10px;';
@@ -4737,7 +4778,7 @@ function render(){
         const inboxCount = items.filter(i=>!i.category).length;
         const inboxTile = document.createElement('div');
         inboxTile.className = 'folder-tile-wide';
-        inboxTile.innerHTML = '<div class="fw-icon">'+folderIconSvg()+'</div><div class="fw-text"><span class="fw-name">Sve slike</span><span class="fw-count">'+inboxCount+' '+(inboxCount===1?'stavka':'stavki')+'</span></div>';
+        inboxTile.innerHTML = '<div class="fw-icon">'+folderIconSvg()+'</div><div class="fw-text"><span class="fw-name">Sve slike</span><span class="fw-count">'+stavkeTxt(inboxCount)+'</span></div>';
         inboxTile.onclick = ()=>{ currentFolder = INBOX; searchEl.value=''; pushBack(closeAlbumViewTop); render(); };
         contentArea.appendChild(inboxTile);
       }
@@ -4752,9 +4793,9 @@ function render(){
           const coverItem = coverItemFor(cat);
           tile.className = 'folder-tile';
           if(coverItem){
-            tile.innerHTML = '<div class="ftile-cover">'+(coverItem.thumb ? '<img src="'+coverItem.thumb+'">' : folderIconSvg())+'</div><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+count+' '+(count===1?'stavka':'stavki')+'</span>';
+            tile.innerHTML = '<div class="ftile-cover">'+(coverItem.thumb ? '<img src="'+coverItem.thumb+'">' : folderIconSvg())+'</div><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+stavkeTxt(count)+'</span>';
           }else{
-            tile.innerHTML = '<div class="ftile-cover">'+folderIconSvg()+'</div><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+count+' '+(count===1?'stavka':'stavki')+'</span>';
+            tile.innerHTML = '<div class="ftile-cover">'+folderIconSvg()+'</div><span class="fname">'+escapeHtml(name)+'</span><span class="fcount">'+stavkeTxt(count)+'</span>';
           }
           tile.onclick = ()=>{
             if(parentCat){ pushBack(closeAlbumViewTop); openSubalbum(cat); return; }
@@ -4786,7 +4827,7 @@ function render(){
   const inboxCount = items.filter(i=>!i.category).length;
   const inboxTile = document.createElement('div');
   inboxTile.className = 'folder-tile-wide';
-  inboxTile.innerHTML = '<div class="fw-icon">'+folderIconSvg()+'</div><div class="fw-text"><span class="fw-name">Sve slike</span><span class="fw-count">'+inboxCount+' '+(inboxCount===1?'stavka':'stavki')+'</span></div>';
+  inboxTile.innerHTML = '<div class="fw-icon">'+folderIconSvg()+'</div><div class="fw-text"><span class="fw-name">Sve slike</span><span class="fw-count">'+stavkeTxt(inboxCount)+'</span></div>';
   inboxTile.onclick = ()=>{ currentFolder = INBOX; searchEl.value=''; pushBack(closeAlbumView); render(); };
   const inboxAdd = document.createElement('button');
   inboxAdd.type = 'button';
@@ -6420,7 +6461,7 @@ function trashDaysLeft(it){
 }
 function trashTileSub(){
   const n = trash.length;
-  return (n === 0 ? 'prazna' : n + (n===1 ? ' stavka' : ' stavki')) + ' \u00B7 čuva ' + getTrashDays() + ' dana';
+  return (n === 0 ? 'prazna' : stavkeTxt(n)) + ' \u00B7 čuva ' + getTrashDays() + ' dana';
 }
 let trashSel = new Set();
 function renderTrashList(){
@@ -6572,7 +6613,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 94</div>'+
+    '<div class="settings-hint set-build">verzija 95</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -6675,14 +6716,14 @@ function updateStorageInfo(){
     navigator.storage.persisted().then(p=>{ pEl.textContent = p ? t('persistOn') : t('persistOff'); }).catch(()=>{});
   }
   const trashPart = trash.length ? ' (u korpi ' + trash.length + ')' : '';
-  infoEl.textContent = 'Iskorišćeno: ~' + mb.toFixed(1) + ' MB \u00B7 ' + items.length + ' stavki' + trashPart;
+  infoEl.textContent = 'Iskorišćeno: ~' + mb.toFixed(1) + ' MB \u00B7 ' + stavkeTxt(items.length) + trashPart;
   if(navigator.storage && navigator.storage.estimate){
     navigator.storage.estimate().then(est=>{
       if(est && est.quota){
         const usedMb = (est.usage || 0) / 1024 / 1024;
         const quotaMb = est.quota / 1024 / 1024;
         const freeMb = Math.max(0, quotaMb - usedMb);
-        infoEl.textContent = 'Iskorišćeno: ~' + mb.toFixed(1) + ' MB \u00B7 ' + items.length + ' stavki' + trashPart + ' \u00B7 Slobodno još ~' + freeMb.toFixed(0) + ' MB';
+        infoEl.textContent = 'Iskorišćeno: ~' + mb.toFixed(1) + ' MB \u00B7 ' + stavkeTxt(items.length) + trashPart + ' \u00B7 Slobodno još ~' + freeMb.toFixed(0) + ' MB';
       }
     }).catch(()=>{});
   }
