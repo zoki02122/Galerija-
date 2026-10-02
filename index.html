@@ -1202,7 +1202,19 @@ html[data-theme="ponoc"]{
 .ai-row .exp-state{ margin:0 2px 10px; }
 .ai-now{ font-size:12px; color:var(--ink-dim); margin:0 2px; overflow-wrap:anywhere; }
 .ai-miss{ font-size:12px; color:var(--ink-dim); margin:0 2px 8px; font-style:italic; }
-.ai-sel-wrap{ position:relative; }
+.ai-sel-wrap{ position:relative; cursor:pointer; }
+.ai-sel-wrap select, .wa-kind select{ pointer-events:none; }
+.wa-kind{ cursor:pointer; }
+#pickSheet .sheet{ max-height:85vh; max-height:85dvh; display:flex; flex-direction:column; box-sizing:border-box; }
+#pickSheet .sheet-head{ margin-bottom:10px; flex:none; }
+.pick-list{ overflow-y:auto; overscroll-behavior:contain; border:1px solid var(--line); border-radius:18px; background:var(--surface); }
+.pick-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; min-height:52px; box-sizing:border-box; padding:10px 16px;
+  background:none; border:none; border-bottom:1px solid var(--line); color:var(--ink); font-family:var(--font-ui); font-size:16px; text-align:left; cursor:pointer; }
+.pick-row:last-child{ border-bottom:none; }
+.pick-row:active{ background:var(--surface-2); }
+.pick-tx{ min-width:0; overflow-wrap:anywhere; line-height:1.3; }
+.pick-rb{ flex:none; width:18px; height:18px; border-radius:50%; border:2px solid var(--ink-faint); box-sizing:border-box; }
+.pick-row.on .pick-rb{ border-color:var(--brass); background:var(--brass); box-shadow:inset 0 0 0 3px var(--surface); }
 .ai-sel-wrap::after{ content:''; position:absolute; right:18px; top:calc(50% - 8px); width:8px; height:8px; border-right:2px solid var(--brass); border-bottom:2px solid var(--brass); transform:rotate(45deg); pointer-events:none; }
 .ai-select{ appearance:none; -webkit-appearance:none; padding-right:44px; width:100%; box-sizing:border-box; text-overflow:ellipsis; }
 .ai-text{ font-size:13px; line-height:1.5; color:var(--ink); background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:10px 12px; white-space:pre-wrap; overflow-wrap:anywhere; max-height:30vh; overflow-y:auto; margin-bottom:8px; }
@@ -2223,6 +2235,12 @@ body:has(#aiWs.open) .toast{ bottom:calc(190px + env(safe-area-inset-bottom)); }
   </div>
 </div>
 
+<div class="sheet-bg" id="pickSheet" style="z-index:80;">
+  <div class="sheet">
+    <div class="sheet-head"><button class="back-btn" id="pickBack" type="button"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h3 id="pickTitle"></h3></div>
+    <div class="pick-list" id="pickList" role="listbox"></div>
+  </div>
+</div>
 <div class="exit-modal-backdrop" id="confirmBackdrop" style="z-index:92;">
   <div class="exit-modal" role="alertdialog" aria-modal="true" aria-labelledby="cfTitle">
     <div id="cfIcon" style="font-size:96px;line-height:1;margin-bottom:8px;"></div>
@@ -2276,6 +2294,42 @@ function pushBack(closer){
 function requestClose(){
   if(backStack.length > 0){ history.back(); }
 }
+/* v103: naš prozor za izbor umesto Androidove liste (<select>). Raspored isti kao Androidov:
+   puno ime, krug desno; boje teme. Select ostaje u stranici (vrednost i 'change' rade kao pre),
+   samo ga dodir ne otvara: pointer-events:none, a dodir na okvir otvara naš prozor. */
+function pickTitleFor(sel){ return sel.id === 'wsAddKind' ? t('pickKind') : t('pickAlbum'); }
+function openPicker(sel){
+  const bg = document.getElementById('pickSheet'), list = document.getElementById('pickList');
+  document.getElementById('pickTitle').textContent = pickTitleFor(sel);
+  list.innerHTML = '';
+  [...sel.options].forEach(o=>{
+    const r = document.createElement('button');
+    r.type = 'button';
+    r.className = 'pick-row' + (o.selected ? ' on' : '');
+    r.setAttribute('role', 'option');
+    r.setAttribute('aria-selected', o.selected ? 'true' : 'false');
+    r.innerHTML = '<span class="pick-tx"></span><span class="pick-rb" aria-hidden="true"></span>';
+    r.querySelector('.pick-tx').textContent = o.textContent;
+    r.onclick = ()=>{
+      if(sel.value !== o.value){ sel.value = o.value; sel.dispatchEvent(new Event('input', {bubbles:true})); sel.dispatchEvent(new Event('change', {bubbles:true})); }
+      requestClose();
+    };
+    list.appendChild(r);
+  });
+  bg.classList.add('open');
+  pushBack(()=>bg.classList.remove('open'));
+  const on = list.querySelector('.pick-row.on'); if(on) on.scrollIntoView({block:'nearest'});
+}
+document.addEventListener('click', (e)=>{
+  const w = e.target.closest && e.target.closest('.ai-sel-wrap, .wa-kind');
+  if(!w) return;
+  const sel = w.querySelector('select');
+  if(!sel) return;
+  e.preventDefault(); e.stopPropagation();
+  if(!sel.disabled) openPicker(sel);
+}, true);
+document.getElementById('pickBack').onclick = ()=>requestClose();
+document.getElementById('pickSheet').addEventListener('click', (e)=>{ if(e.target.id === 'pickSheet') requestClose(); });
 /* Nas prozor za potvrdu (umesto Chrome-ovog confirm): u bojama teme, sa ikonicom.
    Vraca Promise<boolean>. Pokret nazad = Otkazi. Prozori idu jedan po jedan (red cekanja),
    jer se pri dodavanju vise fajlova odjednom moze javiti vise pitanja. */
@@ -2622,7 +2676,7 @@ const I18N = {
     aiErrFile: 'Fajl dokumenta nedostaje.',
     aiErrOther: 'Greška {code}: {msg}',
     wsTitle: 'AI radionica',
-    sortAZ: 'A–Z', sortDate: 'datum', albSearch: 'Pretraži u albumu',
+    sortAZ: 'A–Z', sortDate: 'datum', pickAlbum: 'Izaberi album', pickKind: 'Vrsta polja', albSearch: 'Pretraži u albumu',
     wsHomeSub: 'sažetak, tabela, prevod, zapisnik…',
     wsMoreHint: 'sažetak, tabela, prevod, zapisnik…',
     wsSrcLbl: 'izvor · samo za čitanje',
@@ -3125,7 +3179,7 @@ const I18N = {
     aiErrFile: 'The document file is missing.',
     aiErrOther: 'Error {code}: {msg}',
     wsTitle: 'AI workshop',
-    sortAZ: 'A–Z', sortDate: 'date', albSearch: 'Search this album',
+    sortAZ: 'A–Z', sortDate: 'date', pickAlbum: 'Choose album', pickKind: 'Field type', albSearch: 'Search this album',
     wsHomeSub: 'summary, table, translation, record…',
     wsMoreHint: 'summary, table, translation, record…',
     wsSrcLbl: 'source · read only',
@@ -6799,7 +6853,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 102</div>'+
+    '<div class="settings-hint set-build">verzija 103</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
