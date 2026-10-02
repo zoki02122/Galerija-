@@ -1521,6 +1521,12 @@ html[data-theme="ponoc"]{
 .wor-tx small{ font-size:12px; color:var(--ink-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .wor-ch{ flex:none; font-size:22px; color:var(--brass); line-height:1; }
 .ws-lbl[hidden], .ws-orig[hidden], .ws-ask[hidden], .ws-btns[hidden], .wr-edit[hidden]{ display:none; }
+.ws-res-scr .set-header{ flex-wrap:wrap; }
+.wr-saved-bar{ flex:0 0 100%; order:-1; box-sizing:border-box; margin:0 0 8px 6px; }
+.wr-saved-bar[hidden]{ display:none; }
+.wr-saved-bar .wrs-ok{ flex:none; display:inline-flex; align-items:center; gap:4px; color:var(--brass); font-weight:600; }
+.wr-saved-bar .wrs-alb{ flex:0 1 auto; min-width:0; max-width:38%; overflow:hidden; text-overflow:ellipsis; color:var(--ink-dim); }
+#wrStatus[hidden]{ display:none; }
 .ws-res-scr .set-header .set-title{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .wr-edit{ flex:none; height:38px; padding:0 14px; margin-right:4px; border-radius:19px; border:1px solid var(--brass-soft); background:var(--surface);
   color:var(--brass); font-family:var(--font-ui); font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px; }
@@ -2042,7 +2048,7 @@ body:has(#aiWs.open) .toast{ bottom:calc(190px + env(safe-area-inset-bottom)); }
   </div></div>
 </div>
 <div class="ws-screen ws-res-scr" id="wsResScr">
-  <div class="set-header"><button type="button" class="set-back" id="wrBack" aria-label="nazad"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h2 class="set-title" id="wrTitle"></h2>
+  <div class="set-header"><div class="path-bar wr-saved-bar" id="wrSavedBar" hidden></div><button type="button" class="set-back" id="wrBack" aria-label="nazad"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h2 class="set-title" id="wrTitle"></h2>
     <button type="button" class="wr-edit" id="wrEdit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"></path><line x1="13.5" y1="6.5" x2="17.5" y2="10.5"></line></svg><span id="wrEditLbl"></span></button></div>
   <div class="ws-body" id="wrBody"><div class="ws-inner">
     <div id="wrMsg"></div>
@@ -2669,6 +2675,7 @@ const I18N = {
     wsSave: 'Sačuvaj',
     wsStatusNone: 'U arhivi još ništa nije promenjeno.',
     wsStatusSaved: 'Sačuvano u arhivi kao nov PDF: „{name}“ ({album}).',
+    wrBarPdf: 'Sačuvano kao PDF', wrBarTpl: 'Sačuvano kao šablon', wrBarTplPlace: 'Moji šabloni',
     wsDiscardTitle: 'Odbaci rezultat',
     wsDiscardText: 'Rezultat iz radionice nije sačuvan u arhivi. Odbaciti ga?',
     wsDiscardOk: 'Odbaci',
@@ -3171,6 +3178,7 @@ const I18N = {
     wsSave: 'Save',
     wsStatusNone: 'Nothing in the archive has changed yet.',
     wsStatusSaved: 'Saved in the archive as a new PDF: “{name}” ({album}).',
+    wrBarPdf: 'Saved as PDF', wrBarTpl: 'Saved as template', wrBarTplPlace: 'My templates',
     wsDiscardTitle: 'Discard result',
     wsDiscardText: 'The workshop result is not saved in the archive. Discard it?',
     wsDiscardOk: 'Discard',
@@ -6791,7 +6799,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 101</div>'+
+    '<div class="settings-hint set-build">verzija 102</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -9072,10 +9080,15 @@ function wrRender(){
     (n > 1 ? '<br>' + escapeHtml(t('wsTotal', {usd:fmtUsd(_ws.vers.reduce((s, x)=>s + (x.usage.usd || 0), 0))})) : '') + '</div>' +
     (v.schemaRej ? '<details class="ws-err-det"><summary>' + escapeHtml(t('wsSchemaRejShort')) + '</summary><pre>' + escapeHtml(v.schemaRej) + '</pre></details>' : '');
   /* donja traka */
+  /* v102: potvrda čuvanja je traka na vrhu (kao putanja); dole ostaje samo uputstvo dok se tekst ispravlja */
   const st = document.getElementById('wrStatus');
   const savedNow = _ws.saved && !_ws.dirty;
-  st.classList.toggle('saved', !!(savedNow && !ed));
-  st.textContent = ed ? t('wsEditHint') : (savedNow ? wsSavedText() : t('wsStatusNone'));
+  st.classList.remove('saved');
+  st.textContent = ed ? t('wsEditHint') : '';
+  st.hidden = !ed;
+  const sb = document.getElementById('wrSavedBar');
+  sb.hidden = !savedNow;
+  sb.innerHTML = savedNow ? wrSavedBarHtml() : '';
   document.getElementById('wrAskRow').hidden = !!ed;
   document.querySelector('#wrBar .ws-btns:not(#wrEditBtns)').hidden = !!ed;
   document.getElementById('wrEditBtns').hidden = !ed;
@@ -9612,6 +9625,13 @@ async function tplLoad(){
   return _tpls;
 }
 function tplPut(tpl){ return db2Put('meta', {key:'tpl:' + tpl.id, tpl}); }
+function wrSavedBarHtml(){
+  const sv = _ws.saved, sep = '<span class="path-sep">\u203A</span>';
+  return '<span class="wrs-ok"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>' +
+    escapeHtml(t(sv.tpl ? 'wrBarTpl' : 'wrBarPdf')) + '</span>' + sep +
+    '<span class="wrs-alb">' + escapeHtml(sv.tpl ? t('wrBarTplPlace') : sv.album) + '</span>' + sep +
+    '<span class="path-cur">' + escapeHtml(sv.name) + '</span>';
+}
 function wsSavedText(){
   const sv = _ws.saved;
   return sv.tpl ? t('wsStatusTplSaved', {name:sv.name}) : t('wsStatusSaved', {name:sv.name, album:sv.album});
