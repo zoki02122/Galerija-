@@ -969,6 +969,7 @@ html[data-theme="ponoc"]{
   background:var(--mark-bg); color:var(--ink); border-top:1px solid var(--line); }
 .exp-badge.lvl-warn{ color:var(--brass); }
 .exp-badge.lvl-soon{ background:var(--accent); color:var(--on-accent); border-top-color:transparent; }
+.exp-badge-bell{ width:10px; height:10px; margin-right:3px; vertical-align:-1px; flex:none; }
 .exp-badge.lvl-expired{ background:var(--danger); color:var(--on-danger); border-top-color:transparent; }
 [data-theme="ponoc"] .exp-badge.lvl-soon{ background:var(--g-grad); }
 .card.has-exp .pages-badge{ bottom:25px; }
@@ -1888,7 +1889,7 @@ body:has(#aiWs.open) .toast{ bottom:calc(190px + env(safe-area-inset-bottom)); }
     <svg class="mp-pdf" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2.5H6.5a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V8z"></path><polyline points="14 2.5 14 8 19.5 8"></polyline><text x="12" y="17.6" text-anchor="middle" fill="currentColor" stroke="none" class="modal-pdf-txt">PDF</text></svg>
   </button>
   <button class="back-btn modal-exp" id="modalExp" type="button">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"></rect><line x1="3.5" y1="10" x2="20.5" y2="10"></line><line x1="8" y1="3" x2="8" y2="7"></line><line x1="16" y1="3" x2="16" y2="7"></line><polyline points="9 15 11.2 17.2 15.5 12.8"></polyline></svg>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
   </button>
   <button class="back-btn modal-ai" id="modalAi" type="button">
     <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3.5l1.7 5.1 5.1 1.7-5.1 1.7L10 17.1l-1.7-5.1-5.1-1.7 5.1-1.7z"></path><path d="M18 14l.8 2.2 2.2.8-2.2.8L18 20l-.8-2.2-2.2-.8 2.2-.8z"></path></svg>
@@ -2506,7 +2507,7 @@ const I18N = {
     delAlbumItems: 'Slike i dokumenti iz njega ({n}) ostaju u „Sve slike“.',
     delAlbumEmpty: 'U njemu nema slika ni dokumenata.',
     delAlbumOk: 'Obriši',
-    mergeConfirmText: 'Stranice idu redom kojim si označavao, ukupno {p}. Naziv, album i rok važenja uzimaju se od „{name}“ (rok prelazi na nov dokument). Originali ostaju u albumu; ako ti ne trebaju, označi ih i obriši.',
+    mergeConfirmText: 'Stranice idu redom kojim si označavao, ukupno {p}. Naziv, album i podsetnik uzimaju se od „{name}“ (podsetnik prelazi na nov dokument). Originali ostaju u albumu; ako ti ne trebaju, označi ih i obriši.',
     mergeOk: 'Spoji',
     delModalTrash: 'Ide u korpu, gde čeka {days} dana i može se vratiti.',
     delImgTitle: 'Brisanje slike',
@@ -2573,7 +2574,7 @@ const I18N = {
     aiResHint: 'Označi šta želiš da primeniš i ispravi po potrebi. Ništa se ne menja dok ne dodirneš „Primeni izabrano“.',
     aiName: 'naziv',
     aiAlbum: 'album',
-    aiExp: 'rok važenja',
+    aiExp: 'podsetnik',
     aiNote: 'šta treba uraditi (nije obavezno)',
     aiText: 'tekst za pretragu',
     aiNow: 'sada: {v}',
@@ -2591,10 +2592,10 @@ const I18N = {
     aiNothing: 'Ništa nije označeno.',
     aiNoChange: 'Nema promena.',
     aiNameEmpty: 'Naziv ne može biti prazan.',
-    aiExpEmpty: 'Izaberi datum ili skini oznaku sa roka.',
+    aiExpEmpty: 'Izaberi datum ili skini oznaku sa podsetnika.',
     aiDoneName: 'naziv',
     aiDoneAlbum: 'album',
-    aiDoneExp: 'rok',
+    aiDoneExp: 'podsetnik',
     aiDoneText: 'tekst',
     aiUsageLine: 'tokeni: {inp} ulaz · {out} izlaz · na plaćenom ≈ {usd} ({m})',
     aiErrTitle: 'Čitanje nije uspelo',
@@ -2852,10 +2853,10 @@ const I18N = {
       ['Albumi i podalbumi', 'Novi album praviš ikonicom fascikle sa plusom na vrhu početnog ekrana. U albumu ista ikonica pravi podalbum.', 'Dugi pritisak na album otvara izbor: zakači na vrh, preimenuj, naslovna slika, premesti ili izbriši. Redosled albuma menjaš prevlačenjem ručke u uglu. Naziv albuma menjaš i olovkom pored naslova kad si u albumu.', 'Iznad naslova albuma je putanja, npr. „Arhiva › Album › Podalbum“: uvek vidiš gde si. Dodir na „Arhiva“ vodi na početni ekran, a dodir na naziv albuma u taj album.'],
       ['Dodavanje', 'Ikonica slike sa plusom dodaje sa telefona: iz galerije (više slika odjednom), slikanjem ili kao dokument (PDF, Word, Excel…). Svaka izabrana slika postaje posebna stavka.', 'Ono što dodaš dok si u albumu (iz galerije, slikanjem ili kao dokument) ide pravo u taj album.'],
       ['Dokument od više stranica', 'U meniju za dodavanje izaberi „Dokument od više stranica“. Slikaj stranicu po stranicu ili izaberi više slika iz galerije, upiši naziv i dodirni „Sačuvaj“.', 'Redosled menjaš prevlačenjem ručke u uglu stranice, a ✕ uklanja stranicu. U mreži se vidi prva stranica sa oznakom broja stranica.'],
-      ['Pregled i listanje', 'Dodir na bilo koju stavku (sliku, PDF, Word, Excel) otvara isti pregled. Prevlačenjem levo i desno ili strelicama listaš stranice, a posle poslednje stranice prelaziš na sledeću stavku, istim redom kao u albumu. Kod slike i PDF-a jedan dodir sakriva ili vraća dugmad.', 'Dva prsta uvećavaju sliku ili stranicu PDF-a (do 5 puta), a uvećanu pomeraš jednim prstom. Dvostruki dodir uvećava na tom mestu ili vraća ceo prikaz.', 'PDF se prikazuje stranicu po stranicu. Word i Excel imaju karticu sa dugmetom „Otvori“: tekst ili tabela (sa listovima) otvaraju se u Arhivi, a A− i A+ menjaju veličinu slova. Za zaključan PDF i ostale vrste fajlova „Otvori“ nudi deljenje ili čuvanje na telefon (Word i Excel samo čuvanje).', 'Gornji red dugmadi je isti za sve: ✨ (AI), kalendar (rok važenja), PDF ili deljenje, korpa. Dugme sa stranicama (samo kod slika) dodaje nove stranice ili menja njihov redosled. Olovka pored naziva menja naziv; isto radi i „Više“ → „Preimenuj“ kod izbora.', 'Fajlove prepoznaješ po boji oznake na ikonici: PDF je crven, Word plav, Excel zelen, ostale vrste sive.'],
-      ['Spajanje i izdvajanje', 'Označi dve ili više slika (dugi pritisak), pa u traci dodirni „Više“ i „Spoji u jedan dokument“. Stranice idu redom kojim si ih označio, a naziv, album i rok važenja uzimaju se od prve (rok prelazi na nov dokument). Pre spajanja Arhiva pita za potvrdu. Originali ostaju u albumu; ako ti ne trebaju, označi ih i obriši.', 'Pojedinačnu stranicu izdvajaš na ekranu sa stranicama: dodir na stranicu, pa „Izdvoji kao posebnu sliku“.'],
+      ['Pregled i listanje', 'Dodir na bilo koju stavku (sliku, PDF, Word, Excel) otvara isti pregled. Prevlačenjem levo i desno ili strelicama listaš stranice, a posle poslednje stranice prelaziš na sledeću stavku, istim redom kao u albumu. Kod slike i PDF-a jedan dodir sakriva ili vraća dugmad.', 'Dva prsta uvećavaju sliku ili stranicu PDF-a (do 5 puta), a uvećanu pomeraš jednim prstom. Dvostruki dodir uvećava na tom mestu ili vraća ceo prikaz.', 'PDF se prikazuje stranicu po stranicu. Word i Excel imaju karticu sa dugmetom „Otvori“: tekst ili tabela (sa listovima) otvaraju se u Arhivi, a A− i A+ menjaju veličinu slova. Za zaključan PDF i ostale vrste fajlova „Otvori“ nudi deljenje ili čuvanje na telefon (Word i Excel samo čuvanje).', 'Gornji red dugmadi je isti za sve: ✨ (AI), zvonce (podsetnik), PDF ili deljenje, korpa. Dugme sa stranicama (samo kod slika) dodaje nove stranice ili menja njihov redosled. Olovka pored naziva menja naziv; isto radi i „Više“ → „Preimenuj“ kod izbora.', 'Fajlove prepoznaješ po boji oznake na ikonici: PDF je crven, Word plav, Excel zelen, ostale vrste sive.'],
+      ['Spajanje i izdvajanje', 'Označi dve ili više slika (dugi pritisak), pa u traci dodirni „Više“ i „Spoji u jedan dokument“. Stranice idu redom kojim si ih označio, a naziv, album i podsetnik uzimaju se od prve (podsetnik prelazi na nov dokument). Pre spajanja Arhiva pita za potvrdu. Originali ostaju u albumu; ako ti ne trebaju, označi ih i obriši.', 'Pojedinačnu stranicu izdvajaš na ekranu sa stranicama: dodir na stranicu, pa „Izdvoji kao posebnu sliku“.'],
       ['PDF', 'Sliku, dokument od slika ili više označenih slika pretvaraš u jedan PDF: u pregledu dugmetom PDF, a kod izbora preko „Više“. Zatim biraš da li ga deliš (Viber, e-pošta…) ili čuvaš na telefon.', 'Stranice idu u PDF bez gubitka kvaliteta.', 'Kod PDF fajla na tom mestu je dugme za deljenje: šalje se originalni fajl, bez izmena. Chrome ne dozvoljava deljenje Word i Excel fajlova, pa je kod njih tu dugme za čuvanje na telefon; sačuvan fajl šalješ iz Vibera ili e-pošte (priloži fajl).'],
-      ['Rok važenja', 'Dokumentu koji ističe (registracija, pasoš, osiguranje, garancija) upiši rok: u pregledu dodirni dugme sa kalendarom, zatim polje za datum, izaberi datum i dodirni „Sačuvaj“. Isto važi za PDF, Word i Excel. Rok upisuješ i preko izbora: dugi pritisak, pa „Više“ i „Rok važenja“. Upisan rok menjaš i dodirom na oznaku roka ispod naziva ili na olovku pored nje. Rok se vidi i menja i na ekranu sa stranicama. Ispod datuma možeš da upišeš i šta treba uraditi (npr. „obnoviti kod agenta“); ta napomena se vidi u obaveštenju, u rokovima i u pregledu.', 'Kad se rok približi, Arhiva te obavesti jednom, a zatim još po jednom 7 dana pre i kad dokument istekne. Na početnom ekranu se tada pojavi zvonce sa brojem (crveno ako je nešto isteklo). Dodir na zvonce otvara spisak svih rokova: isteklo, uskoro ističe i kasnije.', 'Koliko dana ranije da te upozori biraš u Podešavanja → rok važenja (podrazumevano 30). Obaveštenje vidiš kad otvoriš Arhivu. Kad obnoviš dokument, upiši nov datum; ako rok više nije potreban, dodirni „Ukloni rok“. Rok se čuva u rezervnoj kopiji.'],
+      ['Podsetnik', 'Dokumentu uz koji treba nešto uraditi do nekog datuma (obnoviti registraciju ili osiguranje, platiti, poslati papire) upiši podsetnik: u pregledu dodirni dugme sa zvoncetom, zatim polje za datum, izaberi datum i dodirni „Sačuvaj“. Isto važi za PDF, Word i Excel. Podsetnik upisuješ i preko izbora: dugi pritisak, pa „Više“ i „Podsetnik“. Upisan podsetnik menjaš i dodirom na oznaku ispod naziva ili na olovku pored nje. Podsetnik se vidi i menja i na ekranu sa stranicama. Ispod datuma upiši šta treba uraditi (npr. „poslati kopiju ugovora“); ta napomena se vidi u obaveštenju, na spisku podsetnika i u pregledu.', 'Kad se datum približi, Arhiva te obavesti jednom, a zatim još po jednom 7 dana pre i kad datum prođe. Na početnom ekranu se tada pojavi zvonce sa brojem (crveno ako je neki datum prošao). Dodir na zvonce otvara spisak svih podsetnika: prošlo, uskoro i kasnije.', 'Koliko dana ranije da te podseti biraš u Podešavanja → podsetnik (podrazumevano 30). Obaveštenje vidiš kad otvoriš Arhivu. Kad završiš posao, upiši nov datum ili dodirni „Ukloni podsetnik“. Podsetnik se čuva u rezervnoj kopiji.'],
       ['AI radionica (proba)', 'AI radionica je posebno mesto gde AI radi sa tvojim dokumentom. Otvara se dugmetom sa zvezdicama ✨ u pregledu bilo kog dokumenta, zelenim dugmetom ✨ na kraju reda „Svi albumi“ na početnom ekranu ili preko izbora: dugi pritisak, pa „Više“ i „AI radionica“.', 'Dodirni gotov zadatak (Izmeni, Sažetak, Iznosi, Prevedi, a gore Moji šabloni → Napravi šablon) ili upiši svoj zadatak u polje dole i dodirni strelicu. Na svakom ekranu radionice dugme ⓘ otvara objašnjenje šta se tu radi; strelica ga zatvara. Pri ulasku na ekran objašnjenje je zatvoreno. Dok AI radi, na ekranu je samo prozor rada; „Otkaži“ ili korak nazad prekida rad. Rezultat se otvara na posebnom ekranu, gde ga čitaš ceo. „Izmeni“ ti dozvoljava da ispraviš bilo koji deo teksta, a polje dole traži doradu od AI, npr. „skrati“ ili „dodaj red za ključeve“. Svaka izmena je nova verzija: okvir „Šta je promenjeno“ kaže šta je urađeno, a strelicama se vraćaš na raniju verziju. U radionici ispod zadataka uvek vidiš original: zadaci stoje na vrhu, a pomera se samo dokument. Naziv dokumenta stoji gore, iza „AI radionica“: dodir na njega bira drugi dokument. Kad rezultat postoji, desno od naziva je pločica „Rezultat“ koja ga otvara. ✕ na dokumentu ili korak nazad zatvara samo dokument (nesačuvan rezultat Arhiva prvo nudi da odbaciš), pa biraš drugi. Iz radionice izlaziš strelicom ‹ gore levo, ili korakom nazad kad nijedan dokument nije otvoren.', 'Šablon: dodirni „Moji šabloni“ gore, pa „Napravi šablon“ na vrhu prozora (bez otvorenog dokumenta prvo biraš dokument). Dok AI čita dokument, na ekranu je samo prozor rada (kod dužeg dokumenta „Čitam deo 1 od 6…“); „Otkaži“ ili korak nazad prekida rad. Stalni tekst ostaje, a podaci slučaja postaju polja. Kod Word i Excel dokumenata tekst se preuzima iz originala od reči do reči: AI samo pronalazi podatke, a Arhiva ih menja poljima. Isti iznos koji znači različite stvari (npr. dve kazne od 500 EUR) dobija posebna polja, a ista osoba pomenuta više puta ostaje jedno polje. Zatim se odmah otvara ekran „Polja šablona“: za svako polje vidiš njegov naziv, vrstu i šta u dokumentu piše. Polje sa kvačicom popunjavaš za svaki nov slučaj, a kad skineš kvačicu, podatak iz originala ostaje stalni tekst. Dodir bilo gde na red uključuje ili isključuje kvačicu. Ako AI neki podatak nije našao (npr. adresa je ostala stalni tekst), dodirni „Dodaj polje koje nedostaje“ ispod spiska: u tekstu dokumenta dodirni prvu, pa poslednju reč podatka, upiši naziv polja i dodirni „Dodaj polje“. Arhiva isti podatak menja svuda u tekstu, bez slanja AI-ju. Dugme ⓘ gore otvara objašnjenje ovog ekrana; strelica ga zatvara. Dugme „Sačuvaj šablon“ na dnu pita za naziv i čuva šablon, a zatim se otvara „Moji šabloni“, gde je nov šablon prvi. Korak nazad pre čuvanja nudi da odbaciš šablon. „Moji šabloni“ (dugme gore) otvara ekran preko celog ekrana. Bez otvorenog dokumenta vidiš dokumente od kojih si pravio šablone, kao redove ili pločice (dugme gore menja prikaz, Arhiva ga pamti); broj kaže koliko šablona dokument ima, a lupa traži po nazivu dokumenta ili šablona. „Šablon od dokumenta…“ prvo traži da izabereš dokument. Dodir na dokument otvara njegove šablone; gore je putanja „Moji šabloni › naziv dokumenta“, a „Nov šablon od ovog dokumenta“ pravi šablon odmah od njega. Kad je dokument otvoren u radionici, odmah vidiš njegove šablone. Vrh ekrana stoji, pomeraju se samo dokumenti i šabloni. Uz svaki šablon je „Popuni šablon“, koje pravi nov dokument. Za drugačiji izbor polja istog dokumenta ponovo dodirni „Napravi šablon“ u tom prozoru: AI čita dokument samo prvi put, a posle se polja otvaraju odmah iz tog čitanja, sva označena, bez troška. Sačuvan šablon se nikad ne menja: nov se čuva pored njega („… (2)“), dugmetom „Sačuvaj kao nov šablon“. Šablon koji ti više ne treba obrišeš korpom. Korpa briše šablon. Šabloni su i u rezervnoj kopiji.', 'Popunjavanje: u „Moji šabloni“ dodirni „Popuni šablon“ ispod šablona. Za svako polje upiši podatak (sivo je primer iz originala). Telefon se sam svede na cifre, e-pošta na mala slova, a iznos bez valute dobija valutu iz primera. „Napravi dokument“ pita za naziv i album i pravi nov dokument u Arhivi: šablon od Word-a daje Word sa izgledom originala (menja se samo tekst polja), ostali šabloni daju PDF. Polje koje ostaviš prazno postaje crta za ručni upis. Naziv šablona, brojač popunjenih polja i dugmad Slikaj · Galerija · Arhiva · Napravi dokument stoje gore i ne pomeraju se; pomeraju se samo polja. Dugme ⓘ u kartici sa nazivom otvara objašnjenje; strelica ga zatvara. Tastatura se prilagođava polju (telefon, brojevi, e-pošta), a taster „Dalje“ vodi u sledeće polje. Umesto kucanja podatke može da upiše AI: gore slikaj ličnu kartu ili pasoš (može i obe strane, i više osoba), izaberi sliku iz galerije ili dokument iz Arhive. Izabrano se vidi dole kao sličice sa ✕, a ispod je dugme „Popuni pomoću AI“. Kad izabereš dva ili više dokumenata (npr. ličnu kartu zakupca i supruge), pojavi se i polje za napomenu: napiši ko je ko, npr. „prva je zakupac, druga supruga“, jer AI to ne može sam da zna. Bez izabranog dokumenta dole nema ničega: podatke kucaš ili izgovaraš (mikrofon na tastaturi) pravo u polje, što je brže i besplatno. Dok AI radi, na ekranu je samo prozor rada; „Otkaži“ ili korak nazad prekida rad. AI upisuje samo u prazna polja; ono što si ti upisao ne dira. Polje koje je popunio AI ima oznaku „AI“, a polje koje nije našao „AI nije pronašao“. Proveri podatke pre pravljenja dokumenta. Strelice gore desno (↶ poništi, ↷ vrati) vraćaju polja korak po korak; jedan korak unazad posle AI vraća sva polja kakva su bila pre AI. Izvori idu Google-ovom servisu Gemini i ne čuvaju se u Arhivi. Šablon ostaje isti, pa ga popunjavaš koliko god puta hoćeš. Word se ne može deliti iz Chrome-a: dugmetom „Sačuvaj na telefon“ ga preuzmeš i pošalješ kao prilog; PDF može odmah „Podeli“.', 'Izmeni (Word): menja tekst Word dokumenta, a izgled ostaje kao u originalu. Dodirni pasus ili ćeliju tabele, ispravi tekst i dodirni „Primeni“. „Otkaži“ (ili korak nazad) zatvara prozor bez ikakve izmene, pa pasus možeš slobodno samo da pogledaš. „Dodaj pasus ispod“ dodaje nov pasus istog stila, „Obriši pasus“ ga uklanja, a „Vrati kao u originalu“ poništava izmenu. Izmenjeni pasusi su označeni. Strelice gore desno (↶ poništi, ↷ vrati) idu korak po korak kroz sve izmene. I u prozoru pasusa, dok kucaš, ↶ ↷ vraćaju kucanje reč po reč. „Sačuvaj kao nov dokument“ pravi nov Word („… – izmena 1“) u albumu originala. Pravilo Arhive: sadržaj originala se nikad ne menja — svaka izmena teksta, ručna ili pomoću AI, daje nov dokument. Naziv, album i rok menjaš na samom dokumentu. Za PDF i slike izmena za sada ide zadatkom svojim rečima (nastaje nov PDF).', 'Dokument ostaje nepromenjen. Rezultat ulazi u arhivu tek kad dodirneš „Sačuvaj“, i to kao nov PDF u album koji izabereš. „Podeli“ šalje rezultat kao PDF. „Pročitaj (AI)“ (označi dokument → „Više“) predlaže naziv, album, rok i tekst za pretragu samog dokumenta; ništa se ne menja dok ne dodirneš „Primeni izabrano“.', 'Ključ, model i trošak su u Podešavanja → AI obrada. Ispod svakog rezultata piše koliko je koštao. Pre prvog slanja Arhiva traži saglasnost, jer dokument ide Google-ovom servisu Gemini. Dok je ovo proba, ne šalji lične i poverljive dokumente.'],
       ['Pretraga', 'Lupa pretražuje nazive albuma, slika i dokumenata. „Detaljno“ traži i reči unutar PDF, Word i Excel dokumenata.', 'U albumu dodirni polje „Pretraži u albumu“ ispod naziva; pretraga obuhvata i njegove podalbume.'],
       ['Prečica na početnom ekranu', 'Označi jednu stavku i dodirni „Prečica“. Stavka se otvara u Chrome-u, a iz Chrome menija biraš „Dodaj na početni ekran“. Prečica dokumenta od više stranica lista sve stranice.'],
@@ -2911,54 +2912,54 @@ const I18N = {
     oldConfirmText: 'Trajno obrisati stare podatke (od pre prelaska)? Tvoji trenutni dokumenti i albumi ostaju.',
     oldDeleted: 'Stari podaci su obrisani.',
     oldBlocked: 'Zatvori druge otvorene prozore Arhive pa pokušaj ponovo.',
-    expTitle: 'Rok važenja',
-    expLbl: 'važi do (poslednji dan važenja)',
+    expTitle: 'Podsetnik',
+    expLbl: 'datum podsetnika',
     expSave: 'Sačuvaj',
     expOk: 'U redu',
-    expClear: 'Ukloni rok',
+    expClear: 'Ukloni podsetnik',
     expNone: 'nije upisan',
     expNoneTap: 'nije upisan, dodirni da upišeš',
-    expSaved: 'Rok je sačuvan: {date}',
-    expRemoved: 'Rok je uklonjen.',
-    expRow: 'Rok važenja',
-    expHdr: 'Rokovi važenja',
-    expScreenTitle: 'rokovi važenja',
-    expScreenHint: 'Arhiva te obavesti {n} {d} pre isteka, 7 dana pre i kad dokument istekne, svaki put samo jednom. dodir na red otvara dokument.',
-    expGrpGone: 'isteklo',
-    expGrpSoon: 'uskoro ističe',
+    expSaved: 'Podsetnik je sačuvan: {date}',
+    expRemoved: 'Podsetnik je uklonjen.',
+    expRow: 'Podsetnik',
+    expHdr: 'Podsetnici',
+    expScreenTitle: 'podsetnici',
+    expScreenHint: 'Arhiva te obavesti {n} {d} pre datuma, 7 dana pre i kad datum prođe, svaki put samo jednom. dodir na red otvara dokument.',
+    expGrpGone: 'prošlo',
+    expGrpSoon: 'uskoro',
     expGrpLater: 'kasnije',
-    expEmpty: 'nijedan dokument nema upisan rok važenja.',
+    expEmpty: 'nijedan dokument nema podsetnik.',
     expNoticeTitle: 'Podsetnik',
     expNoticeMore: 'i još {n}',
-    expNoticeHint: 'Sve rokove vidiš na zvoncetu na početnom ekranu.',
+    expNoticeHint: 'Sve podsetnike vidiš na zvoncetu na početnom ekranu.',
     expNoticeOk: 'U redu',
     expNoticeOpen: 'Otvori',
     expNoticeAll: 'Pogledaj',
     expPickDate: 'dodirni i izaberi datum',
     expNoteLbl: 'šta treba uraditi (nije obavezno)',
-    expNotePh: 'npr. obnoviti kod agenta, poslati kopiju',
+    expNotePh: 'npr. obnoviti registraciju, poslati kopiju',
     renTitle: 'Preimenuj',
     renLbl: 'naziv',
     renSave: 'Sačuvaj',
     renRow: 'Preimenuj',
     renDone: 'Naziv je promenjen.',
     renAlbum: 'Preimenuj album',
-    expBadge: 'ističe {date}',
-    expBadgeGone: 'isteklo {date}',
-    expGone: 'isteklo',
+    expBadge: '{date}',
+    expBadgeGone: 'prošlo {date}',
+    expGone: 'prošlo',
     expToday: 'danas',
     expTomorrow: 'sutra',
     expInShort: 'za {n} {d}',
-    expPhraseGone: 'isteklo pre {n} {d} ({date})',
-    expPhraseGone1: 'isteklo juče ({date})',
-    expPhraseToday: 'ističe danas ({date})',
-    expPhraseTomorrow: 'ističe sutra ({date})',
-    expPhraseIn: 'ističe za {n} {d} ({date})',
+    expPhraseGone: 'prošlo pre {n} {d} ({date})',
+    expPhraseGone1: 'prošlo juče ({date})',
+    expPhraseToday: 'danas ({date})',
+    expPhraseTomorrow: 'sutra ({date})',
+    expPhraseIn: 'za {n} {d} ({date})',
     expAlbumNone: 'Sve slike',
-    expSetTile: 'rok važenja',
-    expSetSub: 'upozori {n} {d} pre isteka',
-    expSetField: 'upozori me (dana pre isteka)',
-    expSetHint1: 'kad dokumentu ostane ovoliko dana ili manje, Arhiva te jednom obavesti, a na zvoncetu na početnom ekranu pojavi se broj. još po jednom te obavesti 7 dana pre i kad dokument istekne.',
+    expSetTile: 'podsetnik',
+    expSetSub: 'podseti {n} {d} ranije',
+    expSetField: 'podseti me (dana ranije)',
+    expSetHint1: 'kad do datuma ostane ovoliko dana ili manje, Arhiva te jednom obavesti, a na zvoncetu na početnom ekranu pojavi se broj. još po jednom te obavesti 7 dana pre i kad datum prođe.',
     expSetHint2: 'obaveštenje vidiš kad otvoriš Arhivu. obaveštenja dok je aplikacija zatvorena za sada ne postoje.',
     bkHintZip: 'rezervna kopija je jedan ZIP fajl: u njemu su tvoji dokumenti kao obične slike i PDF-ovi, složeni po albumima, pa se mogu otvoriti i bez Arhive. uvoz prima i stare .json kopije. vraćanje dodaje samo ono što nedostaje, bez duplikata.'
   },
@@ -3008,7 +3009,7 @@ const I18N = {
     delAlbumItems: 'Its images and documents ({n}) stay in “All images”.',
     delAlbumEmpty: 'It has no images or documents.',
     delAlbumOk: 'Delete',
-    mergeConfirmText: 'Pages follow the order you selected them in, {p} in total. The name, album and valid-until date come from “{name}” (the date moves to the new document). The originals stay in the album; if you do not need them, select and delete them.',
+    mergeConfirmText: 'Pages follow the order you selected them in, {p} in total. The name, album and reminder come from “{name}” (the reminder moves to the new document). The originals stay in the album; if you do not need them, select and delete them.',
     mergeOk: 'Merge',
     delModalTrash: 'It goes to the trash, where it waits {days} days and can be restored.',
     delImgTitle: 'Delete image',
@@ -3075,7 +3076,7 @@ const I18N = {
     aiResHint: 'Tick what you want to apply and correct it if needed. Nothing changes until you tap “Apply selected”.',
     aiName: 'name',
     aiAlbum: 'album',
-    aiExp: 'valid until',
+    aiExp: 'reminder',
     aiNote: 'what needs to be done (optional)',
     aiText: 'text for search',
     aiNow: 'now: {v}',
@@ -3093,10 +3094,10 @@ const I18N = {
     aiNothing: 'Nothing is ticked.',
     aiNoChange: 'No changes.',
     aiNameEmpty: 'The name cannot be empty.',
-    aiExpEmpty: 'Pick a date or untick the date.',
+    aiExpEmpty: 'Pick a date or untick the reminder.',
     aiDoneName: 'name',
     aiDoneAlbum: 'album',
-    aiDoneExp: 'date',
+    aiDoneExp: 'reminder',
     aiDoneText: 'text',
     aiUsageLine: 'tokens: {inp} in · {out} out · on the paid tier ≈ {usd} ({m})',
     aiErrTitle: 'Reading failed',
@@ -3354,10 +3355,10 @@ const I18N = {
       ['Albums and sub-albums', 'Create a new album with the folder-plus icon at the top of the home screen. Inside an album the same icon creates a sub-album.', 'Long-press an album for options: pin to top, rename, cover image, move or delete. Drag the handle in the corner to change the album order. You can also rename an album with the pencil next to its title inside the album.', 'Above the album title is the path, e.g. “Arhiva › Album › Sub-album”, so you always see where you are. Tap “Arhiva” to go to the home screen, or an album name to go to that album.'],
       ['Adding', 'The image-plus icon adds from the phone: from the gallery (several images at once), by taking a photo, or as a document (PDF, Word, Excel…). Every picked image becomes a separate item.', 'What you add while inside an album (from the gallery, by taking a photo or as a document) goes straight into that album.'],
       ['Multi-page document', 'In the add menu choose “Multi-page document”. Photograph page by page or pick several images from the gallery, type a name and tap “Save”.', 'Drag the handle in the corner of a page to change the order; ✕ removes a page. The grid shows the first page with the page count.'],
-      ['Viewing and paging', 'Tap any item (image, PDF, Word, Excel) to open the same viewer. Swipe left and right or use the arrows to turn pages; after the last page you move on to the next item, in the same order as in the album. For an image or a PDF, one tap hides or shows the buttons.', 'Two fingers zoom an image or a PDF page (up to 5 times); move the zoomed view with one finger. A double tap zooms in at that spot or returns to the full view.', 'A PDF is shown page by page. Word and Excel show a card with an “Open” button: the text or the table (with its sheets) opens inside Arhiva, and A− and A+ change the text size. For a locked PDF and other file types “Open” offers sharing or saving to the phone (Word and Excel: saving only).', 'The top row of buttons is the same for everything: ✨ (AI), calendar (valid until), PDF or share, trash. The pages button (images only) adds new pages or changes their order. The pencil next to the name renames the item; “More” → “Rename” does the same when selecting.', 'You can tell files apart by the colored tag on the icon: PDF is red, Word blue, Excel green, other types gray.'],
-      ['Merging and splitting', 'Select two or more images (long-press), then tap “More” and “Merge into one document”. Pages follow the order you selected them in; the name, album and valid-until date come from the first (the date moves to the new document). Arhiva asks before merging. The originals stay in the album; if you do not need them, select and delete them.', 'To split off a single page, open the pages screen, tap the page and choose “Split off as a separate image”.'],
+      ['Viewing and paging', 'Tap any item (image, PDF, Word, Excel) to open the same viewer. Swipe left and right or use the arrows to turn pages; after the last page you move on to the next item, in the same order as in the album. For an image or a PDF, one tap hides or shows the buttons.', 'Two fingers zoom an image or a PDF page (up to 5 times); move the zoomed view with one finger. A double tap zooms in at that spot or returns to the full view.', 'A PDF is shown page by page. Word and Excel show a card with an “Open” button: the text or the table (with its sheets) opens inside Arhiva, and A− and A+ change the text size. For a locked PDF and other file types “Open” offers sharing or saving to the phone (Word and Excel: saving only).', 'The top row of buttons is the same for everything: ✨ (AI), bell (reminder), PDF or share, trash. The pages button (images only) adds new pages or changes their order. The pencil next to the name renames the item; “More” → “Rename” does the same when selecting.', 'You can tell files apart by the colored tag on the icon: PDF is red, Word blue, Excel green, other types gray.'],
+      ['Merging and splitting', 'Select two or more images (long-press), then tap “More” and “Merge into one document”. Pages follow the order you selected them in; the name, album and reminder come from the first (the reminder moves to the new document). Arhiva asks before merging. The originals stay in the album; if you do not need them, select and delete them.', 'To split off a single page, open the pages screen, tap the page and choose “Split off as a separate image”.'],
       ['PDF', 'Turn an image, an image document or several selected images into one PDF: with the PDF button in the viewer, or via “More” when selecting. Then share it (Viber, email…) or save it to the phone.', 'Pages go into the PDF without losing quality.', 'For a PDF file that spot holds a share button: the original file is sent, unchanged. Chrome does not allow sharing Word and Excel files, so for them that button saves the file to the phone; send the saved file from Viber or email (attach file).'],
-      ['Valid until', 'For a document that expires (registration, passport, insurance, warranty) set the date: in the viewer tap the calendar button, then the date field, pick the date and tap “Save”. The same works for PDF, Word and Excel. You can also set it when selecting: long-press, then “More” and “Valid until”. Once set, you can also change it by tapping the date label under the name or the pencil next to it. The date is also shown and changed on the pages screen. Under the date you can also write what needs to be done (e.g. “renew with the agent”); the note is shown in the notification, in the dates list and in the viewer.', 'When the date gets close, Arhiva notifies you once, then once more 7 days before and when the document expires. A bell with a number appears on the home screen (red if something has expired). Tap the bell to see all dates: expired, expiring soon and later.', 'How many days in advance you are warned is set in Settings → valid until (30 by default). You see the notification when you open Arhiva. When you renew a document, enter the new date; if the date is no longer needed, tap “Remove date”. The date is saved in the backup.'],
+      ['Reminder', 'For a document that needs something done by a certain date (renew a registration or insurance, pay, send papers) set a reminder: in the viewer tap the bell button, then the date field, pick the date and tap “Save”. The same works for PDF, Word and Excel. You can also set it when selecting: long-press, then “More” and “Reminder”. Once set, you can also change it by tapping the label under the name or the pencil next to it. The reminder is also shown and changed on the pages screen. Under the date write what needs to be done (e.g. “send a copy of the contract”); the note is shown in the notification, in the reminders list and in the viewer.', 'When the date gets close, Arhiva notifies you once, then once more 7 days before and when the date has passed. A bell with a number appears on the home screen (red if a date has passed). Tap the bell to see all reminders: past, soon and later.', 'How many days in advance you are reminded is set in Settings → reminder (30 by default). You see the notification when you open Arhiva. When the job is done, enter a new date or tap “Remove reminder”. The reminder is saved in the backup.'],
       ['AI workshop (trial)', 'The AI workshop is a separate place where AI works with your document. Open it with the button with the stars ✨ in the viewer of any document, with the green ✨ button at the end of the “All albums” row on the home screen, or by selecting: long-press, then “More” and “AI workshop”.', 'Tap a ready task (Edit, Summary, Amounts, Translate, and My templates → Make template at the top) or type your own task in the field below and tap the arrow. On every workshop screen the ⓘ button opens an explanation of what is done there; the arrow closes it. When you enter a screen, the explanation is closed. While AI works, only the progress window is on the screen; “Cancel” or going back stops the work. The result opens on its own screen where you read all of it. “Edit” lets you correct any part of the text, and the field below asks AI to refine it, e.g. “shorter” or “add a row for the keys”. Every change is a new version: the “What changed” box says what was done, and the arrows take you back to an earlier version. In the workshop the original is always shown below the tasks: the tasks stay at the top and only the document scrolls. The document name is at the top, after “AI workshop”: tap it to choose another document. When there is a result, the “Result” tile next to the name opens it. ✕ on the document or the back gesture closes only the document (Arhiva first offers to discard an unsaved result), so you can choose another. You leave the workshop with the ‹ arrow at the top left, or with the back gesture when no document is open.', 'Template: tap “My templates” at the top, then “Make template” at the top of the window (with no document open, you first choose a document). While AI reads the document, only the progress window is on the screen (for a longer document “Reading part 1 of 6…”); “Cancel” or going back stops the work. The fixed text stays, and the data of the case become fields. For Word and Excel documents the text is taken from the original word for word: AI only finds the data, and Arhiva replaces them with fields. The same amount with different meanings (e.g. two penalties of 500 EUR) gets separate fields, while the same person mentioned several times stays one field. Then the “Template fields” screen opens right away: for each field you see its name, its type and what the document says. A checked field is filled in for each new case, and when you uncheck it, the data from the original stays fixed text. Tapping anywhere on a row checks or unchecks it. If the AI missed some data (e.g. an address stayed fixed text), tap “Add a missing field” below the list: in the document text tap the first, then the last word of the data, type a field name and tap “Add field”. Arhiva replaces that data everywhere in the text, without sending anything to AI. The ⓘ button at the top opens the explanation of this screen; the arrow closes it. The “Save template” button at the bottom asks for a name and saves the template, and then “My templates” opens with the new template first. Going back before saving offers to discard the template. “My templates” (the button at the top) opens a full screen. Without an open document you see the documents you made templates from, as rows or tiles (the button at the top switches the view and Arhiva remembers it); the number shows how many templates a document has, and the magnifier searches by document or template name. “Template from a document…” first asks you to choose a document. Tapping a document opens its templates; at the top is the path “My templates › document name”, and “New template from this document” makes a template right from it. When a document is open in the workshop, you see its templates right away. The top of the screen stays put; only documents and templates scroll. Each template has “Fill in template”, which makes a new document. For a different field selection of the same document tap “Make template” in that window again: AI reads the document only the first time, and afterwards the fields open right away from that reading, all checked, at no cost. A saved template is never changed: the new one is saved next to it (“… (2)”) with “Save as new template”. Delete a template you no longer need with the bin. The bin deletes the template. Templates are also in the backup.', 'Filling in: in “My templates” tap “Fill in template” under a template. Enter the data for each field (the grey text is an example from the original). A phone number is reduced to digits, an e-mail to lower case, and an amount without a currency gets the currency from the example. “Make document” asks for a name and an album and makes a new document in Arhiva: a template from Word gives a Word file with the original layout (only the field text changes), other templates give a PDF. A field you leave empty becomes a line to fill in by hand. The template name, the counter of filled fields and the Camera · Gallery · Arhiva · Make document buttons stay at the top and do not scroll; only the fields scroll. The ⓘ button at the top opens the explanation of this screen; the arrow closes it. The keyboard matches the field (phone, numbers, e-mail), and the “Next” key moves to the next field. Instead of typing, AI can fill in the data: at the top take a photo of an ID card or passport (both sides and several people are fine), pick a photo from the gallery or a document from Arhiva. What you picked is shown at the bottom as thumbnails with ✕, with the “Fill in with AI” button below. When you pick two or more documents (e.g. the ID cards of the tenant and the spouse), a note field appears too: write who is who, e.g. “the first is the tenant, the second the spouse”, because AI cannot know it on its own. With no document picked there is nothing at the bottom: type or dictate the data (the keyboard microphone) straight into the field, which is faster and free. While AI works, only the progress window is on the screen; “Cancel” or going back stops the work. AI writes only into empty fields; what you typed stays. A field filled in by AI is marked “AI”, and a field it could not find “AI did not find it”. Check the data before making the document. The arrows at the top right (↶ undo, ↷ redo) step the fields back and forward; one step back after AI restores all fields as they were before AI. The sources go to the Google Gemini service and are not kept in Arhiva. The template stays the same, so you can fill it in as many times as you like. Chrome cannot share a Word file: download it with “Save to phone” and send it as an attachment; a PDF can be shared right away with “Share”.', 'Edit (Word): changes the text of a Word document while the layout stays as in the original. Tap a paragraph or a table cell, correct the text and tap “Apply”. “Cancel” (or going back) closes the window without any change, so you can just look at a paragraph. “Add paragraph below” adds a new paragraph in the same style, “Delete paragraph” removes it, and “Restore as in the original” undoes the change. Changed paragraphs are marked. The arrows at the top right (↶ undo, ↷ redo) step through all changes one by one. In the paragraph window, while you type, ↶ ↷ step back and forward word by word. “Save as a new document” makes a new Word file (“… – edit 1”) in the original’s album. Arhiva’s rule: the content of the original is never changed — every text change, by hand or with AI, gives a new document. You change the name, album and date on the document itself. For PDFs and photos editing is done for now with a task in your own words (a new PDF is made).', 'The document stays unchanged. The result enters the archive only when you tap “Save”, as a new PDF in the album you choose. “Share” sends the result as a PDF. “Read (AI)” (select the document → “More”) suggests a name, an album, a date and text for search for the document itself; nothing changes until you tap “Apply selected”.', 'Key, model and cost are in Settings → AI processing. Below every result you see what it cost. Before the first send Arhiva asks for consent, because the document goes to the Google Gemini service. While this is a trial, do not send personal or confidential documents.'],
       ['Search', 'The magnifier searches the names of albums, images and documents. “Detailed” also searches words inside PDF, Word and Excel documents.', 'Inside an album, tap the “Search this album” field below the name; search also covers its sub-albums.'],
       ['Home screen shortcut', 'Select one item and tap “Shortcut”. The item opens in Chrome; choose “Add to home screen” from the Chrome menu. The shortcut of a multi-page document shows all pages.'],
@@ -3413,54 +3414,54 @@ const I18N = {
     oldConfirmText: 'Permanently delete the old data (from before the move)? Your current documents and albums stay.',
     oldDeleted: 'Old data deleted.',
     oldBlocked: 'Close other open Arhiva windows and try again.',
-    expTitle: 'Valid until',
-    expLbl: 'valid until (last valid day)',
+    expTitle: 'Reminder',
+    expLbl: 'reminder date',
     expSave: 'Save',
     expOk: 'OK',
-    expClear: 'Remove date',
+    expClear: 'Remove reminder',
     expNone: 'not set',
     expNoneTap: 'not set, tap to add',
-    expSaved: 'Saved: valid until {date}',
-    expRemoved: 'Date removed.',
-    expRow: 'Valid until',
-    expHdr: 'Expiry dates',
-    expScreenTitle: 'expiry dates',
-    expScreenHint: 'Arhiva notifies you {n} {d} before expiry, 7 days before and when the document expires, each only once. Tap a row to open the document.',
-    expGrpGone: 'expired',
-    expGrpSoon: 'expiring soon',
+    expSaved: 'Reminder saved: {date}',
+    expRemoved: 'Reminder removed.',
+    expRow: 'Reminder',
+    expHdr: 'Reminders',
+    expScreenTitle: 'reminders',
+    expScreenHint: 'Arhiva notifies you {n} {d} before the date, 7 days before and when the date has passed, each only once. Tap a row to open the document.',
+    expGrpGone: 'past',
+    expGrpSoon: 'soon',
     expGrpLater: 'later',
-    expEmpty: 'no document has an expiry date yet.',
+    expEmpty: 'no document has a reminder yet.',
     expNoticeTitle: 'Reminder',
     expNoticeMore: 'and {n} more',
-    expNoticeHint: 'All dates are under the bell on the home screen.',
+    expNoticeHint: 'All reminders are under the bell on the home screen.',
     expNoticeOk: 'OK',
     expNoticeOpen: 'Open',
     expNoticeAll: 'View',
     expPickDate: 'tap to pick a date',
     expNoteLbl: 'what needs to be done (optional)',
-    expNotePh: 'e.g. renew with the agent, send a copy',
+    expNotePh: 'e.g. renew the registration, send a copy',
     renTitle: 'Rename',
     renLbl: 'name',
     renSave: 'Save',
     renRow: 'Rename',
     renDone: 'Name changed.',
     renAlbum: 'Rename album',
-    expBadge: 'exp. {date}',
-    expBadgeGone: 'expired {date}',
-    expGone: 'expired',
+    expBadge: '{date}',
+    expBadgeGone: 'past {date}',
+    expGone: 'past',
     expToday: 'today',
     expTomorrow: 'tomorrow',
     expInShort: 'in {n} {d}',
-    expPhraseGone: 'expired {n} {d} ago ({date})',
-    expPhraseGone1: 'expired yesterday ({date})',
-    expPhraseToday: 'expires today ({date})',
-    expPhraseTomorrow: 'expires tomorrow ({date})',
-    expPhraseIn: 'expires in {n} {d} ({date})',
+    expPhraseGone: '{n} {d} ago ({date})',
+    expPhraseGone1: 'yesterday ({date})',
+    expPhraseToday: 'today ({date})',
+    expPhraseTomorrow: 'tomorrow ({date})',
+    expPhraseIn: 'in {n} {d} ({date})',
     expAlbumNone: 'All images',
-    expSetTile: 'valid until',
-    expSetSub: 'warn {n} {d} before expiry',
-    expSetField: 'warn me (days before expiry)',
-    expSetHint1: 'when a document has this many days left or fewer, Arhiva notifies you once and a number appears on the bell on the home screen. You are notified once more 7 days before and when the document expires.',
+    expSetTile: 'reminder',
+    expSetSub: 'remind {n} {d} earlier',
+    expSetField: 'remind me (days earlier)',
+    expSetHint1: 'when this many days or fewer are left until the date, Arhiva notifies you once and a number appears on the bell on the home screen. You are notified once more 7 days before and when the date has passed.',
     expSetHint2: 'you see the notification when you open Arhiva. Notifications while the app is closed are not available yet.',
     bkHintZip: 'the backup is one ZIP file: your documents are inside as ordinary images and PDFs, sorted by album, so they open even without Arhiva. import also accepts old .json backups. restoring adds only what is missing, without duplicates.'
   }
@@ -3806,7 +3807,7 @@ function addExpiryBadge(card, thumbBox, item){
   const days = expDaysLeft(item.validUntil);
   const b = document.createElement('span');
   b.className = 'exp-badge lvl-' + expLevel(days);
-  b.textContent = t(days < 0 ? 'expBadgeGone' : 'expBadge', {date:fmtExpDate(item.validUntil, false)});
+  b.innerHTML = '<svg class="exp-badge-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>' + escapeHtml(t(days < 0 ? 'expBadgeGone' : 'expBadge', {date:fmtExpDate(item.validUntil, false)}));
   thumbBox.appendChild(b);
   card.classList.add('has-exp');
 }
@@ -6783,14 +6784,14 @@ function renderSettingsTiles(){
     settingsTile('🎨', 'tema', themeName(getTheme()), "openSettingsSub('theme')")+
     settingsTile('💾', 'rezervna kopija', lastBackupDisplay(), "openSettingsSub('backup')")+
     settingsTile('♻️', 'korpa', trashTileSub(), "openSettingsSub('trash')")+
-    settingsTile('📅', t('expSetTile'), t('expSetSub', {n:getExpiryDays(), d:dayWord(getExpiryDays())}), "openSettingsSub('expiry')")+
+    settingsTile('🔔', t('expSetTile'), t('expSetSub', {n:getExpiryDays(), d:dayWord(getExpiryDays())}), "openSettingsSub('expiry')")+
     settingsTile('✨', t('aiTile'), aiTileSub(), "openSettingsSub('ai')")+
     settingsTile('📖', t('guideTile'), t('guideTileSub'), "openSettingsSub('guide')")+
     (_oldDbPresent ? settingsTile('🗄️', t('oldTile'), t('oldTileSub'), "openSettingsSub('old')") : '')+
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 100</div>'+
+    '<div class="settings-hint set-build">verzija 101</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -8068,7 +8069,7 @@ function openMoreSheet(){
   const rows = [];
   if(chosen.length === 1){
     const it = chosen[0];
-    rows.push({icon:'📅', label:t('expRow'), hint: isYmd(it.validUntil) ? expPhrase(it.validUntil) : t('expNone'), onClick:()=>{
+    rows.push({icon:'🔔', label:t('expRow'), hint: isYmd(it.validUntil) ? expPhrase(it.validUntil) : t('expNone'), onClick:()=>{
       openExpirySheet({name:it.name, value:it.validUntil, note:it.validNote, onDone:(v, note)=>{
         setItemExpiry(it, v, note).then(ok=>{ if(ok){ if(selectionMode) exitSelection(); else render(); } });
       }});
