@@ -2560,7 +2560,7 @@ const I18N = {
     aiTileSubOn: 'ključ upisan · {m}',
     aiTileSubOff: 'ključ nije upisan',
     aiRead: 'Pročitaj (AI)',
-    aiReadHint: 'predlog naziva, albuma, roka i teksta',
+    aiReadHint: 'predlog naziva, albuma, podsetnika i teksta',
     aiBtnLbl: 'Pročitaj dokument (AI)',
     aiConsentTitle: 'Slanje dokumenta Google-u',
     aiConsentText: 'Da bi pročitala dokument, Arhiva šalje njegove stranice (ili tekst) Google-ovom servisu Gemini, preko tvog ključa. Na besplatnom nivou Google taj sadržaj može da koristi za unapređenje svojih proizvoda. Dok je ovo proba, ne šalji lične i poverljive dokumente. Saglasnost možeš da povučeš u Podešavanja → AI obrada.',
@@ -2581,7 +2581,7 @@ const I18N = {
     aiNowNone: 'sada: nema',
     aiNoAlbum: 'bez albuma (Sve slike)',
     aiNoAlbumFound: 'AI nije našao odgovarajući album; možeš da izabereš sam.',
-    aiNoExp: 'AI nije našao rok u dokumentu; možeš da ga upišeš sam.',
+    aiNoExp: 'AI nije našao datum u dokumentu; podsetnik možeš da upišeš sam.',
     aiNoText: 'AI nije našao tekst u dokumentu.',
     aiTextCount: 'ukupno {n} znakova',
     aiTextMore: 'prikaži ceo tekst',
@@ -3062,7 +3062,7 @@ const I18N = {
     aiTileSubOn: 'key saved · {m}',
     aiTileSubOff: 'no key saved',
     aiRead: 'Read (AI)',
-    aiReadHint: 'suggests name, album, date and text',
+    aiReadHint: 'suggests name, album, reminder and text',
     aiBtnLbl: 'Read document (AI)',
     aiConsentTitle: 'Sending the document to Google',
     aiConsentText: 'To read a document, Arhiva sends its pages (or text) to the Google Gemini service using your key. On the free tier Google may use this content to improve its products. While this is a trial, do not send personal or confidential documents. You can withdraw consent in Settings → AI processing.',
@@ -3907,7 +3907,7 @@ crumbRename.onclick = (e)=>{ e.stopPropagation(); if(currentFolder && currentFol
 function renderPageEditorExp(){
   const val = document.getElementById('pgExpVal');
   if(!val || !ed) return;
-  const icon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"></rect><line x1="3.5" y1="10" x2="20.5" y2="10"></line><line x1="8" y1="3" x2="8" y2="7"></line><line x1="16" y1="3" x2="16" y2="7"></line></svg>';
+  const icon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>';
   if(isYmd(ed.validUntil)){
     val.className = 'pg-exp-val lvl-' + expLevel(expDaysLeft(ed.validUntil));
     val.innerHTML = icon + '<span>' + escapeHtml(expPhrase(ed.validUntil)) +
@@ -8423,7 +8423,7 @@ function aiShowResult(item, res, r){
   const onAlb = !!res.albumId && res.albumId !== cur && !cur;
   const onExp = !!res.vu && !isYmd(item.validUntil);
   const onText = !!res.text && !item.hasText;
-  const expIcon = '<svg class="exp-field-ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"></rect><line x1="3.5" y1="10" x2="20.5" y2="10"></line><line x1="8" y1="3" x2="8" y2="7"></line><line x1="16" y1="3" x2="16" y2="7"></line></svg>';
+  const expIcon = '<svg class="exp-field-ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>';
   const tx = inp => '<input ' + inp + ' autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">';
   let h = '<div class="exp-doc">' + escapeHtml(item.name) + '</div><p class="ai-hint">' + escapeHtml(t('aiResHint')) + '</p>';
   h += aiRowHtml('aiRowName', t('aiName'), onName,
