@@ -737,7 +737,7 @@ html[data-theme="ponoc"]{
 /* =========================================================
    TEMA: PRIVATNO BANKARSTVO
    ========================================================= */
-[data-theme="banka"] #stickyTop{ background:rgba(246,245,241,.92); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
+/* v113: zaglavlje neprozirno (ranije poluprozirno: sadrzaj albuma se video kroz zaglavlje pri pomeranju) */
 [data-theme="banka"] h1{ letter-spacing:-.2px; }
 [data-theme="banka"] .icon-btn, [data-theme="banka"] .back-btn{ background:#fff; border:1px solid var(--line); box-shadow:0 1px 2px rgba(14,39,71,.06); color:var(--title-color); }
 [data-theme="banka"] .sort-seg{ background:#EAE6DC; }
@@ -752,7 +752,7 @@ html[data-theme="ponoc"]{
 /* =========================================================
    TEMA: CRNA KARTICA
    ========================================================= */
-[data-theme="crna"] #stickyTop{ background:rgba(27,27,30,.92); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
+
 [data-theme="crna"] .icon-btn, [data-theme="crna"] .back-btn{ background:#26262A; border:1px solid #3A3A40; color:#D9C08C; }
 [data-theme="crna"] .sort-seg{ background:#26262A; border:1px solid #34343A; }
 [data-theme="crna"] .sort-btn{ color:#8E8A82; }
@@ -1841,10 +1841,11 @@ header .icon-btn svg{ width:24px; height:24px; }
 #pathZone .path-bar .path-cur{ flex:0 0 auto; max-width:52%; }
 #pathZone .path-bar .path-cur.ren{ cursor:pointer; }
 #pathZone .path-ren{ flex:none; width:34px; height:40px; margin-left:-4px; padding:0; border:none; background:none; color:var(--brass); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
-#pathZone .path-count{ flex:none; margin-left:auto; padding-left:8px; font-size:13px; color:var(--ink-dim); }
+#pathZone .path-count{ flex:none; margin-left:auto; padding-left:8px; font-size:13px; color:var(--ink-dim); white-space:nowrap; }
 /* v112: prečica do albuma u koji je poslato (desno u redu putanje, umesto broja stavki); naziv albuma se po potrebi skraćuje */
 #pathZone .path-bar .path-lnk{ flex-shrink:100; }
-#pathZone .path-bar .path-cur{ flex:0 0 auto; min-width:3em; max-width:none; }
+/* v113: naziv albuma uvek moze da se skrati (gornji delovi 100 puta brze), da broj stavki nikad ne bude presecen, i kad se font ucita kasnije */
+#pathZone .path-bar .path-cur{ flex:0 1 auto; min-width:3em; max-width:none; }
 #pathZone .path-bar.tight .path-cur{ flex-shrink:1; }
 #pathZone .path-jump{ flex:0 1 auto; min-width:7.5em; max-width:36%; margin-left:auto; height:36px; padding:0 10px 0 9px; box-sizing:border-box; border-radius:18px;
   border:1.5px solid var(--brass); background:var(--surface-2); color:var(--brass); font:inherit; font-size:14px; font-weight:600;
@@ -5044,6 +5045,9 @@ function fitPathBar(bar){
   if(bar.scrollWidth > bar.clientWidth + 1) bar.classList.add('tight');
 }
 window.addEventListener('resize', ()=>fitPathBar());
+/* v113: font se ucitava posle prvog crtanja (font-display:swap) i menja sirinu teksta: ponovo uklopi putanju */
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>fitPathBar());
+if(window.ResizeObserver) new ResizeObserver(()=>fitPathBar()).observe(pathZone);
 function jumpSet(to, ids){ _jump = (currentFolder && to !== currentFolder) ? {from:currentFolder, to, ids:ids.slice()} : null; }
 function jumpFor(folder){
   if(!_jump) return null;
@@ -7406,7 +7410,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 112</div>'+
+    '<div class="settings-hint set-build">verzija 113</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
