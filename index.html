@@ -1761,7 +1761,8 @@ body:has(#aiWs.open) .toast{ bottom:calc(190px + env(safe-area-inset-bottom)); }
 #wsTplSheet .sheet-head h3{ margin-top:0; margin-bottom:0; }
 #wsTplSheet .sheet-head{ display:flex; align-items:center; }
 #wsTplSheet .ws-tpl-hsp{ flex:1; }
-#wsTplSheet .sheet-head .ws-tpl-ibtn{ width:48px; height:48px; border-radius:50%; }
+#wsTplSheet .sheet-head .ws-tpl-ibtn{ width:40px; height:40px; border-radius:50%; }
+#wsTplSheet .sheet-head .ws-tpl-ibtn svg{ width:22px; height:22px; }
 #wsTplSheet .ws-chip.ws-tpl-make-btn svg{ color:var(--brass); width:19px; height:19px; }
 /* v100: blago osenčeno, isto kao „Sve slike“ na početnom ekranu */
 #wsTplSheet .ws-chip.ws-tpl-make-btn{ flex:1; min-width:0; height:52px; border-radius:16px; border:1px solid color-mix(in srgb, var(--brass) 38%, var(--line));
@@ -1778,8 +1779,7 @@ body:has(#aiWs.open) .toast{ bottom:calc(190px + env(safe-area-inset-bottom)); }
 .ib-btn.on{ border-color:var(--brass); box-shadow:0 0 0 2px var(--brass-soft); }
 .ib-btn[hidden]{ display:none; }
 .sheet-head .ib-hsp{ flex:1; }
-.wf-head .ib-btn{ width:34px; height:34px; margin:-4px -4px -4px 0; }
-.wf-head .ib-btn svg{ width:19px; height:19px; }
+.wf-head .ib-btn{ width:40px; height:40px; margin:-7px -4px -7px 0; }
 .ibox.ibox-att.shut{ display:none; }
 .ws-tpl-empty{ font-size:14px; color:var(--ink-dim); text-align:center; padding:18px 8px 8px; }
 /* verzija 90: duži nazivi („Napravi šablon“) — natpis „gotovi zadaci“ se sklanja, dugmad dele red na jednake delove */
@@ -1889,8 +1889,9 @@ body.merge-mode .card .select-mark{ display:none; }
 .sel-header{ min-height:46px; margin-top:4px; gap:12px; }
 #selHeader .cancel{ width:40px; height:40px; font-size:22px; }
 #selHeader .count{ flex:1; min-width:0; text-align:center; font-size:19px; text-transform:none; letter-spacing:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-body.act-mode #mergeInfoBtn{ width:40px; height:40px; }
-body.act-mode #mergeInfoBtn svg{ width:26px; height:26px; }
+/* v112: ⓘ svuda kao u radionici - krug 40 px, obrub i podloga, znak 22 px (staro pravilo .sel-header button brisalo je obrub) */
+#selHeader .ib-btn{ width:40px; height:40px; border:1px solid var(--brass-soft); background:var(--surface-2); }
+#selHeader .ib-btn svg{ width:22px; height:22px; }
 .merge-num.empty{ background:rgba(0,0,0,.35); border:2px solid var(--brass); }
 .sel-bar button.bar-off{ opacity:.35; }
 /* v111: donji red ravan u svim temama (bez lebdeće sive trake), na podlozi ekrana, odvojen tankom linijom kao gornji red */
@@ -7346,7 +7347,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 111</div>'+
+    '<div class="settings-hint set-build">verzija 112</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
