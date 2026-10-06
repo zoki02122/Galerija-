@@ -5398,10 +5398,13 @@ function render(){
     }
 
     if(matchedItems.length > 0){
-      const label2 = document.createElement('p');
-      label2.className = 'section-label';
-      label2.textContent = 'Slike i dokumenti';
-      contentArea.appendChild(label2);
+      /* v109: naslov grupe samo kad iznad postoje i albumi */
+      if(inboxMatches || matchedCats.length > 0){
+        const label2 = document.createElement('p');
+        label2.className = 'section-label';
+        label2.textContent = 'Slike i dokumenti';
+        contentArea.appendChild(label2);
+      }
       currentGalleryItems = matchedItems.slice().sort((a,b)=>b.ts-a.ts);
       contentArea.appendChild(buildDatedPhotoSections(matchedItems));
     }
