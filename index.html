@@ -421,6 +421,10 @@
 
   .meta{padding:8px 1px 0;}
   .meta .index{display:block;font-family:var(--font-num);font-size:11px;letter-spacing:1px;color:var(--brass-soft);margin-bottom:2px;}
+  /* v117: broj i datum u jednom redu (datum bez razmaka izmedju slova) */
+  .meta .index{white-space:nowrap;overflow:hidden;text-overflow:clip;}
+  .meta .index .idx-day{letter-spacing:0;font-family:var(--font-ui);}
+  @media (max-width:360px){ .meta .index{letter-spacing:.3px;} }
   .meta .name{display:block;font-family:var(--font-name);font-style:var(--name-style);font-size:19.5px;color:var(--ink);white-space:normal;overflow-wrap:anywhere;line-height:1.3;}
   /* v116: naziv na kartici najvise 2 reda; automatsko ime = „Slika“ + vreme sitnije ispod */
   .meta .name{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;}
@@ -1050,6 +1054,9 @@ html[data-theme="ponoc"]{
 [data-theme="ponoc"] .exit-btn.go{ background:var(--g-grad); }
 /* polje za datum: naš zapis (30.09.2026.) preko Chrome-ovog polja; dodir bilo gde otvara kalendar */
 .exp-field{ position:relative; margin-bottom:14px; }
+.name-dt{ display:flex; gap:10px; margin-top:12px; }
+.name-dt[hidden]{ display:none; }
+.name-dt-col{ flex:1 1 0; min-width:0; }
 .exp-field .exp-input{ margin:0; width:100%; box-sizing:border-box; color:transparent; -webkit-text-fill-color:transparent; caret-color:transparent; }
 .exp-field .exp-input::-webkit-datetime-edit{ color:transparent; }
 .exp-field .exp-input::-webkit-calendar-picker-indicator{ position:absolute; inset:0; width:auto; height:auto; margin:0; padding:0; opacity:0; cursor:pointer; }
@@ -2209,6 +2216,13 @@ body.merge-mode .card .select-mark{ display:none; }
     <div class="sheet-head"><button class="back-btn" id="nameBack" type="button"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h3 id="nameTitle"></h3></div>
     <label class="exp-lbl" for="nameInput" id="nameLbl"></label>
     <input id="nameInput" type="text" class="sheet-input" maxlength="200" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">
+    <!-- v117: datum i vreme stavke (kad je dodata); retko se menjaju, po njima se stavke redjaju -->
+    <div class="name-dt" id="nameDt">
+      <div class="name-dt-col"><label class="exp-lbl" for="nameDate" id="nameDateLbl"></label>
+        <div class="exp-field"><input id="nameDate" type="date" class="sheet-input exp-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><span class="exp-field-txt" id="nameDateTxt"></span><svg class="exp-field-ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"></rect><line x1="3.5" y1="10" x2="20.5" y2="10"></line></svg></div></div>
+      <div class="name-dt-col"><label class="exp-lbl" for="nameTime" id="nameTimeLbl"></label>
+        <div class="exp-field"><input id="nameTime" type="time" class="sheet-input exp-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><span class="exp-field-txt" id="nameTimeTxt"></span><svg class="exp-field-ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"></circle><polyline points="12 7.5 12 12 15 14"></polyline></svg></div></div>
+    </div>
     <button type="button" id="nameSave" class="sheet-cta"></button>
   </div>
 </div>
@@ -2632,6 +2646,8 @@ function itemWhen(item){
   const two = n=>String(n).padStart(2, '0');
   return d.getDate() + '.' + (d.getMonth() + 1) + '.' + d.getFullYear() + '. ' + d.getHours() + ':' + two(d.getMinutes());
 }
+/* kratko, kao oznaka podsetnika: ove godine „6.10.“, druge godine „15.3.25.“ (staje i na 340 px) */
+function itemDay(item){ const d = new Date(item.ts || Date.now()); const y = d.getFullYear(); return d.getDate() + '.' + (d.getMonth() + 1) + '.' + (y === new Date().getFullYear() ? '' : String(y).slice(-2) + '.'); }
 function itemAutoWord(item){ return t(item.type === 'image' ? 'autoImg' : 'autoDoc'); }
 /* naziv za prikaz u jednom redu (pregled, korpa, AI): „Slika · 6.10.2026. 12:34“ */
 function itemLabel(item){
@@ -2744,7 +2760,7 @@ const I18N = {
     pgExtractHint: 'odmah postaje posebna slika u istom albumu',
     pgExtractNo: 'moguće kod sačuvanog dokumenta sa bar dve stranice',
     pgRemove: 'Ukloni iz dokumenta',
-    pgExtracted: 'Stranica je izdvojena kao posebna slika u istom albumu.', selAll: 'Izaberi sve', selNone: 'Poništi sve', selPick: 'Izaberi stavke', autoImg: 'Slika', autoDoc: 'Dokument', pgExtractLater: 'Stranica će biti posebna slika kad dodirneš „Sačuvaj“.', pgSavedExt: 'Sačuvano. Izdvojene stranice su posebne slike u istom albumu.', pgSavedBoth: 'Sačuvano. Izdvojene stranice su posebne slike u albumu, a uklonjene su u korpi.',
+    pgExtracted: 'Stranica je izdvojena kao posebna slika u istom albumu.', selAll: 'Izaberi sve', selNone: 'Poništi sve', selPick: 'Izaberi stavke', renDate: 'datum', renTime: 'vreme', autoImg: 'Slika', autoDoc: 'Dokument', pgExtractLater: 'Stranica će biti posebna slika kad dodirneš „Sačuvaj“.', pgSavedExt: 'Sačuvano. Izdvojene stranice su posebne slike u istom albumu.', pgSavedBoth: 'Sačuvano. Izdvojene stranice su posebne slike u albumu, a uklonjene su u korpi.',
     pgPartName: '{name} – str. {n}',
     pgNeedOne: 'Dokument mora imati bar jednu stranicu.',
     pgWait: 'Sačekaj da se sve stranice obrade.',
@@ -3116,7 +3132,7 @@ const I18N = {
     guide: [
       ['Albumi i podalbumi', 'Novi album praviš ikonicom fascikle sa plusom na vrhu početnog ekrana. U albumu je ispod putanje red ikonica: Dodaj (slikaj, iz galerije ili dokument u ovaj album), Pretraži, Podalbum (nov podalbum, samo u glavnom albumu) Sortiraj (po datumu ili po abecedi; krug pokazuje koji je uključen) i Spoji (više slika u jedan dokument).', 'Kad otvoriš sliku ili dokument, na vrhu je ista putanja (Arhiva › album › podalbum): dodir na bilo koji deo vodi u taj album, a na „Arhiva“ na početni ekran. U rezultatima pretrage putanja stoji ispod naziva, a dokument otvoren iz pretrage otvara se u svom albumu: korak nazad vodi u taj album. Dugmad na otvorenom dokumentu imaju natpise: Nazad, AI, Podsetnik, PDF (ili Podeli / Sačuvaj), Stranice i Izbriši.', 'Dugi pritisak na album otvara izbor: zakači na vrh, preimenuj, naslovna slika, premesti ili izbriši. Redosled albuma menjaš prevlačenjem ručke u uglu. Naziv albuma menjaš i olovkom pored njegovog naziva u putanji (ili dodirom na sam naziv) kad si u albumu.', 'Na vrhu albuma je putanja, npr. „Arhiva › Album › Podalbum“: uvek vidiš gde si, a desno piše koliko stavki ima. Dodir na „Arhiva“ vodi na početni ekran, a dodir na naziv nadređenog albuma u taj album. Korak nazad vraća jedan nivo.'],
       ['Donji red u albumu', 'U albumu je dole uvek red: Pošalji · U album · Preimenuj · Više · Izbriši. Dodir na bilo koju radnju kad ništa nije izabrano otvara izbor (isti kao dugi pritisak na stavku): putanja gore i donji red ostaju, dugmad su bleda dok ne izabereš bar jednu stavku. Dodiruješ stavke, pa radnju koju hoćeš. ✕ ili korak nazad prekida izbor. Kod dugog pritiska na stavku gore je „Izaberi sve“; kad je sve izabrano, isto dugme piše „Poništi sve“ i jednim dodirom poništava izbor.', 'Pošalji nudi „Podeli“ ili „Sačuvaj na telefon“; za slike i dokumente od više stranica i „kao jedan PDF“ ili „svaku posebno“. „Više“ ima podsetnik, AI radionicu i prečicu na početni ekran.', 'Dugi pritisak na stavku i dalje radi: stavke označiš, pa radnja u donjem redu ide odmah na označeno.', 'Premeštanje u podalbum: dok su stavke označene, podalbumi dobiju obrub i natpis „premesti ovde“. Jedan dodir na podalbum premešta označeno i ostaješ u albumu. Na vrhu se pojavi obaveštenje sa dugmetom „Vrati“, koje za par sekundi vraća stavke na staro mesto. Za premeštanje u bilo koji drugi album služi „U album“. Posle premeštanja ili kopiranja u drugi album, desno u redu putanje stoji dugme sa nazivom tog albuma (npr. „Stoja ›“): dodir vodi pravo tamo, a prebačeni dokumenti su nakratko uokvireni. Dugme stoji dok si u albumu odakle si slao.', 'Nov podalbum se ne otvara sam: ostaješ u albumu, a podalbum se pojavi među podalbumima.', 'Obaveštenja (šta je sačuvano, premešteno ili šta nije uspelo) uvek izlaze na vrhu ekrana, na mestu putanje. Kvačica znači da je urađeno, znak „!“ da nešto treba proveriti. Obaveštenje posle par sekundi samo nestane, a za to vreme možeš normalno da radiš.'],
-      ['Dodavanje', 'Ikonica slike sa plusom dodaje sa telefona: iz galerije (više slika odjednom), slikanjem ili kao dokument (PDF, Word, Excel…). Svaka izabrana slika postaje posebna stavka.', 'Ono što dodaš dok si u albumu (iz galerije, slikanjem ili kao dokument) ide pravo u taj album. Kad slika ima samo automatsko ime iz telefona (niz brojeva, IMG_…), Arhiva ga ne prikazuje, nego piše „Slika“ i vreme kad je dodata; svoj naziv daješ dodirom na naziv.'],
+      ['Dodavanje', 'Ikonica slike sa plusom dodaje sa telefona: iz galerije (više slika odjednom), slikanjem ili kao dokument (PDF, Word, Excel…). Svaka izabrana slika postaje posebna stavka.', 'Ono što dodaš dok si u albumu (iz galerije, slikanjem ili kao dokument) ide pravo u taj album. Kad slika ima samo automatsko ime iz telefona (niz brojeva, IMG_…), Arhiva ga ne prikazuje, nego piše „Slika“. Pored rednog broja na kartici je datum kad je stavka dodata. Dodir na naziv otvara prozor sa tri polja: naziv, datum i vreme; datum i vreme se retko menjaju (npr. račun iz marta slikan danas), a po njima se stavke ređaju.'],
       ['Dokument od više stranica', 'U meniju za dodavanje izaberi „Dokument od više stranica“. Slikaj stranicu po stranicu ili izaberi više slika iz galerije, upiši naziv i dodirni „Sačuvaj“.', 'Lupa u uglu stranice (ili dodir na stranicu) otvara je preko celog ekrana, da vidiš šta piše (dva prsta uvećavaju, prevlačenje levo-desno lista stranice). Dole su „Ranije“ i „Kasnije“, koji pomeraju tu stranicu za jedno mesto, i „Na mesto…“, koje je jednim dodirom na broj premešta na bilo koje mesto. Krupan broj na vrhu slike (npr. „3 / 8“) pokazuje na kom je mestu stranica i zatreperi posle svakog pomeranja; ⓘ gore desno objašnjava ekran. „Ukloni“ prvo traži potvrdu, a „Izdvoji“ se vidi samo kod već sačuvanog dokumenta. Redosled menjaš i prevlačenjem ručke u uglu, a ✕ uklanja stranicu. Sve se čuva tek na „Sačuvaj“. U mreži se vidi prva stranica sa oznakom broja stranica.'],
       ['Pregled i listanje', 'Dodir na bilo koju stavku (sliku, PDF, Word, Excel) otvara isti pregled. Prevlačenjem levo i desno ili strelicama listaš stranice, a posle poslednje stranice prelaziš na sledeću stavku, istim redom kao u albumu. Kod slike i PDF-a jedan dodir sakriva ili vraća dugmad.', 'Dva prsta uvećavaju sliku ili stranicu PDF-a (do 5 puta), a uvećanu pomeraš jednim prstom. Dvostruki dodir uvećava na tom mestu ili vraća ceo prikaz.', 'PDF se prikazuje stranicu po stranicu. Word i Excel imaju karticu sa dugmetom „Otvori“: tekst ili tabela (sa listovima) otvaraju se u Arhivi, a A− i A+ menjaju veličinu slova. Za zaključan PDF i ostale vrste fajlova „Otvori“ nudi deljenje ili čuvanje na telefon (Word i Excel samo čuvanje).', 'Gornji red dugmadi je isti za sve: ✨ (AI), zvonce (podsetnik), PDF ili deljenje, korpa. Dugme sa stranicama (samo kod slika) dodaje nove stranice ili menja njihov redosled. Olovka pored naziva menja naziv; isto radi i „Preimenuj“ u donjem redu albuma.', 'Fajlove prepoznaješ po boji oznake na ikonici: PDF je crven, Word plav, Excel zelen, ostale vrste sive.'],
       ['Spajanje i izdvajanje', 'U albumu dodirni ikonicu „Spoji“, pa dodiruj slike redom kojim idu: svaka dobija broj stranice u novom dokumentu (dokument koji već ima 2 stranice dobija „1–2“). Lupa u uglu sličice otvara stranicu preko celog ekrana, da je pročitaš. PDF, Word i Excel su zatamnjeni jer se spajaju samo slike. Dugme dole „Proveri redosled“ kaže koliko će stranica imati nov dokument; dodir otvara ekran stranica novog dokumenta, gde proveriš i središ redosled (dodir na stranicu, pa Ranije · Na mesto… · Kasnije) i po potrebi dodaš stranice. Ništa se ne pravi dok ne dodirneš „Sačuvaj“ (korak nazad vraća izbor, a izabrane slike ostaju označene); posle čuvanja si u albumu novog dokumenta, a obaveštenje na mestu putanje kaže gde je sačuvan. Prazan kružić na slici pokazuje gde dolazi broj.', 'Naziv, album i podsetnik uzimaju se od prve slike (podsetnik prelazi na nov dokument). Originali ostaju u albumu; ako ti ne trebaju, označi ih i obriši. Pojedinačnu stranicu sačuvanog dokumenta izdvajaš kao posebnu sliku: otvori dokument, dugme „Uredi stranice“, dodir na stranicu, pa „Izdvoji“ (kod novog dokumenta ovog dugmeta nema, jer stranica još nije sačuvana).'],
@@ -3257,7 +3273,7 @@ const I18N = {
     pgExtractHint: 'becomes a separate image in the same album right away',
     pgExtractNo: 'possible for a saved document with at least two pages',
     pgRemove: 'Remove from document',
-    pgExtracted: 'The page is now a separate image in the same album.', selAll: 'Select all', selNone: 'Clear all', selPick: 'Choose items', autoImg: 'Image', autoDoc: 'Document', pgExtractLater: 'The page becomes a separate image when you tap “Save”.', pgSavedExt: 'Saved. Extracted pages are separate images in the same album.', pgSavedBoth: 'Saved. Extracted pages are separate images in the album; removed ones are in the trash.',
+    pgExtracted: 'The page is now a separate image in the same album.', selAll: 'Select all', selNone: 'Clear all', selPick: 'Choose items', renDate: 'date', renTime: 'time', autoImg: 'Image', autoDoc: 'Document', pgExtractLater: 'The page becomes a separate image when you tap “Save”.', pgSavedExt: 'Saved. Extracted pages are separate images in the same album.', pgSavedBoth: 'Saved. Extracted pages are separate images in the album; removed ones are in the trash.',
     pgPartName: '{name} – p. {n}',
     pgNeedOne: 'A document needs at least one page.',
     pgWait: 'Wait until all pages are processed.',
@@ -3629,7 +3645,7 @@ const I18N = {
     guide: [
       ['Albums and sub-albums', 'Create a new album with the folder-plus icon at the top of the home screen. Inside an album, below the path, is a row of icons: Add (camera, gallery or a document into this album), Search, Subalbum (a new sub-album, only in a main album) Sort (by date or by name; the circle shows which is on) and Merge (several images into one document).', 'When you open an image or document, the same path is at the top (Arhiva › album › sub-album): tap any part to go to that album, or “Arhiva” for the home screen. In search results the path is shown below the name, and a document opened from search opens in its own album: Back takes you to that album. The buttons on an open document have labels: Back, AI, Reminder, PDF (or Share / Save), Pages and Delete.', 'Long-press an album for options: pin to top, rename, cover image, move or delete. Drag the handle in the corner to change the album order. You can also rename an album inside it with the pencil next to its name in the path (or by tapping the name).', 'At the top of an album is the path, e.g. “Arhiva › Album › Sub-album”, so you always see where you are; the number of items is on the right. Tap “Arhiva” to go to the home screen, or the parent album name to go to that album. Back goes up one level.'],
       ['Bottom row in an album', 'At the bottom of an album there is always a row: Send · To album · Rename · More · Delete. Tapping any action when nothing is selected opens the selection (the same as a long press on an item): the path at the top and the bottom row stay, and the buttons are dimmed until you pick at least one item. Tap the items, then the action you want. ✕ or Back cancels the selection. After a long press on an item, “Select all” is at the top; when everything is selected the same button reads “Clear all” and clears the selection with one tap.', '“Send” offers “Share” or “Save to phone”; for images and multi-page documents also “as one PDF” or “each separately”. “More” has the reminder, the AI workshop and the home screen shortcut.', 'Long-press still works: select items, and an action in the bottom row then applies to them right away.', 'Moving into a sub-album: while items are selected, sub-albums get a frame and the label “move here”. One tap on a sub-album moves the selection and you stay in the album. A notice with an “Undo” button appears at the top and puts the items back for a few seconds. To move to any other album, use “To album”. After moving or copying to another album, a button with that album’s name (e.g. “Stoja ›”) sits on the right of the path row: one tap takes you there, and the items you sent are briefly outlined. The button stays while you are in the album you sent from.', 'A new sub-album does not open by itself: you stay in the album and the sub-album appears among the sub-albums.', 'Notices (what was saved, moved or what did not work) always appear at the top of the screen, in place of the path. A check mark means it is done, a “!” sign that something needs checking. A notice disappears by itself after a few seconds, and you can keep working meanwhile.'],
-      ['Adding', 'The image-plus icon adds from the phone: from the gallery (several images at once), by taking a photo, or as a document (PDF, Word, Excel…). Every picked image becomes a separate item.', 'What you add while inside an album (from the gallery, by taking a photo or as a document) goes straight into that album. When an image has only an automatic phone name (a string of digits, IMG_…), Arhiva does not show it but writes “Image” and the time it was added; tap the name to give your own.'],
+      ['Adding', 'The image-plus icon adds from the phone: from the gallery (several images at once), by taking a photo, or as a document (PDF, Word, Excel…). Every picked image becomes a separate item.', 'What you add while inside an album (from the gallery, by taking a photo or as a document) goes straight into that album. When an image has only an automatic phone name (a string of digits, IMG_…), Arhiva does not show it but writes “Image”. Next to the item number on the card is the date it was added. Tapping the name opens a window with three fields: name, date and time; date and time rarely change (e.g. a March receipt photographed today), and items are ordered by them.'],
       ['Multi-page document', 'In the add menu choose “Multi-page document”. Photograph page by page or pick several images from the gallery, type a name and tap “Save”.', 'The magnifier in the corner of a page (or a tap on the page) opens it full screen so you can see what it says (two fingers zoom, swiping left and right turns pages). At the bottom, “Earlier” and “Later” move that page by one place, and “Move to…” moves it to any place with one tap on a number. A large number at the top of the page (e.g. “3 / 8”) shows its place and flashes after every move; ⓘ at the top right explains the screen. “Remove” asks for confirmation first, and “Extract” appears only for an already saved document. You can also drag the handle in the corner; ✕ removes a page. Nothing is saved until you tap “Save”. The grid shows the first page with the page count.'],
       ['Viewing and paging', 'Tap any item (image, PDF, Word, Excel) to open the same viewer. Swipe left and right or use the arrows to turn pages; after the last page you move on to the next item, in the same order as in the album. For an image or a PDF, one tap hides or shows the buttons.', 'Two fingers zoom an image or a PDF page (up to 5 times); move the zoomed view with one finger. A double tap zooms in at that spot or returns to the full view.', 'A PDF is shown page by page. Word and Excel show a card with an “Open” button: the text or the table (with its sheets) opens inside Arhiva, and A− and A+ change the text size. For a locked PDF and other file types “Open” offers sharing or saving to the phone (Word and Excel: saving only).', 'The top row of buttons is the same for everything: ✨ (AI), bell (reminder), PDF or share, trash. The pages button (images only) adds new pages or changes their order. The pencil next to the name renames the item; “Rename” in the album bottom row does the same.', 'You can tell files apart by the colored tag on the icon: PDF is red, Word blue, Excel green, other types gray.'],
       ['Merging and splitting', 'In an album tap the “Merge” icon, then tap the images in the order they go: each gets its page number in the new document (a document that already has 2 pages gets “1–2”). The magnifier in the corner opens a page full screen so you can read it. PDF, Word and Excel are dimmed because only images can be merged. The “Check order” button at the bottom shows how many pages the new document will have; tapping it opens the pages screen of the new document, where you check and fix the order (tap a page, then Earlier · Move to… · Later) and add pages if needed. Nothing is made until you tap “Save” (Back returns to the selection and the chosen images stay marked); after saving you are in the new document’s album and a notice in place of the path says where it was saved. An empty circle on an image shows where the number goes.', 'The name, album and reminder come from the first image (the reminder moves to the new document). The originals stay in the album; if you do not need them, select and delete them. To split a page off a saved document as a separate image: open the document, tap “Edit pages”, tap the page and choose “Extract” (a new document has no such button, because the page is not saved yet).'],
@@ -4136,13 +4152,30 @@ function openNameSheet(item, after){
   document.getElementById('nameLbl').textContent = t('renLbl');
   document.getElementById('nameSave').textContent = t('renSave');
   const auto = autoNameParts(item.name);
-  nameInput.value = auto ? itemAutoWord(item) + auto.tail + ' ' + itemWhen(item) : (item.name || '');
+  nameInput.value = auto ? itemAutoWord(item) + auto.tail : (item.name || '');
+  const d = new Date(item.ts || Date.now()), two = n=>String(n).padStart(2, '0');
+  document.getElementById('nameDateLbl').textContent = t('renDate');
+  document.getElementById('nameTimeLbl').textContent = t('renTime');
+  document.getElementById('nameDate').value = d.getFullYear() + '-' + two(d.getMonth() + 1) + '-' + two(d.getDate());
+  document.getElementById('nameTime').value = two(d.getHours()) + ':' + two(d.getMinutes());
+  _nameCtx.d0 = document.getElementById('nameDate').value; _nameCtx.t0 = document.getElementById('nameTime').value;
+  nameDtSync();
   nameUpdateState();
   nameSheet.classList.add('open');
   pushBack(closeNameSheet);
   setTimeout(()=>{ try{ nameInput.focus(); }catch(e){} }, 50);
 }
 const closeNameSheet = ()=>{ nameSheet.classList.remove('open'); try{ nameInput.blur(); }catch(e){} };
+function nameDtSync(){
+  const dv = document.getElementById('nameDate').value, tv = document.getElementById('nameTime').value;
+  const dt = document.getElementById('nameDateTxt'), tt = document.getElementById('nameTimeTxt');
+  dt.textContent = dv ? fmtExpDate(dv, true) : '—'; dt.className = 'exp-field-txt' + (dv ? '' : ' is-empty');
+  tt.textContent = tv || '—'; tt.className = 'exp-field-txt' + (tv ? '' : ' is-empty');
+}
+document.getElementById('nameDate').addEventListener('input', nameDtSync);
+document.getElementById('nameDate').addEventListener('change', nameDtSync);
+document.getElementById('nameTime').addEventListener('input', nameDtSync);
+document.getElementById('nameTime').addEventListener('change', nameDtSync);
 function nameUpdateState(){ document.getElementById('nameSave').disabled = !nameInput.value.trim(); }
 nameInput.addEventListener('input', nameUpdateState);
 wireBackspace(nameInput, nameUpdateState);
@@ -4153,14 +4186,27 @@ document.getElementById('nameSave').onclick = ()=>{
   const v = nameInput.value.replace(/\s+/g, ' ').trim();
   if(!v || !_nameCtx) return;
   const ctx = _nameCtx; _nameCtx = null;
-  requestCloseThen(()=>{ renameItem(ctx.item, v).then(ok=>{ if(ctx.after) ctx.after(ok); }); });
+  /* v117: novo vreme samo ako je korisnik promenio datum ili vreme (prazno polje = ostaje staro) */
+  const dv = document.getElementById('nameDate').value, tv = document.getElementById('nameTime').value;
+  let ts = null;
+  if((dv !== ctx.d0 || tv !== ctx.t0) && /^\d{4}-\d{2}-\d{2}$/.test(dv)){
+    const [y, m, d] = dv.split('-').map(Number), [hh, mm] = (tv || ctx.t0 || '00:00').split(':').map(Number);
+    const nt = new Date(y, m - 1, d, hh || 0, mm || 0).getTime();
+    if(isFinite(nt)) ts = nt;
+  }
+  requestCloseThen(()=>{ renameItem(ctx.item, v, ts).then(ok=>{ if(ctx.after) ctx.after(ok); }); });
 };
-async function renameItem(item, name){
-  if(name === item.name) return true;
-  const old = item.name;
+async function renameItem(item, name, ts){
+  const tsCh = ts != null && ts !== item.ts;
+  if(name === item.name && !tsCh) return true;
+  /* automatsko ime ostaje automatsko ako je korisnik ostavio ponudjeno „Slika…“ (menjao samo datum) */
+  const a = autoNameParts(item.name);
+  if(a && name === itemAutoWord(item) + a.tail) name = item.name;
+  const old = item.name, oldTs = item.ts;
   item.name = name;
+  if(tsCh) item.ts = ts;
   try{ await idbPut(item); }
-  catch(e){ item.name = old; console.error(e); toast(t('saveErr')); return false; }
+  catch(e){ item.name = old; item.ts = oldTs; console.error(e); toast(t('saveErr')); return false; }
   render();
   if(modalBg.classList.contains('open') && modalItemId === item.id){
     currentGalleryIndex = currentGalleryItems.findIndex(i=>i.id === item.id);
@@ -5937,14 +5983,11 @@ function buildCard(item, indexNumber){
   const idx = document.createElement('span');
   idx.className = 'index';
   idx.textContent = 'N\u00B0 ' + pad(indexNumber);
+  { const dd = document.createElement('span'); dd.className = 'idx-day'; dd.textContent = ' · ' + itemDay(item); idx.appendChild(dd); }   /* v117: datum pored broja */
   const nameSpan = document.createElement('span');
   nameSpan.className = 'name';
   const auto = autoNameParts(item.name);
-  if(auto){
-    nameSpan.textContent = itemAutoWord(item) + auto.tail;
-    const w = document.createElement('span'); w.className = 'name-when'; w.textContent = itemWhen(item);
-    nameSpan.appendChild(w);
-  }else nameSpan.textContent = item.name;
+  nameSpan.textContent = auto ? itemAutoWord(item) + auto.tail : item.name;
   nameSpan.title = t('renTitle');
   /* dodir na naziv: isti prozor za naziv kao „Više“ → „Preimenuj“ (Gboard zaštita, obavezna svojstva polja) */
   nameSpan.onclick = (e)=>{ e.stopPropagation(); if(!selectionMode) openNameSheet(item); };
