@@ -1895,6 +1895,15 @@ body.act-mode #mergeInfoBtn{ width:40px; height:40px; }
 body.act-mode #mergeInfoBtn svg{ width:26px; height:26px; }
 .merge-num.empty{ background:rgba(0,0,0,.35); border:2px solid var(--brass); }
 .sel-bar button.bar-off{ opacity:.35; }
+/* v110: donji red u istom stilu kao gornji red ikonica: zaobljeni kvadrati 46 px (gore 54 px), nijedan nije popunjen;
+   „Izbriši“ crvena ikonica i crvenkast obrub */
+.sel-bar button{ gap:6px; color:var(--ink-dim); font-size:12px; }
+.sel-bar button svg{ box-sizing:border-box; width:46px; height:46px; padding:10.5px; border-radius:14px; flex:none;
+  background:var(--surface-2); border:1px solid var(--line); stroke:var(--brass); }
+.sel-bar button.danger svg{ stroke:var(--danger); border-color:color-mix(in srgb, var(--danger) 55%, transparent); }
+.sel-bar button:active{ opacity:1; }
+.sel-bar button:active svg{ background:var(--brass-glow); }
+@media (max-width:360px){ .sel-bar button svg{ width:42px; height:42px; padding:9.5px; } }
 .merge-bar .pg-save.danger-btn{ background:var(--danger); color:var(--on-danger); box-shadow:none; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
