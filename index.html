@@ -5057,8 +5057,8 @@ function jumpGo(){
   navToAlbum(j.to, ()=>{
     _flash = {ids:new Set(j.ids)};
     render();
-    const first = contentArea.querySelector('.card.just-moved');
-    if(first) first.scrollIntoView({block:'center'});
+    /* posle otvaranja albuma ekran se vraća na vrh; zato se do stavke pomera trenutak kasnije */
+    setTimeout(()=>{ const first = contentArea.querySelector('.card.just-moved'); if(first) first.scrollIntoView({block:'center'}); }, 80);
     setTimeout(()=>{ _flash = null; contentArea.querySelectorAll('.card.just-moved').forEach(c=>c.classList.remove('just-moved')); }, 2500);
   });
 }
