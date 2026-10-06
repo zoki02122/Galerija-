@@ -1826,7 +1826,15 @@ header .icon-btn svg{ width:24px; height:24px; }
 .note-bar{ height:46px; box-sizing:border-box; display:flex; align-items:center; gap:9px; padding:0 12px; border-radius:12px;
   background:var(--brass-glow, rgba(201,176,122,.2)); color:var(--ink); font-size:15px; line-height:1.25; overflow:hidden; }
 .note-bar svg{ flex:none; color:var(--brass); }
-.note-bar span{ min-width:0; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+.note-bar span{ min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+/* v110: sve poruke na vrhu; „!“ za poruke koje nisu potvrda; dugme „Vrati“ / „Podeli“ desno */
+.note-bar.warn svg{ color:var(--ink-dim); }
+.note-bar .note-act{ flex:none; margin-left:auto; height:34px; padding:0 14px; border-radius:10px; border:1px solid var(--brass); background:none; color:var(--brass); font:inherit; font-size:14px; font-weight:600; cursor:pointer; pointer-events:auto; }
+.note-top{ display:none; position:fixed; top:0; left:0; right:0; z-index:86; padding:8px 12px 0; height:54px; box-sizing:border-box; background:var(--bg); pointer-events:none; }
+.note-top.on{ display:block; }
+.note-top.in-modal{ top:env(safe-area-inset-top, 0px); left:16px; right:16px; padding:0; height:46px; }
+.note-pad{ padding-top:54px !important; }
+.sheet-bg.sheet-full.note-pad .sheet{ height:calc(100dvh - 54px); }
 #pathZone .path-bar{ height:46px; box-sizing:border-box; padding:0 2px; margin:0; font-size:17px; gap:7px; }
 #pathZone .path-bar .path-lnk{ flex:0 6 auto; min-width:2.2em; max-width:none; padding:10px 0; margin:-10px 0; }
 #pathZone .path-bar .path-cur{ flex:0 0 auto; max-width:52%; }
@@ -2042,6 +2050,7 @@ body.act-mode #mergeInfoBtn svg{ width:26px; height:26px; }
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="note-top" id="noteTop"></div>
 
 <div class="sheet-bg" id="sheetBg">
   <div class="sheet">
@@ -2527,6 +2536,7 @@ document.getElementById('exitStayBtn').addEventListener('click', () => {
 const contentArea = document.getElementById('contentArea');
 const albumHeaderZone = document.getElementById('albumHeaderZone');
 const pathZone = document.getElementById('pathZone');
+const noteTop = document.getElementById('noteTop');
 const countEl = document.getElementById('count');
 const searchEl = document.getElementById('search');
 const fileInput = document.getElementById('fileInput');
@@ -2554,12 +2564,8 @@ const moveCopySheet = document.getElementById('moveCopySheet');
 const moveCopyTitle = document.getElementById('moveCopyTitle');
 
 let _toastTimer = null;   /* jedan tajmer: nova poruka ponistava sklanjanje prethodne */
-function toast(msg){
-  toastEl.innerHTML = '<span class="toast-msg">'+escapeHtml(msg)+'</span>';
-  toastEl.classList.add('show');
-  clearTimeout(_toastTimer);
-  _toastTimer = setTimeout(()=>{ _toastTimer = null; toastEl.classList.remove('show'); }, 2200);
-}
+/* v110: nijedna poruka više ne izlazi na dnu; sve idu u obaveštenje na vrhu (showNote) */
+function toast(msg){ showNote(msg, 4000); }
 function pad(n){ return String(n).padStart(3,'0'); }
 function escapeHtml(s){
   return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -5030,29 +5036,92 @@ function modalPathSet(item){
 /* v109: dokument otvoren iz pretrage otvara se u svom albumu, pa korak nazad vodi u taj album */
 function openFromSearch(item){ navToAlbum(item.category || INBOX, ()=>openModal(item)); }
 /* v108: obaveštenje na mestu putanje; dodir bilo gde ga zatvara i radi ono što je dodirnuto */
-let _note = null, _noteTimer = null;
-function showNote(text, ms){
-  _note = {text, until: Date.now() + (ms || 4000)};
+let _note = null, _noteTimer = null, _notePoll = null, _noteWarn = null;
+/* Ekrani preko celog ekrana, redom kako su u stranici (kasniji je iznad ranijeg pri istom z-index) */
+const NOTE_SCREENS = ['modalBg','docRd','pageEditor','pgView','aiWs','wsResScr','wsBusyScr','wsFill','wfBusyScr','wsEditW','wsAddSheet','settingsScreen','expScreen','migrateScreen'];
+function noteHost(){
+  let best = null, bz = -1;
+  for(const id of NOTE_SCREENS){
+    const el = document.getElementById(id);
+    if(!el || !el.classList.contains('open')) continue;
+    const z = parseInt(getComputedStyle(el).zIndex, 10) || 0;
+    if(z >= bz){ best = el; bz = z; }
+  }
+  return best;
+}
+/* Poruke koje nisu potvrda uspeha (greška, upozorenje, uputstvo) dobijaju znak „!“ umesto kvačice */
+function noteIsWarn(text){
+  if(!_noteWarn){
+    _noteWarn = [];
+    const re = /(Err|Failed|Missing|NoShare|Empty|Need|NoEx|Same|NoSel|Miss|Max|Only|Locked|Changed|Wait|ExtractNo|Bad|ShareNo|NoImages|Nothing|NoChange|NoFields|ChgNone|Blocked|Packed|TooBig)/;
+    for(const lang in I18N){ for(const k in I18N[lang]){ const v = I18N[lang][k];
+      if(re.test(k) && typeof v === 'string' && v.indexOf('{') < 0) _noteWarn.push(v.trim()); } }
+  }
+  if(/Greška|nije |ne može|već postoji|Nema |nije uspelo|nije podržano/.test(text)) return true;
+  return _noteWarn.some(v => v && text.indexOf(v) === 0);
+}
+function showNote(text, ms, opt){
+  opt = opt || {};
+  _note = {text, sticky:!!opt.sticky, action:opt.action || null, warn: opt.warn != null ? opt.warn : noteIsWarn(String(text))};
   clearTimeout(_noteTimer);
-  _noteTimer = setTimeout(hideNote, ms || 4000);
-  applyNote();
+  if(!_note.sticky) _noteTimer = setTimeout(hideNote, ms || 4000);
+  clearInterval(_notePoll); _notePoll = setInterval(applyNote, 250);
+  applyNote(true);
 }
 function hideNote(){
-  _note = null; clearTimeout(_noteTimer);
-  pathZone.classList.remove('noting');
-  const el = pathZone.querySelector('.note-bar'); if(el) el.remove();
+  _note = null; clearTimeout(_noteTimer); clearInterval(_notePoll); _notePoll = null;
+  applyNote(true);
 }
-function applyNote(){
-  const old = pathZone.querySelector('.note-bar'); if(old) old.remove();
-  if(!_note || Date.now() > _note.until){ _note = null; pathZone.classList.remove('noting'); return; }
+function buildNoteBar(){
   const el = document.createElement('div');
-  el.className = 'note-bar'; el.setAttribute('role', 'status');
-  el.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg><span></span>';
+  el.className = 'note-bar' + (_note.warn ? ' warn' : ''); el.setAttribute('role', 'status');
+  el.innerHTML = (_note.warn
+    ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"></circle><line x1="12" y1="7.5" x2="12" y2="13"></line><line x1="12" y1="16.5" x2="12.01" y2="16.5"></line></svg>'
+    : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>')
+    + '<span></span>';
   el.querySelector('span').textContent = _note.text;
-  pathZone.appendChild(el);
-  pathZone.classList.add('noting');
+  if(_note.action){
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'note-act'; b.textContent = _note.action.label;
+    const fn = _note.action.fn;
+    b.onclick = (e)=>{ e.stopPropagation(); hideNote(); fn(); };
+    el.appendChild(b);
+  }
+  return el;
 }
-document.addEventListener('pointerdown', ()=>{ if(_note) hideNote(); }, true);
+/* Gde se obaveštenje vidi: na početnom ekranu i u albumu na mestu putanje (#pathZone);
+   u pregledu na mestu putanje pregleda; u ostalim prozorima na vrhu prozora, a prozor se spusti za jedan red. */
+let _noteShown = null;
+function applyNote(force){
+  const host = _note ? noteHost() : null;
+  const key = _note ? (host ? host.id : '#path') + '|' + _note.text + '|' + _note.warn + '|' + (_note.action ? _note.action.label : '') : '';
+  if(!force && key === _noteShown && (!_note || host || pathZone.querySelector('.note-bar'))) return;
+  _noteShown = key;
+  const old = pathZone.querySelector('.note-bar'); if(old) old.remove();
+  pathZone.classList.remove('noting');
+  noteTop.innerHTML = ''; noteTop.className = 'note-top';
+  document.querySelectorAll('.note-pad').forEach(el=>el.classList.remove('note-pad'));
+  if(!_note) return;
+  const bar = buildNoteBar();
+  if(!host){ pathZone.appendChild(bar); pathZone.classList.add('noting'); return; }
+  noteTop.appendChild(bar);
+  noteTop.classList.add('on');
+  if(host.id === 'modalBg') noteTop.classList.add('in-modal');
+  else host.classList.add('note-pad');
+}
+/* Dodir bilo gde zatvara obaveštenje i radi ono što je dodirnuto. Obaveštenje se odmah sakrije, a njegov red se skloni
+   tek kad se prst podigne: inače bi se sadržaj pomerio pod prstom i dodir bi pogodio nešto drugo. */
+document.addEventListener('pointerdown', (e)=>{
+  if(!_note || _note.sticky) return;
+  if(e.target && e.target.closest && e.target.closest('.note-act')) return;
+  const n = _note;
+  document.querySelectorAll('#pathZone .note-bar, #noteTop .note-bar').forEach(el=>{ el.style.visibility = 'hidden'; });
+  clearTimeout(_noteTimer);
+  const done = ()=>{ document.removeEventListener('pointerup', up, true); document.removeEventListener('pointercancel', up, true);
+    setTimeout(()=>{ if(_note === n) hideNote(); }, 60); };
+  const up = ()=>done();
+  document.addEventListener('pointerup', up, true); document.addEventListener('pointercancel', up, true);
+}, true);
 function openSubalbum(sub){
   currentFolder = sub.id; searchEl.value=''; pushBack(parentCloser(sub.parent)); render();
 }
@@ -6762,14 +6831,8 @@ document.getElementById('newFolderBack').onclick = ()=>requestClose();
 newFolderInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') createFolder(); });
 newFolderSheet.onclick = (e)=>{ if(e.target === newFolderSheet){ requestClose(); } };
 
-function toastPersist(msg){
-  clearTimeout(_toastTimer); _toastTimer = null;
-  toastEl.innerHTML = '<span class="toast-msg">'+escapeHtml(msg)+'</span>';
-  toastEl.classList.add('show');
-}
-function toastHide(){
-  toastEl.classList.remove('show');
-}
+function toastPersist(msg){ showNote(msg, 0, {sticky:true}); }
+function toastHide(){ if(_note && _note.sticky) hideNote(); }
 async function addFilesWithProgress(files, category){
   if(files.length === 0) return;
   if(files.length === 1){ await addFile(files[0], category); return; }
@@ -7945,13 +8008,7 @@ document.getElementById('actBack').onclick = ()=>requestClose();
 actSheet.onclick = (e)=>{ if(e.target === actSheet) requestClose(); };
 
 /* Poruka sa dugmetom (npr. „Podeli“ kad Chrome traži nov dodir) */
-function toastAction(msg, label, fn){
-  clearTimeout(_toastTimer); _toastTimer = null;
-  toastEl.innerHTML = '<span class="toast-msg">'+escapeHtml(msg)+'</span><span class="toast-undo" id="toastActBtn">'+escapeHtml(label)+'</span>';
-  toastEl.classList.add('show');
-  document.getElementById('toastActBtn').onclick = ()=>{ toastEl.classList.remove('show'); fn(); };
-  _toastTimer = setTimeout(()=>{ _toastTimer = null; toastEl.classList.remove('show'); }, 9000);
-}
+function toastAction(msg, label, fn){ showNote(msg, 9000, {action:{label, fn}}); }
 
 /* ---------- Sličice pojedinačnih stranica (za pregled i uređivanje) ---------- */
 const _pageThumbs = new Map();   /* ID fajla -> adresa sličice */
