@@ -1810,6 +1810,27 @@ body.in-album .searchbar{ margin-top:12px; }
 .alb-ico-sq.add-sq{ border:none; }
 .alb-ico:active .alb-ico-sq{ background:var(--brass-glow); }
 .alb-ico-tx{ font-size:12px; line-height:1.2; color:var(--ink-dim); text-align:center; max-width:100%; overflow-wrap:anywhere; }
+/* v105: stranica preko celog ekrana (ekran stranica i spajanje) */
+.pv-screen{ display:none; position:fixed; inset:0; z-index:54; background:var(--bg); flex-direction:column; }
+.pv-screen.open{ display:flex; }
+.pv-head{ flex:none; display:flex; align-items:center; gap:10px; height:52px; padding:0 10px; border-bottom:1px solid var(--line); }
+.pv-close{ width:44px; height:44px; border:none; background:none; color:var(--ink); display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; }
+.pv-title{ font-family:var(--font-ui); font-size:17px; font-weight:600; color:var(--ink); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.pv-frame{ flex:1 1 auto; min-height:0; position:relative; overflow:hidden; touch-action:none; background:var(--surface-2); }
+.pv-frame img{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; transform-origin:0 0; user-select:none; -webkit-user-drag:none; }
+.pv-frame img.zm-anim{ transition:transform .2s ease; }
+.pv-bar{ flex:none; display:flex; flex-direction:column; gap:8px; background:var(--surface); border-top:1px solid var(--line); padding:10px 12px calc(10px + env(safe-area-inset-bottom)); }
+.pv-bar[hidden]{ display:none; }
+.pv-row{ display:flex; gap:8px; }
+.pv-row .pg-btn{ flex:1 1 0; min-width:0; }
+.pv-to{ border:1.5px solid var(--brass) !important; }
+.pv-small{ height:42px !important; font-size:13.5px !important; font-weight:500 !important; color:var(--ink-dim) !important; }
+.pv-danger{ color:var(--danger) !important; }
+.pg-btn.pv-off{ opacity:.35; }
+.pv-to-hint{ margin:-4px 0 12px; font-size:13px; color:var(--ink-dim); font-family:var(--font-ui); }
+.pv-nums{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; max-height:50vh; overflow-y:auto; }
+.pv-num{ height:48px; border-radius:12px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); font-family:var(--font-ui); font-size:17px; cursor:pointer; }
+.pv-num.on{ background:var(--brass); color:var(--bg); border-color:var(--brass); font-weight:700; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -2033,6 +2054,21 @@ body.in-album .searchbar{ margin-top:12px; }
   </div>
   <input id="pgCamInput" type="file" accept="image/*" capture="environment" hidden>
   <input id="pgGalInput" type="file" accept="image/*" multiple hidden>
+</div>
+<div class="pv-screen" id="pgView">
+  <div class="pv-head"><button type="button" class="pv-close" id="pvClose"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button><span class="pv-title" id="pvTitle"></span></div>
+  <div class="pv-frame" id="pvFrame"><img id="pvImg" alt=""></div>
+  <div class="pv-bar" id="pvBar">
+    <div class="pv-row"><button type="button" class="pg-btn" id="pvPrev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg><span id="pvPrevLbl"></span></button><button type="button" class="pg-btn pv-to" id="pvTo"></button><button type="button" class="pg-btn" id="pvNext"><span id="pvNextLbl"></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></button></div>
+    <div class="pv-row pv-row2"><button type="button" class="pg-btn pv-small" id="pvExtract"></button><button type="button" class="pg-btn pv-small pv-danger" id="pvRemove"></button></div>
+  </div>
+</div>
+<div class="sheet-bg" id="pvToSheet">
+  <div class="sheet">
+    <div class="sheet-head"><button class="back-btn" id="pvToBack" type="button"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 20 9 12 15 6"></polyline></svg></button><h3 id="pvToTitle"></h3></div>
+    <p class="pv-to-hint" id="pvToHint"></p>
+    <div class="pv-nums" id="pvNums"></div>
+  </div>
 </div>
 <div class="sheet-bg" id="expSheet">
   <div class="sheet">
@@ -2555,7 +2591,8 @@ const I18N = {
     pgSave: 'Sačuvaj',
     pgProcessing: 'Obrađujem stranice…',
     pgEmpty: 'Još nema stranica. Slikaj prvu stranicu ili izaberi slike iz galerije.',
-    pgHint: 'Redosled menjaš prevlačenjem ručke u uglu stranice. Dodir na stranicu otvara izbor.',
+    pgHint: 'Dodir na stranicu otvara je preko celog ekrana: tamo je čitaš i pomeraš (Ranije, Na mesto…, Kasnije). Redosled menjaš i prevlačenjem ručke u uglu.',
+    pvTitle: 'str. {i} / {n}', pvPrev: 'Ranije', pvNext: 'Kasnije', pvTo: 'Na mesto…', pvExtract: 'Izdvoji', pvRemove: 'Ukloni', pvToTitle: 'Premesti stranicu {n} na mesto', pvToHint: 'Ostale stranice se pomere za jedno mesto.',
     pgCountLong: 'stranica: {n}',
     pgCount: '{n} str.',
     pgPageNo: 'str. {n} / {total}',
@@ -3059,7 +3096,8 @@ const I18N = {
     pgSave: 'Save',
     pgProcessing: 'Processing pages…',
     pgEmpty: 'No pages yet. Take a photo of the first page or pick images from the gallery.',
-    pgHint: 'Drag the handle in the corner of a page to change the order. Tap a page for options.',
+    pgHint: 'Tap a page to open it full screen: read it there and move it (Earlier, Move to…, Later). You can also drag the handle in the corner.',
+    pvTitle: 'p. {i} / {n}', pvPrev: 'Earlier', pvNext: 'Later', pvTo: 'Move to…', pvExtract: 'Extract', pvRemove: 'Remove', pvToTitle: 'Move page {n} to position', pvToHint: 'The other pages shift by one.',
     pgCountLong: 'pages: {n}',
     pgCount: '{n} pp.',
     pgPageNo: 'p. {n} / {total}',
@@ -7755,7 +7793,7 @@ function buildPageTile(pg, idx){
   tile.appendChild(x);
   tile.onclick = ()=>{
     if(tile.dataset.suppressClick === '1'){ tile.dataset.suppressClick = ''; return; }
-    openPageSheet(pg.key);
+    openPageView(ed.pages.indexOf(pg));
   };
   if(ed.pages.length > 1) attachPageDrag(tile, pg);
   return tile;
@@ -7770,17 +7808,189 @@ function edRemovePage(key){
   ed.dirty = true;
   renderPageEditor();
 }
-function openPageSheet(key){
-  if(!ed) return;
-  const i = ed.pages.findIndex(p=>p.key === key);
-  if(i < 0) return;
-  const pg = ed.pages[i];
-  const canExtract = !!(ed.item && pg.file && ed.item.pages.length > 1);
-  const rows = [];
-  rows.push({icon:'↗️', label:t('pgExtract'), hint: canExtract ? t('pgExtractHint') : t('pgExtractNo'), disabled:!canExtract, onClick:()=>edExtractPage(key)});
-  rows.push({icon:'✕', label:t('pgRemove'), danger:true, onClick:()=>edRemovePage(key)});
-  openActionSheet(t('pgPageSheet', {n:i+1}), rows);
+/* v105: stranica preko celog ekrana. 'edit' = ekran stranica (Ranije / Na mesto… / Kasnije, Izdvoji, Ukloni);
+   'look' = samo gledanje (lupa na ekranu za spajanje). Dva prsta uvećavaju, dvostruki dodir 2,5×,
+   prevlačenje levo-desno lista stranice (ne pomera ih). */
+const pgView = document.getElementById('pgView'), pvImg = document.getElementById('pvImg'), pvFrame = document.getElementById('pvFrame');
+let pv = null;
+function pvCount(){ if(!pv) return 0; return pv.mode === 'edit' ? (ed ? ed.pages.length : 0) : pageCount(pv.item); }
+async function pvSrc(){
+  if(pv.mode === 'edit'){
+    const pg = ed && ed.pages[pv.idx]; if(!pg) return null;
+    if(pg.blob) return pg.blob;
+    if(pg.file){ const r = await db2Get('files', pg.file); return r ? r.blob : null; }
+    return null;
+  }
+  return await getFileBlob(pv.item, pv.idx);
 }
+function pvUi(){
+  const n = pvCount(), i = pv.idx;
+  const pos = t('pvTitle', {i:i+1, n});
+  document.getElementById('pvTitle').textContent = pv.mode === 'edit' ? pos : (n > 1 ? pv.item.name + ' · ' + pos : pv.item.name);
+  const bar = document.getElementById('pvBar');
+  bar.hidden = pv.mode !== 'edit';
+  if(pv.mode !== 'edit') return;
+  document.getElementById('pvPrevLbl').textContent = t('pvPrev'); document.getElementById('pvNextLbl').textContent = t('pvNext');
+  document.getElementById('pvTo').textContent = t('pvTo'); document.getElementById('pvExtract').textContent = t('pvExtract'); document.getElementById('pvRemove').textContent = t('pvRemove');
+  document.getElementById('pvPrev').classList.toggle('pv-off', i === 0);
+  document.getElementById('pvNext').classList.toggle('pv-off', i >= n - 1);
+  document.getElementById('pvTo').classList.toggle('pv-off', n < 3);
+  const pg = ed.pages[i];
+  const canExtract = !!(ed.item && pg && pg.file && ed.item.pages.length > 1);
+  document.getElementById('pvExtract').classList.toggle('pv-off', !canExtract);
+}
+function pvShow(){
+  const n = pvCount();
+  if(!n){ requestClose(); return; }
+  pv.idx = Math.max(0, Math.min(n - 1, pv.idx));
+  pvZmReset();
+  pvUi();
+  const thumb = pv.mode === 'edit' ? ed.pages[pv.idx].url : (pv.idx === 0 ? pv.item.thumb : '');
+  if(thumb) pvImg.src = thumb; else pvImg.removeAttribute('src');
+  const tok = ++pv.tok;
+  pvSrc().then(b=>{
+    if(!pv || pv.tok !== tok || !b) return;
+    if(pv.url){ try{ URL.revokeObjectURL(pv.url); }catch(e){} }
+    pv.url = URL.createObjectURL(b);
+    pvImg.src = pv.url;
+  }).catch(e=>console.error(e));
+}
+function openPageView(idx){
+  if(!ed || idx < 0) return;
+  pv = {mode:'edit', idx, tok:0, url:''};
+  pgView.classList.add('open');
+  pvShow();
+  pushBack(closePageView);
+}
+function openItemView(item){
+  pv = {mode:'look', item, idx:0, tok:0, url:''};
+  pgView.classList.add('open');
+  pvShow();
+  pushBack(closePageView);
+}
+function closePageView(){
+  pgView.classList.remove('open');
+  if(pv && pv.url){ try{ URL.revokeObjectURL(pv.url); }catch(e){} }
+  pv = null;
+  pvImg.removeAttribute('src');
+}
+function pvMove(to){
+  if(!ed || !pv || pv.mode !== 'edit') return;
+  const n = ed.pages.length;
+  to = Math.max(0, Math.min(n - 1, to));
+  if(to === pv.idx) return;
+  const [pg] = ed.pages.splice(pv.idx, 1);
+  ed.pages.splice(to, 0, pg);
+  ed.dirty = true;
+  pv.idx = to;
+  renderPageEditor();
+  pvUi();
+}
+document.getElementById('pvClose').onclick = ()=>requestClose();
+document.getElementById('pvPrev').onclick = ()=>{ if(pv) pvMove(pv.idx - 1); };
+document.getElementById('pvNext').onclick = ()=>{ if(pv) pvMove(pv.idx + 1); };
+document.getElementById('pvTo').onclick = ()=>{
+  if(!pv || !ed || ed.pages.length < 3) return;
+  const sh = document.getElementById('pvToSheet'), box = document.getElementById('pvNums');
+  document.getElementById('pvToTitle').textContent = t('pvToTitle', {n:pv.idx + 1});
+  document.getElementById('pvToHint').textContent = t('pvToHint');
+  box.innerHTML = '';
+  for(let k = 0; k < ed.pages.length; k++){
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'pv-num' + (k === pv.idx ? ' on' : '');
+    b.textContent = String(k + 1);
+    b.onclick = ()=>{ requestClose(); pvMove(k); };
+    box.appendChild(b);
+  }
+  sh.classList.add('open');
+  pushBack(()=>sh.classList.remove('open'));
+  const on = box.querySelector('.on'); if(on) on.scrollIntoView({block:'nearest'});
+};
+document.getElementById('pvToBack').onclick = ()=>requestClose();
+document.getElementById('pvToSheet').addEventListener('click', (e)=>{ if(e.target.id === 'pvToSheet') requestClose(); });
+document.getElementById('pvRemove').onclick = ()=>{
+  if(!pv || !ed) return;
+  const pg = ed.pages[pv.idx]; if(!pg) return;
+  edRemovePage(pg.key);
+  if(!ed.pages.length) requestClose(); else pvShow();
+};
+document.getElementById('pvExtract').onclick = async ()=>{
+  if(!pv || !ed) return;
+  const pg = ed.pages[pv.idx]; if(!pg) return;
+  if(document.getElementById('pvExtract').classList.contains('pv-off')){ toast(t('pgExtractNo')); return; }
+  await edExtractPage(pg.key);
+  if(pv) pvShow();
+};
+/* uvećanje i listanje u pregledu stranice */
+const _pz = {s:1, tx:0, ty:0};
+let _pzG = null, _pzTap = null;
+function pvZmApply(anim){
+  pvImg.classList.toggle('zm-anim', !!anim);
+  pvImg.style.transform = (_pz.s === 1) ? '' : 'translate(' + _pz.tx + 'px,' + _pz.ty + 'px) scale(' + _pz.s + ')';
+}
+function pvZmReset(anim){ _pz.s = 1; _pz.tx = 0; _pz.ty = 0; pvZmApply(anim); }
+function pvClamp(){
+  const W = pvFrame.clientWidth, H = pvFrame.clientHeight, nw = pvImg.naturalWidth, nh = pvImg.naturalHeight;
+  _pz.s = Math.max(1, Math.min(5, _pz.s));
+  if(!nw || !nh || _pz.s === 1){ _pz.tx = 0; _pz.ty = 0; return; }
+  const k = Math.min(W / nw, H / nh), cw = nw * k, ch = nh * k, ox = (W - cw) / 2, oy = (H - ch) / 2;
+  const ax = (L, o, len, t)=>{ const sz = _pz.s * len; if(sz <= L) return (L - sz) / 2 - _pz.s * o; return Math.min(-_pz.s * o, Math.max(L - _pz.s * (o + len), t)); };
+  _pz.tx = ax(W, ox, cw, _pz.tx); _pz.ty = ax(H, oy, ch, _pz.ty);
+}
+function pvPt(tc){ const r = pvFrame.getBoundingClientRect(); return {x:tc.clientX - r.left, y:tc.clientY - r.top}; }
+function pvZoomAt(s, px, py, anim){
+  const cx = (px - _pz.tx) / _pz.s, cy = (py - _pz.ty) / _pz.s;
+  _pz.s = Math.max(1, Math.min(5, s)); _pz.tx = px - _pz.s * cx; _pz.ty = py - _pz.s * cy;
+  pvClamp(); pvZmApply(anim);
+}
+pvFrame.addEventListener('touchstart', (e)=>{
+  if(e.touches.length === 1){
+    const p = pvPt(e.touches[0]);
+    _pzG = _pz.s > 1 ? {mode:'pan', x:p.x, y:p.y, tx:_pz.tx, ty:_pz.ty, sx:p.x, sy:p.y} : {mode:'swipe', sx:p.x, sy:p.y};
+  }else if(e.touches.length === 2){
+    const a = pvPt(e.touches[0]), b = pvPt(e.touches[1]);
+    _pzG = {mode:'pinch', d:Math.hypot(a.x - b.x, a.y - b.y) || 1, s:_pz.s, mx:(a.x + b.x) / 2, my:(a.y + b.y) / 2, tx:_pz.tx, ty:_pz.ty};
+    pvImg.classList.remove('zm-anim');
+  }
+}, {passive:true});
+pvFrame.addEventListener('touchmove', (e)=>{
+  if(!_pzG) return;
+  if(_pzG.mode === 'pinch' && e.touches.length >= 2){
+    const a = pvPt(e.touches[0]), b = pvPt(e.touches[1]), g = _pzG;
+    const d = Math.hypot(a.x - b.x, a.y - b.y) || 1, mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    const cx = (g.mx - g.tx) / g.s, cy = (g.my - g.ty) / g.s;
+    _pz.s = Math.max(1, Math.min(5, g.s * d / g.d)); _pz.tx = mx - _pz.s * cx; _pz.ty = my - _pz.s * cy;
+    pvClamp(); pvZmApply(false); g.moved = true;
+  }else if(_pzG.mode === 'pan' && e.touches.length === 1){
+    const p = pvPt(e.touches[0]);
+    _pz.tx = _pzG.tx + (p.x - _pzG.x); _pz.ty = _pzG.ty + (p.y - _pzG.y);
+    pvClamp(); pvZmApply(false);
+    if(Math.abs(p.x - _pzG.sx) > 8 || Math.abs(p.y - _pzG.sy) > 8) _pzG.moved = true;
+  }
+}, {passive:true});
+pvFrame.addEventListener('touchend', (e)=>{
+  if(e.touches.length > 0){
+    if(_pzG && _pzG.mode === 'pinch' && e.touches.length === 1 && _pz.s > 1){ const p = pvPt(e.touches[0]); _pzG = {mode:'pan', x:p.x, y:p.y, tx:_pz.tx, ty:_pz.ty, sx:p.x, sy:p.y, moved:true}; }
+    return;
+  }
+  const g = _pzG; _pzG = null;
+  if(!g || !pv) return;
+  if(g.mode === 'pinch'){ if(_pz.s < 1.05) pvZmReset(true); return; }
+  const p = pvPt(e.changedTouches[0]), dx = p.x - g.sx, dy = p.y - g.sy;
+  if(g.mode === 'swipe' && Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.4){
+    const n = pvCount(), to = pv.idx + (dx < 0 ? 1 : -1);
+    if(to >= 0 && to < n){ pv.idx = to; pvShow(); }
+    return;
+  }
+  if(g.moved || Math.abs(dx) > 10 || Math.abs(dy) > 10) return;
+  const now = Date.now();
+  if(_pzTap && now - _pzTap.t < 300 && Math.hypot(p.x - _pzTap.x, p.y - _pzTap.y) < 40){
+    _pzTap = null;
+    if(_pz.s > 1) pvZmReset(true); else pvZoomAt(2.5, p.x, p.y, true);
+    return;
+  }
+  _pzTap = {t:now, x:p.x, y:p.y};
+});
 /* Izdvajanje: stranica odmah postaje posebna slika u istom albumu (jedna transakcija).
    Ostale nesačuvane izmene na ekranu ostaju i čuvaju se tek na „Sačuvaj“. */
 async function edExtractPage(key){
