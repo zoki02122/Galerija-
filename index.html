@@ -1801,8 +1801,23 @@ body.in-album header{ margin-bottom:0; }
 #modalPath .path-bar{ height:46px; box-sizing:border-box; padding:0 2px; margin:0; font-size:17px; gap:7px; }
 #modalPath .path-bar .path-lnk{ flex:0 6 auto; min-width:2.2em; max-width:none; padding:10px 0; margin:-10px 0; }
 #modalPath .path-bar .path-lnk.path-last{ flex:0 1 auto; color:var(--ink); font-weight:600; }
-.modal-bg.has-path .modal-close, .modal-bg.has-path .modal-del, .modal-bg.has-path .modal-pages,
-.modal-bg.has-path .modal-pdf, .modal-bg.has-path .modal-exp, .modal-bg.has-path .modal-ai{ top:calc(66px + env(safe-area-inset-top, 0px)); }
+/* v109: dugmad pregleda u jednom redu, isti oblik kao red ikonica u albumu (zaobljen kvadrat + natpis ispod) */
+#modalBar{ --mb:min(54px, calc((100vw - 32px - 30px) / 6)); position:absolute; top:calc(54px + env(safe-area-inset-top, 0px)); left:16px; right:16px; z-index:4;
+  display:flex; justify-content:space-between; align-items:flex-start; padding-bottom:24px; background:var(--bg); transition:opacity .22s ease; }
+#modalBar > .back-btn{ position:relative; top:auto; left:auto; right:auto; width:var(--mb); height:var(--mb); border-radius:15px; flex:none;
+  background:var(--surface-2); border:1px solid var(--line); color:var(--brass); }
+#modalBar > .back-btn > svg{ width:calc(var(--mb) * .56); height:calc(var(--mb) * .56); }
+#modalBar > .modal-del{ color:var(--danger); border-color:var(--danger-line, var(--line)); }
+#modalBar > .modal-exp.lvl-expired{ color:var(--danger); }
+#modalBar .mb-lbl{ position:absolute; top:calc(100% + 5px); left:50%; transform:translateX(-50%); white-space:nowrap; pointer-events:none;
+  font-family:var(--font-ui); font-size:11.5px; line-height:1.2; color:var(--ink-dim); }
+#modalBar > .modal-del .mb-lbl{ color:var(--danger); }
+#modalBar .mb-lbl b{ font-weight:inherit; }
+.modal-bg.ui-hidden #modalBar{ opacity:0; pointer-events:none; }
+/* v109: veći znak u ikonicama (kvadrati iste veličine) */
+.alb-ico-sq svg{ width:30px; height:30px; }
+.sel-bar button svg{ width:25px; height:25px; }
+header .icon-btn svg{ width:24px; height:24px; }
 .modal-bg.ui-hidden #modalPath{ opacity:0; pointer-events:none; }
 /* v108: putanja ispod naziva u rezultatima pretrage */
 .card .meta .item-path{ display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; font-size:12px; line-height:1.3; color:var(--ink-dim); margin-top:2px; overflow:hidden; overflow-wrap:anywhere; cursor:pointer; }
@@ -2785,7 +2800,7 @@ const I18N = {
     actNeedOne: 'Izaberi bar jednu stavku.', renOnlyOne: 'Preimenuje se jedna stavka: označi samo jednu.',
     sendTitle: 'Pošalji ({n})', sendShare: 'Podeli', sendSave: 'Sačuvaj na telefon', sendSharePdf: 'Podeli kao jedan PDF', sendShareEach: 'Podeli svaku posebno', sendSavePdf: 'Sačuvaj na telefon kao jedan PDF', sendSaveEach: 'Sačuvaj na telefon svaku posebno', sendPdfImgOnly: 'U PDF ulaze samo slike',
     shortcutRow: 'Prečica na početni ekran', shortcutHint: 'otvara ovu stavku jednim dodirom',
-    icoMerge: 'Spoji', mergeTitle: 'Spoji u jedan dokument', mergePickHint: 'Dodirni slike redom kojim idu: prazan kružić dobija broj. Lupa u uglu otvara stranicu da je pročitaš. Redosled stranica možeš da središ i u sledećem koraku, posle „Proveri redosled“.', mergeNext: 'Proveri redosled · {n} str.', mergeNext0: 'Proveri redosled', mergeNeed2: 'Izaberi bar dve slike.', mergeOnlyImg: 'Spajaju se samo slike. PDF, Word i Excel ne mogu da se spoje.', mergeLook: 'Pogledaj', mergeSaved: 'Dokument je napravljen od {n} str. Originali su ostali u albumu.', noteMerged: '„{name}“ ({n} str.) sačuvan u: {album}',
+    icoMerge: 'Spoji', mergeTitle: 'Spoji u jedan dokument', mergePickHint: 'Dodirni slike redom kojim idu: prazan kružić dobija broj. Lupa u uglu otvara stranicu da je pročitaš. Redosled stranica možeš da središ i u sledećem koraku, posle „Proveri redosled“.', mergeNext: 'Proveri redosled · {n} str.', mergeNext0: 'Proveri redosled', mergeNeed2: 'Izaberi bar dve slike.', mergeOnlyImg: 'Spajaju se samo slike. PDF, Word i Excel ne mogu da se spoje.', mergeLook: 'Pogledaj', mergeSaved: 'Dokument je napravljen od {n} str. Originali su ostali u albumu.', noteMerged: '„{name}“ ({n} str.) sačuvan u: {album}', mbBack: 'Nazad', mbAi: 'AI', mbExp: 'Podsetnik', mbPdf: 'PDF', mbShare: 'Podeli', mbSave: 'Sačuvaj', mbPages: 'Stranice', mbDel: 'Izbriši',
     icoAdd: 'Dodaj', icoSearch: 'Pretraži', icoSub: 'Podalbum', icoSort: 'Sortiraj', sortTitle: 'Sortiraj', sortByDate: 'Po datumu, najnovije prvo', sortByName: 'Po abecedi, A–Ž',
     sortAZ: 'A–Z', sortDate: 'datum', pickAlbum: 'Izaberi album', pickKind: 'Vrsta polja', albSearch: 'Pretraži u albumu',
     wsHomeSub: 'sažetak, tabela, prevod, zapisnik…',
@@ -3022,7 +3037,7 @@ const I18N = {
     guideTileSub: 'kako se koristi Arhiva',
     guideIntro: 'Dodirni naslov da otvoriš objašnjenje.',
     guide: [
-      ['Albumi i podalbumi', 'Novi album praviš ikonicom fascikle sa plusom na vrhu početnog ekrana. U albumu je ispod putanje red ikonica: Dodaj (slikaj, iz galerije ili dokument u ovaj album), Pretraži, Podalbum (nov podalbum, samo u glavnom albumu) Sortiraj (po datumu ili po abecedi; krug pokazuje koji je uključen) i Spoji (više slika u jedan dokument).', 'Kad otvoriš sliku ili dokument, na vrhu je ista putanja (Arhiva › album › podalbum): dodir na bilo koji deo vodi u taj album, a na „Arhiva“ na početni ekran. U rezultatima pretrage putanja stoji ispod naziva.', 'Dugi pritisak na album otvara izbor: zakači na vrh, preimenuj, naslovna slika, premesti ili izbriši. Redosled albuma menjaš prevlačenjem ručke u uglu. Naziv albuma menjaš i olovkom pored njegovog naziva u putanji (ili dodirom na sam naziv) kad si u albumu.', 'Na vrhu albuma je putanja, npr. „Arhiva › Album › Podalbum“: uvek vidiš gde si, a desno piše koliko stavki ima. Dodir na „Arhiva“ vodi na početni ekran, a dodir na naziv nadređenog albuma u taj album. Korak nazad vraća jedan nivo.'],
+      ['Albumi i podalbumi', 'Novi album praviš ikonicom fascikle sa plusom na vrhu početnog ekrana. U albumu je ispod putanje red ikonica: Dodaj (slikaj, iz galerije ili dokument u ovaj album), Pretraži, Podalbum (nov podalbum, samo u glavnom albumu) Sortiraj (po datumu ili po abecedi; krug pokazuje koji je uključen) i Spoji (više slika u jedan dokument).', 'Kad otvoriš sliku ili dokument, na vrhu je ista putanja (Arhiva › album › podalbum): dodir na bilo koji deo vodi u taj album, a na „Arhiva“ na početni ekran. U rezultatima pretrage putanja stoji ispod naziva, a dokument otvoren iz pretrage otvara se u svom albumu: korak nazad vodi u taj album. Dugmad na otvorenom dokumentu imaju natpise: Nazad, AI, Podsetnik, PDF (ili Podeli / Sačuvaj), Stranice i Izbriši.', 'Dugi pritisak na album otvara izbor: zakači na vrh, preimenuj, naslovna slika, premesti ili izbriši. Redosled albuma menjaš prevlačenjem ručke u uglu. Naziv albuma menjaš i olovkom pored njegovog naziva u putanji (ili dodirom na sam naziv) kad si u albumu.', 'Na vrhu albuma je putanja, npr. „Arhiva › Album › Podalbum“: uvek vidiš gde si, a desno piše koliko stavki ima. Dodir na „Arhiva“ vodi na početni ekran, a dodir na naziv nadređenog albuma u taj album. Korak nazad vraća jedan nivo.'],
       ['Donji red u albumu', 'U albumu je dole uvek red: Pošalji · U album · Preimenuj · Više · Izbriši. Dodir na radnju otvara izbor sa naslovom te radnje (npr. „Izaberi šta šalješ“): dodiruješ stavke, pa jedno dugme dole (npr. „Pošalji (3)“). Kod „Preimenuj“ samo dodirneš stavku. ✕ ili korak nazad prekida izbor.', 'Pošalji nudi „Podeli“ ili „Sačuvaj na telefon“; za slike i dokumente od više stranica i „kao jedan PDF“ ili „svaku posebno“. „Više“ ima podsetnik, AI radionicu i prečicu na početni ekran.', 'Dugi pritisak na stavku i dalje radi: stavke označiš, pa radnja u donjem redu ide odmah na označeno.'],
       ['Dodavanje', 'Ikonica slike sa plusom dodaje sa telefona: iz galerije (više slika odjednom), slikanjem ili kao dokument (PDF, Word, Excel…). Svaka izabrana slika postaje posebna stavka.', 'Ono što dodaš dok si u albumu (iz galerije, slikanjem ili kao dokument) ide pravo u taj album.'],
       ['Dokument od više stranica', 'U meniju za dodavanje izaberi „Dokument od više stranica“. Slikaj stranicu po stranicu ili izaberi više slika iz galerije, upiši naziv i dodirni „Sačuvaj“.', 'Dodir na stranicu otvara je preko celog ekrana, da vidiš šta piše (dva prsta uvećavaju, prevlačenje levo-desno lista stranice). Dole su „Ranije“ i „Kasnije“, koji pomeraju tu stranicu za jedno mesto, i „Na mesto…“, koje je jednim dodirom na broj premešta na bilo koje mesto. Tu su i „Izdvoji“ i „Ukloni“. Redosled menjaš i prevlačenjem ručke u uglu, a ✕ uklanja stranicu. Sve se čuva tek na „Sačuvaj“. U mreži se vidi prva stranica sa oznakom broja stranica.'],
@@ -3298,7 +3313,7 @@ const I18N = {
     actNeedOne: 'Choose at least one item.', renOnlyOne: 'Only one item can be renamed: select just one.',
     sendTitle: 'Send ({n})', sendShare: 'Share', sendSave: 'Save to phone', sendSharePdf: 'Share as one PDF', sendShareEach: 'Share each separately', sendSavePdf: 'Save to phone as one PDF', sendSaveEach: 'Save to phone each separately', sendPdfImgOnly: 'Only images go into the PDF',
     shortcutRow: 'Shortcut on home screen', shortcutHint: 'opens this item with one tap',
-    icoMerge: 'Merge', mergeTitle: 'Merge into one document', mergePickHint: 'Tap the images in the order they go: the empty circle gets a number. The magnifier in the corner opens a page so you can read it. You can also fix the page order in the next step, after “Check order”.', mergeNext: 'Check order · {n} pages', mergeNext0: 'Check order', mergeNeed2: 'Choose at least two images.', mergeOnlyImg: 'Only images can be merged. PDF, Word and Excel cannot.', mergeLook: 'View', mergeSaved: 'Document made from {n} pages. The originals stayed in the album.', noteMerged: '“{name}” ({n} pages) saved in: {album}',
+    icoMerge: 'Merge', mergeTitle: 'Merge into one document', mergePickHint: 'Tap the images in the order they go: the empty circle gets a number. The magnifier in the corner opens a page so you can read it. You can also fix the page order in the next step, after “Check order”.', mergeNext: 'Check order · {n} pages', mergeNext0: 'Check order', mergeNeed2: 'Choose at least two images.', mergeOnlyImg: 'Only images can be merged. PDF, Word and Excel cannot.', mergeLook: 'View', mergeSaved: 'Document made from {n} pages. The originals stayed in the album.', noteMerged: '“{name}” ({n} pages) saved in: {album}', mbBack: 'Back', mbAi: 'AI', mbExp: 'Reminder', mbPdf: 'PDF', mbShare: 'Share', mbSave: 'Save', mbPages: 'Pages', mbDel: 'Delete',
     icoAdd: 'Add', icoSearch: 'Search', icoSub: 'Subalbum', icoSort: 'Sort', sortTitle: 'Sort', sortByDate: 'By date, newest first', sortByName: 'By name, A–Z',
     sortAZ: 'A–Z', sortDate: 'date', pickAlbum: 'Choose album', pickKind: 'Field type', albSearch: 'Search this album',
     wsHomeSub: 'summary, table, translation, record…',
@@ -3535,7 +3550,7 @@ const I18N = {
     guideTileSub: 'how to use Arhiva',
     guideIntro: 'Tap a title to open the explanation.',
     guide: [
-      ['Albums and sub-albums', 'Create a new album with the folder-plus icon at the top of the home screen. Inside an album, below the path, is a row of icons: Add (camera, gallery or a document into this album), Search, Subalbum (a new sub-album, only in a main album) Sort (by date or by name; the circle shows which is on) and Merge (several images into one document).', 'When you open an image or document, the same path is at the top (Arhiva › album › sub-album): tap any part to go to that album, or “Arhiva” for the home screen. In search results the path is shown below the name.', 'Long-press an album for options: pin to top, rename, cover image, move or delete. Drag the handle in the corner to change the album order. You can also rename an album inside it with the pencil next to its name in the path (or by tapping the name).', 'At the top of an album is the path, e.g. “Arhiva › Album › Sub-album”, so you always see where you are; the number of items is on the right. Tap “Arhiva” to go to the home screen, or the parent album name to go to that album. Back goes up one level.'],
+      ['Albums and sub-albums', 'Create a new album with the folder-plus icon at the top of the home screen. Inside an album, below the path, is a row of icons: Add (camera, gallery or a document into this album), Search, Subalbum (a new sub-album, only in a main album) Sort (by date or by name; the circle shows which is on) and Merge (several images into one document).', 'When you open an image or document, the same path is at the top (Arhiva › album › sub-album): tap any part to go to that album, or “Arhiva” for the home screen. In search results the path is shown below the name, and a document opened from search opens in its own album: Back takes you to that album. The buttons on an open document have labels: Back, AI, Reminder, PDF (or Share / Save), Pages and Delete.', 'Long-press an album for options: pin to top, rename, cover image, move or delete. Drag the handle in the corner to change the album order. You can also rename an album inside it with the pencil next to its name in the path (or by tapping the name).', 'At the top of an album is the path, e.g. “Arhiva › Album › Sub-album”, so you always see where you are; the number of items is on the right. Tap “Arhiva” to go to the home screen, or the parent album name to go to that album. Back goes up one level.'],
       ['Bottom row in an album', 'At the bottom of an album there is always a row: Send · To album · Rename · More · Delete. Tapping an action opens a selection titled with that action (e.g. “Choose what to send”): tap the items, then the one button at the bottom (e.g. “Send (3)”). For “Rename” you just tap the item. ✕ or Back cancels the selection.', '“Send” offers “Share” or “Save to phone”; for images and multi-page documents also “as one PDF” or “each separately”. “More” has the reminder, the AI workshop and the home screen shortcut.', 'Long-press still works: select items, and an action in the bottom row then applies to them right away.'],
       ['Adding', 'The image-plus icon adds from the phone: from the gallery (several images at once), by taking a photo, or as a document (PDF, Word, Excel…). Every picked image becomes a separate item.', 'What you add while inside an album (from the gallery, by taking a photo or as a document) goes straight into that album.'],
       ['Multi-page document', 'In the add menu choose “Multi-page document”. Photograph page by page or pick several images from the gallery, type a name and tap “Save”.', 'Tap a page to open it full screen and see what it says (two fingers zoom, swiping left and right turns pages). At the bottom, “Earlier” and “Later” move that page by one place, and “Move to…” moves it to any place with one tap on a number. “Extract” and “Remove” are there too. You can also drag the handle in the corner; ✕ removes a page. Nothing is saved until you tap “Save”. The grid shows the first page with the page count.'],
@@ -4999,6 +5014,21 @@ function modalPathSet(item){
   box.appendChild(bar);
   modalBg.classList.add('has-path');
 }
+/* v109: dugmad pregleda u jedan red sa natpisima (isti dugmići i id-jevi, samo novi raspored) */
+(function buildModalBar(){
+  const bar = document.createElement('div'); bar.id = 'modalBar';
+  const lbl = (b, html)=>{ const s = document.createElement('span'); s.className = 'mb-lbl'; s.innerHTML = html; b.appendChild(s); bar.appendChild(b); };
+  const g = id=>document.getElementById(id);
+  lbl(g('modalClose'), escapeHtml(t('mbBack')));
+  lbl(g('modalAi'), escapeHtml(t('mbAi')));
+  lbl(g('modalExp'), escapeHtml(t('mbExp')));
+  lbl(g('modalPdf'), '<b class="mp-pdf">'+escapeHtml(t('mbPdf'))+'</b><b class="mp-share">'+escapeHtml(t('mbShare'))+'</b><b class="mp-save">'+escapeHtml(t('mbSave'))+'</b>');
+  lbl(g('modalPages'), escapeHtml(t('mbPages')));
+  lbl(g('modalDelete'), escapeHtml(t('mbDel')));
+  document.getElementById('modalPath').after(bar);
+})();
+/* v109: dokument otvoren iz pretrage otvara se u svom albumu, pa korak nazad vodi u taj album */
+function openFromSearch(item){ navToAlbum(item.category || INBOX, ()=>openModal(item)); }
 /* v108: obaveštenje na mestu putanje; dodir bilo gde ga zatvara i radi ono što je dodirnuto */
 let _note = null, _noteTimer = null;
 function showNote(text, ms){
@@ -5692,6 +5722,7 @@ function buildCard(item, indexNumber){
     if(mergeOff){ toast(t('mergeOnlyImg')); return; }
     if(actMode === 'rename'){ openNameSheet(item, (ok)=>{ if(ok) exitSelection(); }); return; }
     if(selectionMode){ toggleSelect(item.id); }
+    else if(searchEl.value.trim()){ openFromSearch(item); }
     else{ openModal(item); }
   };
 
@@ -7207,7 +7238,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 108</div>'+
+    '<div class="settings-hint set-build">verzija 109</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
