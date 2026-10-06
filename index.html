@@ -1968,6 +1968,8 @@ body:not(.in-album) .mark-row{ height:46px; box-sizing:border-box; border-top:1p
 .home-inbox svg{ flex:none; color:var(--brass); width:24px; height:24px; }
 .home-inbox .hi-nm{ flex:1 1 auto; min-width:0; font-size:16px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .home-inbox .hi-ct{ flex:none; font-size:14px; color:var(--ink-dim); white-space:nowrap; }
+/* v118: na uskom ekranu okrugla dugmad gore malo manja, da stane i broj albuma */
+@media (max-width:380px){ body:not(.in-album) .header-actions .icon-btn{ width:40px; height:40px; } body:not(.in-album) .header-actions{ gap:6px; } }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -5059,10 +5061,22 @@ function albumiTxt(n){ if(appLang() === 'en') return n + (n === 1 ? ' album' : '
   const d=n%10, h=n%100; return n + ((d===1&&h!==11) ? ' album' : ' albuma'); }
 /* v118: broj albuma u gornjem redu se sklanja ako red ne staje (to je samo informacija) */
 function fitMarkRow(){
-  const r = document.querySelector('.mark-row'); if(!r) return;
+  const r = document.querySelector('.mark-row'), c = document.getElementById('markCnt'); if(!r || !c) return;
   r.classList.remove('cnt-off');
-  const c = document.getElementById('markCnt');
-  if(c && c.textContent && (c.scrollWidth > c.clientWidth + 1 || r.scrollWidth > r.clientWidth + 1)) r.classList.add('cnt-off');
+  if(!c.textContent || r.offsetParent === null) return;
+  c.style.flexShrink = '0';   /* meri se pun natpis: ako ne staje ceo, skloni se (to je samo informacija) */
+  const tt = c.parentElement;
+  const over = tt.scrollWidth > tt.clientWidth + 1 || r.scrollWidth > r.clientWidth + 1;
+  c.style.flexShrink = '';
+  if(over) r.classList.add('cnt-off');
+  /* fontovi naslova i broja se učitavaju tek kad zatrebaju i menjaju širinu: posle učitavanja izmeri još jednom */
+  if(!fitMarkRow._f && document.fonts && document.fonts.load){
+    fitMarkRow._f = true;
+    const fs = el=>{ const cs = getComputedStyle(el); return cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily; };
+    const h = r.querySelector('h1');
+    Promise.all([document.fonts.load(fs(c), c.textContent), h ? document.fonts.load(fs(h), h.textContent) : null])
+      .then(()=>requestAnimationFrame(()=>{ if(!currentFolder) fitMarkRow(); })).catch(()=>{});
+  }
 }
 const PHOTO_SVG_HOME = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><polyline points="3 16 8.5 11 13 15.5 15.5 13 21 17.5"></polyline><circle cx="8.5" cy="9" r="1.3"></circle></svg>';
 
@@ -5183,7 +5197,8 @@ window.addEventListener('resize', ()=>fitPathBar());
 /* v113: font se ucitava posle prvog crtanja (font-display:swap) i menja sirinu teksta: ponovo uklopi putanju */
 if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>fitPathBar());
 if(window.ResizeObserver) new ResizeObserver(()=>fitPathBar()).observe(pathZone);
-if(window.ResizeObserver) new ResizeObserver(()=>{ if(!currentFolder) fitMarkRow(); }).observe(document.querySelector('.mark-row'));
+if(window.ResizeObserver) { const ro = new ResizeObserver(()=>{ if(!currentFolder) fitMarkRow(); }); ro.observe(document.querySelector('.mark-row')); ro.observe(document.querySelector('.mark-row h1')); ro.observe(document.querySelector('.mark-row .header-actions')); }   /* h1 menja širinu kad se učita pravi font */
+if(document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', ()=>{ if(!currentFolder) fitMarkRow(); });
 if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>{ if(!currentFolder) fitMarkRow(); });
 function jumpSet(to, ids){ _jump = (currentFolder && to !== currentFolder) ? {from:currentFolder, to, ids:ids.slice()} : null; }
 function jumpFor(folder){
