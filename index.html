@@ -1874,6 +1874,13 @@ body.in-album .searchbar{ margin-top:12px; }
 .pv-bar{ flex:none; display:flex; flex-direction:column; gap:8px; background:var(--surface); border-top:1px solid var(--line); padding:10px 12px calc(10px + env(safe-area-inset-bottom)); }
 .pv-bar[hidden]{ display:none; }
 .pv-row{ display:flex; gap:8px; }
+/* v114: ⓘ desno u zaglavlju, objašnjenje ispod; krupan brojač na samoj slici (Zoran: broj gore u traci se ne primećuje) */
+.pv-head .pv-ib{ margin-left:auto; flex:none; }
+.pv-hint{ flex:none; margin:8px 12px 0; }
+.pv-cnt{ position:absolute; top:12px; left:50%; transform:translateX(-50%); z-index:2; pointer-events:none; padding:6px 18px; border-radius:12px; background:var(--bg); border:2px solid var(--brass); color:var(--brass); font-family:var(--font-ui); font-size:28px; font-weight:700; line-height:1.15; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.pv-cnt.flash{ animation:pvCntFlash .55s ease-out; }
+@keyframes pvCntFlash{ 0%{ background:var(--brass); color:var(--bg); transform:translateX(-50%) scale(1.12); } 100%{ background:var(--bg); color:var(--brass); transform:translateX(-50%) scale(1); } }
+.pv-row2 .pg-btn[hidden]{ display:none !important; }
 .pv-row .pg-btn{ flex:1 1 0; min-width:0; }
 .pv-to{ border:1.5px solid var(--brass) !important; }
 .pv-small{ height:42px !important; font-size:13.5px !important; font-weight:500 !important; color:var(--ink-dim) !important; }
@@ -2155,8 +2162,9 @@ body.merge-mode .card .select-mark{ display:none; }
   <input id="pgGalInput" type="file" accept="image/*" multiple hidden>
 </div>
 <div class="pv-screen" id="pgView">
-  <div class="pv-head"><button type="button" class="pv-close" id="pvClose"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button><span class="pv-title" id="pvTitle"></span></div>
-  <div class="pv-frame" id="pvFrame"><img id="pvImg" alt=""></div>
+  <div class="pv-head"><button type="button" class="pv-close" id="pvClose"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button><span class="pv-title" id="pvTitle"></span><button type="button" class="ib-btn pv-ib" id="pvInfoBtn" hidden></button></div>
+  <div class="ibox pv-hint" id="pvHint" hidden></div>
+  <div class="pv-frame" id="pvFrame"><img id="pvImg" alt=""><div class="pv-cnt" id="pvCnt" hidden></div></div>
   <div class="pv-bar" id="pvBar">
     <div class="pv-row"><button type="button" class="pg-btn" id="pvPrev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg><span id="pvPrevLbl"></span></button><button type="button" class="pg-btn pv-to" id="pvTo"></button><button type="button" class="pg-btn" id="pvNext"><span id="pvNextLbl"></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></button></div>
     <div class="pv-row pv-row2"><button type="button" class="pg-btn pv-small" id="pvExtract"></button><button type="button" class="pg-btn pv-small pv-danger" id="pvRemove"></button></div>
@@ -2691,7 +2699,7 @@ const I18N = {
     pgProcessing: 'Obrađujem stranice…',
     pgEmpty: 'Još nema stranica. Slikaj prvu stranicu ili izaberi slike iz galerije.',
     pgHint: 'Lupa u uglu (ili dodir na stranicu) otvara stranicu preko celog ekrana: tamo je čitaš i pomeraš (Ranije, Na mesto…, Kasnije). Redosled menjaš i prevlačenjem ručke u uglu, a ✕ uklanja stranicu. Sve se čuva tek na „Sačuvaj“.',
-    pvTitle: 'str. {i} / {n}', pvPrev: 'Ranije', pvNext: 'Kasnije', pvTo: 'Na mesto…', pvExtract: 'Izdvoji', pvRemove: 'Ukloni', pvToTitle: 'Premesti stranicu {n} na mesto', pvToHint: 'Ostale stranice se pomere za jedno mesto.',
+    pvTitle: 'str. {i} / {n}', pvPrev: 'Ranije', pvNext: 'Kasnije', pvTo: 'Na mesto…', pvExtract: 'Izdvoji', pvRemove: 'Ukloni', pvHead: 'Redosled stranica', pvHint: 'Ranije i Kasnije pomeraju ovu stranicu za jedno mesto, a Na mesto… odmah na izabrano mesto. Broj na slici pokazuje gde je sada. Prevuci prstom za sledeću stranicu. Sve se čuva tek na Sačuvaj.', pvRmTitle: 'Ukloniti stranicu {n}?', pvRmSaved: 'Kad sačuvaš dokument, stranica ide u korpu.', pvRmMerge: 'Stranica neće biti u novom dokumentu. Original ostaje u albumu.', pvRmNew: 'Ova stranica se briše iz dokumenta koji praviš.', pvToTitle: 'Premesti stranicu {n} na mesto', pvToHint: 'Ostale stranice se pomere za jedno mesto.',
     pgCountLong: 'stranica: {n}',
     pgCount: '{n} str.',
     pgPageNo: 'str. {n} / {total}',
@@ -3204,7 +3212,7 @@ const I18N = {
     pgProcessing: 'Processing pages…',
     pgEmpty: 'No pages yet. Take a photo of the first page or pick images from the gallery.',
     pgHint: 'The magnifier in the corner (or a tap on the page) opens the page full screen: read it there and move it (Earlier, Move to…, Later). You can also drag the handle in the corner, and ✕ removes the page. Nothing is saved until “Save”.',
-    pvTitle: 'p. {i} / {n}', pvPrev: 'Earlier', pvNext: 'Later', pvTo: 'Move to…', pvExtract: 'Extract', pvRemove: 'Remove', pvToTitle: 'Move page {n} to position', pvToHint: 'The other pages shift by one.',
+    pvTitle: 'p. {i} / {n}', pvPrev: 'Earlier', pvNext: 'Later', pvTo: 'Move to…', pvExtract: 'Extract', pvRemove: 'Remove', pvHead: 'Page order', pvHint: 'Earlier and Later move this page by one place, Move to… straight to the chosen place. The number on the page shows where it is now. Swipe for the next page. Nothing is saved until Save.', pvRmTitle: 'Remove page {n}?', pvRmSaved: 'When you save the document, the page goes to the trash.', pvRmMerge: 'The page won’t be in the new document. The original stays in the album.', pvRmNew: 'This page is removed from the document you are making.', pvToTitle: 'Move page {n} to position', pvToHint: 'The other pages shift by one.',
     pgCountLong: 'pages: {n}',
     pgCount: '{n} pp.',
     pgPageNo: 'p. {n} / {total}',
@@ -7410,7 +7418,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 113</div>'+
+    '<div class="settings-hint set-build">verzija 114</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -8328,10 +8336,19 @@ async function pvSrc(){
 function pvUi(){
   const n = pvCount(), i = pv.idx;
   const pos = t('pvTitle', {i:i+1, n});
-  document.getElementById('pvTitle').textContent = pv.mode === 'edit' ? pos : (n > 1 ? pv.item.name + ' · ' + pos : pv.item.name);
+  document.getElementById('pvTitle').textContent = pv.mode === 'edit' ? t('pvHead') : (n > 1 ? pv.item.name + ' · ' + pos : pv.item.name);
   const bar = document.getElementById('pvBar');
   bar.hidden = pv.mode !== 'edit';
+  /* v114: brojac na slici (samo pri slaganju); kratko zatreperi kad se broj promeni */
+  const cnt = document.getElementById('pvCnt'), ib = document.getElementById('pvInfoBtn'), hint = document.getElementById('pvHint');
+  cnt.hidden = ib.hidden = hint.hidden = pv.mode !== 'edit';
   if(pv.mode !== 'edit') return;
+  const cTxt = (i + 1) + ' / ' + n;
+  if(cnt.textContent !== cTxt){
+    const had = !!cnt.textContent;
+    cnt.textContent = cTxt;
+    if(had){ cnt.classList.remove('flash'); void cnt.offsetWidth; cnt.classList.add('flash'); }
+  }
   document.getElementById('pvPrevLbl').textContent = t('pvPrev'); document.getElementById('pvNextLbl').textContent = t('pvNext');
   document.getElementById('pvTo').textContent = t('pvTo'); document.getElementById('pvExtract').textContent = t('pvExtract'); document.getElementById('pvRemove').textContent = t('pvRemove');
   document.getElementById('pvPrev').classList.toggle('pv-off', i === 0);
@@ -8339,7 +8356,8 @@ function pvUi(){
   document.getElementById('pvTo').classList.toggle('pv-off', n < 3);
   const pg = ed.pages[i];
   const canExtract = !!(ed.item && pg && pg.file && ed.item.pages.length > 1);
-  document.getElementById('pvExtract').classList.toggle('pv-off', !canExtract);
+  /* v114: Izdvoji se ne vidi kad ne moze da radi (novi dokument); Ukloni tada zauzima ceo red */
+  document.getElementById('pvExtract').hidden = !canExtract;
 }
 function pvShow(){
   const n = pvCount();
@@ -8360,6 +8378,10 @@ function pvShow(){
 function openPageView(idx){
   if(!ed || idx < 0) return;
   pv = {mode:'edit', idx, tok:0, url:''};
+  document.getElementById('pvCnt').textContent = '';
+  const hint = document.getElementById('pvHint'), ib = document.getElementById('pvInfoBtn');
+  iboxSet(hint, t('pvHint'), false);
+  if(hint._ibBtn !== ib) iboxAttach(hint, ib);
   pgView.classList.add('open');
   pvShow();
   pushBack(closePageView);
@@ -8401,7 +8423,7 @@ document.getElementById('pvTo').onclick = ()=>{
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'pv-num' + (k === pv.idx ? ' on' : '');
     b.textContent = String(k + 1);
-    b.onclick = ()=>{ requestClose(); pvMove(k); };
+    b.onclick = ()=>{ requestCloseThen(()=>pvMove(k)); };   /* v114: pomeri tek kad se prozor zatvori */
     box.appendChild(b);
   }
   sh.classList.add('open');
@@ -8410,9 +8432,13 @@ document.getElementById('pvTo').onclick = ()=>{
 };
 document.getElementById('pvToBack').onclick = ()=>requestClose();
 document.getElementById('pvToSheet').addEventListener('click', (e)=>{ if(e.target.id === 'pvToSheet') requestClose(); });
-document.getElementById('pvRemove').onclick = ()=>{
+document.getElementById('pvRemove').onclick = async ()=>{
   if(!pv || !ed) return;
   const pg = ed.pages[pv.idx]; if(!pg) return;
+  /* v114: Ukloni trazi potvrdu (lako se stisne) */
+  const txt = (ed.item && pg.file) ? t('pvRmSaved') : (ed.mergeFrom ? t('pvRmMerge') : t('pvRmNew'));
+  const yes = await askConfirm({icon:'🗑️', title:t('pvRmTitle', {n:pv.idx + 1}), text:txt, okLabel:t('pvRemove')});
+  if(!yes || !pv || !ed || !ed.pages.includes(pg)) return;
   edRemovePage(pg.key);
   if(!ed.pages.length) requestClose(); else pvShow();
 };
