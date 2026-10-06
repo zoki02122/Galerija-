@@ -422,6 +422,9 @@
   .meta{padding:8px 1px 0;}
   .meta .index{display:block;font-family:var(--font-num);font-size:11px;letter-spacing:1px;color:var(--brass-soft);margin-bottom:2px;}
   .meta .name{display:block;font-family:var(--font-name);font-style:var(--name-style);font-size:19.5px;color:var(--ink);white-space:normal;overflow-wrap:anywhere;line-height:1.3;}
+  /* v116: naziv na kartici najvise 2 reda; automatsko ime = „Slika“ + vreme sitnije ispod */
+  .meta .name{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;}
+  .meta .name .name-when{display:block;font-family:var(--font-ui);font-style:normal;font-size:12.5px;font-weight:400;color:var(--ink-dim);line-height:1.35;margin-top:1px;}
   .meta input{background:none;border:none;border-bottom:1px solid var(--brass);outline:none;color:var(--ink);font-size:19.5px;font-family:var(--font-name);font-style:var(--name-style);width:100%;padding:0;}
 
   .empty{text-align:center;padding:56px 20px;color:var(--ink-dim);border:1px solid var(--line-soft);position:relative;}
@@ -2614,6 +2617,25 @@ let _toastTimer = null;   /* jedan tajmer: nova poruka ponistava sklanjanje pret
 /* v110: nijedna poruka više ne izlazi na dnu; sve idu u obaveštenje na vrhu (showNote) */
 function toast(msg){ showNote(msg, 4000); }
 function pad(n){ return String(n).padStart(3,'0'); }
+/* v116: automatsko ime iz kamere ili telefona (sami brojevi, IMG_/PXL_/Screenshot_ + brojevi) se ne prikazuje;
+   umesto njega „Slika“ + vreme. Pravi naziv u podacima ostaje isti (Zoranova odluka: samo prikaz). */
+const AUTO_NAME_RE = /^(?:(?:img|pxl|vid|dsc|dscn|dcim|photo|image|pic|screenshot|snimak ekrana|scan|save|wp|mvimg)[\s_\-]*)?[\d][\d\s_\-.:]{5,}(?:[_\-][a-z][\w.]*\.[\w.]+)?$/i;
+function autoNameParts(name){
+  const m = String(name || '').trim().match(/^(.*?)((?:\s+–\s+str\.\s*\d+)?(?:\s*\(\d+\))?)$/);
+  const base = m ? m[1] : String(name || ''), tail = m ? m[2] : '';
+  return AUTO_NAME_RE.test(base.trim()) ? {tail} : null;
+}
+function itemWhen(item){
+  const d = new Date(item.ts || item.updatedAt || Date.now());
+  const two = n=>String(n).padStart(2, '0');
+  return d.getDate() + '.' + (d.getMonth() + 1) + '.' + d.getFullYear() + '. ' + d.getHours() + ':' + two(d.getMinutes());
+}
+function itemAutoWord(item){ return t(item.type === 'image' ? 'autoImg' : 'autoDoc'); }
+/* naziv za prikaz u jednom redu (pregled, korpa, AI): „Slika · 6.10.2026. 12:34“ */
+function itemLabel(item){
+  const a = autoNameParts(item.name);
+  return a ? itemAutoWord(item) + a.tail + ' · ' + itemWhen(item) : item.name;
+}
 function escapeHtml(s){
   return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
@@ -2720,7 +2742,7 @@ const I18N = {
     pgExtractHint: 'odmah postaje posebna slika u istom albumu',
     pgExtractNo: 'moguće kod sačuvanog dokumenta sa bar dve stranice',
     pgRemove: 'Ukloni iz dokumenta',
-    pgExtracted: 'Stranica je izdvojena kao posebna slika u istom albumu.', selAll: 'Izaberi sve', selNone: 'Poništi sve', pgExtractLater: 'Stranica će biti posebna slika kad dodirneš „Sačuvaj“.', pgSavedExt: 'Sačuvano. Izdvojene stranice su posebne slike u istom albumu.', pgSavedBoth: 'Sačuvano. Izdvojene stranice su posebne slike u albumu, a uklonjene su u korpi.',
+    pgExtracted: 'Stranica je izdvojena kao posebna slika u istom albumu.', selAll: 'Izaberi sve', selNone: 'Poništi sve', autoImg: 'Slika', autoDoc: 'Dokument', pgExtractLater: 'Stranica će biti posebna slika kad dodirneš „Sačuvaj“.', pgSavedExt: 'Sačuvano. Izdvojene stranice su posebne slike u istom albumu.', pgSavedBoth: 'Sačuvano. Izdvojene stranice su posebne slike u albumu, a uklonjene su u korpi.',
     pgPartName: '{name} – str. {n}',
     pgNeedOne: 'Dokument mora imati bar jednu stranicu.',
     pgWait: 'Sačekaj da se sve stranice obrade.',
@@ -3233,7 +3255,7 @@ const I18N = {
     pgExtractHint: 'becomes a separate image in the same album right away',
     pgExtractNo: 'possible for a saved document with at least two pages',
     pgRemove: 'Remove from document',
-    pgExtracted: 'The page is now a separate image in the same album.', selAll: 'Select all', selNone: 'Clear all', pgExtractLater: 'The page becomes a separate image when you tap “Save”.', pgSavedExt: 'Saved. Extracted pages are separate images in the same album.', pgSavedBoth: 'Saved. Extracted pages are separate images in the album; removed ones are in the trash.',
+    pgExtracted: 'The page is now a separate image in the same album.', selAll: 'Select all', selNone: 'Clear all', autoImg: 'Image', autoDoc: 'Document', pgExtractLater: 'The page becomes a separate image when you tap “Save”.', pgSavedExt: 'Saved. Extracted pages are separate images in the same album.', pgSavedBoth: 'Saved. Extracted pages are separate images in the album; removed ones are in the trash.',
     pgPartName: '{name} – p. {n}',
     pgNeedOne: 'A document needs at least one page.',
     pgWait: 'Wait until all pages are processed.',
@@ -4111,7 +4133,8 @@ function openNameSheet(item, after){
   document.getElementById('nameTitle').textContent = t('renTitle');
   document.getElementById('nameLbl').textContent = t('renLbl');
   document.getElementById('nameSave').textContent = t('renSave');
-  nameInput.value = item.name || '';
+  const auto = autoNameParts(item.name);
+  nameInput.value = auto ? itemAutoWord(item) + auto.tail + ' ' + itemWhen(item) : (item.name || '');
   nameUpdateState();
   nameSheet.classList.add('open');
   pushBack(closeNameSheet);
@@ -4139,7 +4162,7 @@ async function renameItem(item, name){
   render();
   if(modalBg.classList.contains('open') && modalItemId === item.id){
     currentGalleryIndex = currentGalleryItems.findIndex(i=>i.id === item.id);
-    modalCaption.textContent = item.name;
+    modalCaption.textContent = itemLabel(item);
   }
   toast(t('renDone'));
   return true;
@@ -5907,7 +5930,12 @@ function buildCard(item, indexNumber){
   idx.textContent = 'N\u00B0 ' + pad(indexNumber);
   const nameSpan = document.createElement('span');
   nameSpan.className = 'name';
-  nameSpan.textContent = item.name;
+  const auto = autoNameParts(item.name);
+  if(auto){
+    nameSpan.textContent = itemAutoWord(item) + auto.tail;
+    const w = document.createElement('span'); w.className = 'name-when'; w.textContent = itemWhen(item);
+    nameSpan.appendChild(w);
+  }else nameSpan.textContent = item.name;
   nameSpan.title = t('renTitle');
   /* dodir na naziv: isti prozor za naziv kao „Više“ → „Preimenuj“ (Gboard zaštita, obavezna svojstva polja) */
   nameSpan.onclick = (e)=>{ e.stopPropagation(); if(!selectionMode) openNameSheet(item); };
@@ -6093,7 +6121,7 @@ function showModalItem(item, page){
   }
   fullUrlFor(item, pg).then(u=>{ if(req === _modalReq){ fullShown = true; modalImg.src = u; } })
     .catch(e=>{ console.error(e); if(req === _modalReq) toast(t('fileMissing')); });
-  modalCaption.textContent = item.name;
+  modalCaption.textContent = itemLabel(item);
   const total = currentGalleryItems.length;
   const showNav = (total > 1 && currentGalleryIndex >= 0) || n > 1;
   document.getElementById('modalPrev').hidden = !showNav;
@@ -6137,7 +6165,7 @@ function showModalFile(item){
   document.getElementById('mfNote').textContent = why ? t(why === 'locked' ? 'pdfLocked' : 'pdfBroken') : '';
   document.getElementById('modalFile').hidden = false;
   document.getElementById('modalDelete').setAttribute('aria-label', t('delFileLbl'));
-  modalCaption.textContent = item.name;
+  modalCaption.textContent = itemLabel(item);
   const total = currentGalleryItems.length;
   const showNav = total > 1 && currentGalleryIndex >= 0;
   document.getElementById('modalPrev').hidden = !showNav;
@@ -6222,7 +6250,7 @@ function showModalPdf(item, page){
   modalBg.classList.add('is-file', 'is-pdfview');
   document.getElementById('modalFile').hidden = true;
   document.getElementById('modalDelete').setAttribute('aria-label', t('delFileLbl'));
-  modalCaption.textContent = item.name;
+  modalCaption.textContent = itemLabel(item);
   updateModalExp(item);
   const known = pdfKnownTotal(item);
   const want = (page < 0) ? (known ? known - 1 : -1) : (page || 0);
@@ -7305,7 +7333,7 @@ function renderTrashList(){
       ? (it.thumb ? '<img src="'+it.thumb+'" alt="">' : pdfIconSvg() + '<span>SLIKA</span>')
       : fileTypeIcon(fileTypeOf(it));
     cell.innerHTML = '<div class="trash-thumb">'+inner+'<span class="trash-check">'+(trashSel.has(it.id)?'\u2713':'')+'</span></div>'+
-      '<div class="trash-name">'+escapeHtml(it.name)+'</div>'+
+      '<div class="trash-name">'+escapeHtml(itemLabel(it))+'</div>'+
       '<div class="trash-left">'+(left === 0 ? 'briše se danas' : 'još '+left+(left===1?' dan':' dana'))+'</div>';
     cell.onclick = ()=>{
       if(trashSel.has(it.id)) trashSel.delete(it.id); else trashSel.add(it.id);
@@ -7427,7 +7455,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 115</div>'+
+    '<div class="settings-hint set-build">verzija 116</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -9142,7 +9170,7 @@ function aiStartRead(item){
 }
 function aiShowConsent(item){
   aiSetTitle(t('aiConsentTitle'));
-  aiBody.innerHTML = '<div class="exp-doc">' + escapeHtml(item.name) + '</div>' +
+  aiBody.innerHTML = '<div class="exp-doc">' + escapeHtml(itemLabel(item)) + '</div>' +
     '<p class="ai-p">' + escapeHtml(t('aiConsentText')) + '</p>' +
     '<button type="button" class="sheet-cta" id="aiConsentOk">' + escapeHtml(t('aiConsentOk')) + '</button>' +
     '<button type="button" class="sheet-cta secondary ai-gap" id="aiConsentNo">' + escapeHtml(t('aiCancel')) + '</button>';
@@ -9183,7 +9211,7 @@ function aiShowError(e, item){
   const code = e && e.aiCode;
   const toSettings = code === 'aiErrNoKey' || code === 'aiErrKey' || code === 'aiErrModel';
   const retry = !toSettings && ['aiErrBig', 'aiErrNoText', 'aiErrFile', 'aiErrBlocked'].indexOf(code) < 0;
-  aiBody.innerHTML = '<div class="exp-doc">' + escapeHtml(item.name) + '</div>' +
+  aiBody.innerHTML = '<div class="exp-doc">' + escapeHtml(itemLabel(item)) + '</div>' +
     '<p class="ai-p ai-err">' + escapeHtml(aiErrText(e)) + '</p>' +
     (toSettings ? '<button type="button" class="sheet-cta" id="aiErrSet">' + escapeHtml(t('aiOpenSettings')) + '</button>' : '') +
     (retry ? '<button type="button" class="sheet-cta" id="aiErrRetry">' + escapeHtml(t('aiTryAgain')) + '</button>' : '') +
@@ -9211,7 +9239,7 @@ function aiShowResult(item, res, r){
   const onText = !!res.text && !item.hasText;
   const expIcon = '<svg class="exp-field-ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>';
   const tx = inp => '<input ' + inp + ' autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">';
-  let h = '<div class="exp-doc">' + escapeHtml(item.name) + '</div><p class="ai-hint">' + escapeHtml(t('aiResHint')) + '</p>';
+  let h = '<div class="exp-doc">' + escapeHtml(itemLabel(item)) + '</div><p class="ai-hint">' + escapeHtml(t('aiResHint')) + '</p>';
   h += aiRowHtml('aiRowName', t('aiName'), onName,
     tx('id="aiNameIn" type="text" class="sheet-input" maxlength="200"') +
     '<div class="ai-now">' + escapeHtml(t('aiNow', {v:item.name})) + '</div>');
@@ -9347,7 +9375,7 @@ async function aiApply(item, ch){
   render();
   currentGalleryIndex = currentGalleryItems.findIndex(i=>i.id === item.id);
   if(modalBg.classList.contains('open') && modalItemId === item.id){
-    modalCaption.textContent = item.name;
+    modalCaption.textContent = itemLabel(item);
     updateModalExp(item);
   }
   toast(t('aiApplied', {list:done.join(', ')}));
