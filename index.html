@@ -1832,7 +1832,10 @@ body.in-album .searchbar{ margin-top:12px; }
 .pv-num{ height:48px; border-radius:12px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); font-family:var(--font-ui); font-size:17px; cursor:pointer; }
 .pv-num.on{ background:var(--brass); color:var(--bg); border-color:var(--brass); font-weight:700; }
 /* v105: Spoji */
-.merge-hint{ margin:10px 2px 4px; font-family:var(--font-ui); font-size:14px; line-height:1.35; color:var(--ink-dim); }
+body.merge-mode .sel-header{ min-height:46px; margin-top:4px; gap:12px; }
+body.merge-mode .sel-header .cancel{ width:40px; height:40px; font-size:22px; }
+body.merge-mode .sel-header .count{ flex:1; min-width:0; text-align:center; font-size:19px; text-transform:none; letter-spacing:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+body.merge-mode #mergeInfo{ margin:10px 0 2px; }
 .card.merge-off{ opacity:.35; }
 .card.merge-off .select-mark{ display:none; }
 body.merge-mode .card .select-mark{ display:none; }
@@ -1892,7 +1895,9 @@ body.merge-mode .card .select-mark{ display:none; }
       <button class="cancel" id="selCancel">✕</button>
       <span class="count" id="selCount">1 odabrano</span>
       <button class="all" id="selAll">Izaberi sve</button>
+      <button class="ib-btn" id="mergeInfoBtn" type="button" hidden></button>
     </div>
+    <div class="ibox" id="mergeInfo" style="display:none"></div>
 
     <div class="searchbar" id="searchbarWrap" style="display:none;">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
@@ -4699,6 +4704,9 @@ const MERGE_SVG = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" s
 function startMerge(){
   if(searchOpen) closeSearch();
   selectionMode = true; mergeMode = true; selectedIds = new Set();
+  const mi = document.getElementById('mergeInfo');
+  iboxSet(mi, t('mergePickHint'));
+  if(!mi._ibBtn) iboxAttach(mi, document.getElementById('mergeInfoBtn'));
   pushBack(closeMergeMode);
   render();
   window.scrollTo(0, 0);
@@ -5025,6 +5033,8 @@ function render(){
   document.getElementById('mergeBar').classList.toggle('show', mergeMode);
   document.getElementById('mergeNext').textContent = t('mergeNext', {n:selectedIds.size});
   selAll.style.display = mergeMode ? 'none' : '';
+  document.getElementById('mergeInfoBtn').hidden = !mergeMode;
+  document.getElementById('mergeInfo').style.display = mergeMode ? '' : 'none';
   document.body.classList.toggle('merge-mode', mergeMode);
   document.body.style.paddingBottom = selectionMode ? '90px' : '70px';
   searchbarWrap.style.display = (selectionMode || !searchOpen) ? 'none' : 'flex';
@@ -5072,12 +5082,6 @@ function render(){
       ico('alb-ico-sort', SORT_SVG, t('icoSort'), ()=>openSortChoice());
       ico('alb-ico-merge', MERGE_SVG, t('icoMerge'), ()=>startMerge());
       albumHead.appendChild(row);
-    }
-    if(mergeMode){
-      const h = document.createElement('p');
-      h.className = 'merge-hint';
-      h.textContent = t('mergePickHint');
-      albumHead.appendChild(h);
     }
     albumHeaderZone.appendChild(albumHead);
 
