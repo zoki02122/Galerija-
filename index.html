@@ -1842,6 +1842,16 @@ header .icon-btn svg{ width:24px; height:24px; }
 #pathZone .path-bar .path-cur.ren{ cursor:pointer; }
 #pathZone .path-ren{ flex:none; width:34px; height:40px; margin-left:-4px; padding:0; border:none; background:none; color:var(--brass); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
 #pathZone .path-count{ flex:none; margin-left:auto; padding-left:8px; font-size:13px; color:var(--ink-dim); }
+/* v112: prečica do albuma u koji je poslato (desno u redu putanje, umesto broja stavki); naziv albuma se po potrebi skraćuje */
+#pathZone .path-bar .path-lnk{ flex-shrink:100; }
+#pathZone .path-bar .path-cur{ flex:0 0 auto; min-width:3em; max-width:none; }
+#pathZone .path-bar.tight .path-cur{ flex-shrink:1; }
+#pathZone .path-jump{ flex:0 1 auto; min-width:7.5em; max-width:36%; margin-left:auto; height:36px; padding:0 10px 0 9px; box-sizing:border-box; border-radius:18px;
+  border:1.5px solid var(--brass); background:var(--surface-2); color:var(--brass); font:inherit; font-size:14px; font-weight:600;
+  display:inline-flex; align-items:center; gap:5px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+#pathZone .path-jump svg{ flex:none; }
+#pathZone .path-jump .pj-nm{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.card.just-moved .thumb-box{ outline:3px solid var(--brass); outline-offset:-3px; }
 body.in-album .searchbar{ margin-top:12px; }
 .alb-head{ display:flex; flex-direction:column; }
 .alb-icons{ display:flex; align-items:flex-start; margin-top:12px; margin-bottom:6px; }
@@ -2415,6 +2425,7 @@ let items = [];
 let trash = [];   /* obrisane stavke (deletedAt) — van svih prikaza, brojeva i backupa */
 let categories = [];
 let currentFolder = null;
+let _jump = null, _flash = null;   /* v112: prečica do albuma posle premeštanja / kopiranja; kratko istaknute stavke */
 let sortMode = 'date';
 let pendingAssignItemId = null;
 let selectionMode = false;
@@ -2828,7 +2839,7 @@ const I18N = {
     actNeedOne: 'Izaberi bar jednu stavku.', renOnlyOne: 'Preimenuje se jedna stavka: označi samo jednu.',
     sendTitle: 'Pošalji ({n})', sendShare: 'Podeli', sendSave: 'Sačuvaj na telefon', sendSharePdf: 'Podeli kao jedan PDF', sendShareEach: 'Podeli svaku posebno', sendSavePdf: 'Sačuvaj na telefon kao jedan PDF', sendSaveEach: 'Sačuvaj na telefon svaku posebno', sendPdfImgOnly: 'U PDF ulaze samo slike',
     shortcutRow: 'Prečica na početni ekran', shortcutHint: 'otvara ovu stavku jednim dodirom',
-    icoMerge: 'Spoji', mergeTitle: 'Spoji u jedan dokument', mergePickHint: 'Dodirni slike redom kojim idu: prazan kružić dobija broj. Lupa u uglu otvara stranicu da je pročitaš. Redosled stranica možeš da središ i u sledećem koraku, posle „Proveri redosled“.', mergeNext: 'Proveri redosled · {n} str.', mergeNext0: 'Proveri redosled', mergeNeed2: 'Izaberi bar dve slike.', mergeOnlyImg: 'Spajaju se samo slike. PDF, Word i Excel ne mogu da se spoje.', mergeLook: 'Pogledaj', moveHere: 'premesti ovde', noteUndo: 'Vrati', movedBack: 'Vraćeno na staro mesto.', subMade: 'Podalbum „{name}“ je napravljen.', mergeSaved: 'Dokument je napravljen od {n} str. Originali su ostali u albumu.', noteMerged: '„{name}“ ({n} str.) sačuvan u: {album}', mbBack: 'Nazad', mbAi: 'AI', mbExp: 'Podsetnik', mbPdf: 'PDF', mbShare: 'Podeli', mbSave: 'Sačuvaj', mbPages: 'Stranice', mbDel: 'Izbriši',
+    icoMerge: 'Spoji', mergeTitle: 'Spoji u jedan dokument', mergePickHint: 'Dodirni slike redom kojim idu: prazan kružić dobija broj. Lupa u uglu otvara stranicu da je pročitaš. Redosled stranica možeš da središ i u sledećem koraku, posle „Proveri redosled“.', mergeNext: 'Proveri redosled · {n} str.', mergeNext0: 'Proveri redosled', mergeNeed2: 'Izaberi bar dve slike.', mergeOnlyImg: 'Spajaju se samo slike. PDF, Word i Excel ne mogu da se spoje.', mergeLook: 'Pogledaj', moveHere: 'premesti ovde', noteUndo: 'Vrati', jumpTo: 'Idi u album {name}', movedBack: 'Vraćeno na staro mesto.', subMade: 'Podalbum „{name}“ je napravljen.', mergeSaved: 'Dokument je napravljen od {n} str. Originali su ostali u albumu.', noteMerged: '„{name}“ ({n} str.) sačuvan u: {album}', mbBack: 'Nazad', mbAi: 'AI', mbExp: 'Podsetnik', mbPdf: 'PDF', mbShare: 'Podeli', mbSave: 'Sačuvaj', mbPages: 'Stranice', mbDel: 'Izbriši',
     icoAdd: 'Dodaj', icoSearch: 'Pretraži', icoSub: 'Podalbum', icoSort: 'Sortiraj', sortTitle: 'Sortiraj', sortByDate: 'Po datumu, najnovije prvo', sortByName: 'Po abecedi, A–Ž',
     sortAZ: 'A–Z', sortDate: 'datum', pickAlbum: 'Izaberi album', pickKind: 'Vrsta polja', albSearch: 'Pretraži u albumu',
     wsHomeSub: 'sažetak, tabela, prevod, zapisnik…',
@@ -3341,7 +3352,7 @@ const I18N = {
     actNeedOne: 'Choose at least one item.', renOnlyOne: 'Only one item can be renamed: select just one.',
     sendTitle: 'Send ({n})', sendShare: 'Share', sendSave: 'Save to phone', sendSharePdf: 'Share as one PDF', sendShareEach: 'Share each separately', sendSavePdf: 'Save to phone as one PDF', sendSaveEach: 'Save to phone each separately', sendPdfImgOnly: 'Only images go into the PDF',
     shortcutRow: 'Shortcut on home screen', shortcutHint: 'opens this item with one tap',
-    icoMerge: 'Merge', mergeTitle: 'Merge into one document', mergePickHint: 'Tap the images in the order they go: the empty circle gets a number. The magnifier in the corner opens a page so you can read it. You can also fix the page order in the next step, after “Check order”.', mergeNext: 'Check order · {n} pages', mergeNext0: 'Check order', mergeNeed2: 'Choose at least two images.', mergeOnlyImg: 'Only images can be merged. PDF, Word and Excel cannot.', mergeLook: 'View', moveHere: 'move here', noteUndo: 'Undo', movedBack: 'Moved back.', subMade: 'Sub-album “{name}” created.', mergeSaved: 'Document made from {n} pages. The originals stayed in the album.', noteMerged: '“{name}” ({n} pages) saved in: {album}', mbBack: 'Back', mbAi: 'AI', mbExp: 'Reminder', mbPdf: 'PDF', mbShare: 'Share', mbSave: 'Save', mbPages: 'Pages', mbDel: 'Delete',
+    icoMerge: 'Merge', mergeTitle: 'Merge into one document', mergePickHint: 'Tap the images in the order they go: the empty circle gets a number. The magnifier in the corner opens a page so you can read it. You can also fix the page order in the next step, after “Check order”.', mergeNext: 'Check order · {n} pages', mergeNext0: 'Check order', mergeNeed2: 'Choose at least two images.', mergeOnlyImg: 'Only images can be merged. PDF, Word and Excel cannot.', mergeLook: 'View', moveHere: 'move here', noteUndo: 'Undo', jumpTo: 'Go to album {name}', movedBack: 'Moved back.', subMade: 'Sub-album “{name}” created.', mergeSaved: 'Document made from {n} pages. The originals stayed in the album.', noteMerged: '“{name}” ({n} pages) saved in: {album}', mbBack: 'Back', mbAi: 'AI', mbExp: 'Reminder', mbPdf: 'PDF', mbShare: 'Share', mbSave: 'Save', mbPages: 'Pages', mbDel: 'Delete',
     icoAdd: 'Add', icoSearch: 'Search', icoSub: 'Subalbum', icoSort: 'Sort', sortTitle: 'Sort', sortByDate: 'By date, newest first', sortByName: 'By name, A–Z',
     sortAZ: 'A–Z', sortDate: 'date', pickAlbum: 'Choose album', pickKind: 'Field type', albSearch: 'Search this album',
     wsHomeSub: 'summary, table, translation, record…',
@@ -4975,6 +4986,7 @@ function buildPathBar(curCat, total){
     bar.appendChild(el);
   });
   /* v104: olovka za preimenovanje odmah iza naziva (dodir na naziv ili olovku), broj stavki desno */
+  const jmp = jumpFor(currentFolder);
   if(curCat && currentFolder !== INBOX && !selectionMode){
     const cur = bar.querySelector('.path-cur');
     const ren = document.createElement('button');
@@ -4983,9 +4995,17 @@ function buildPathBar(curCat, total){
     ren.innerHTML = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg>';
     const go = (e)=>{ e.stopPropagation(); openRenameSheet(currentFolder); };
     ren.onclick = go; cur.onclick = go; cur.classList.add('ren');
-    bar.appendChild(ren);
+    if(!(jmp && !selectionMode)) bar.appendChild(ren);   /* v112: dok stoji prečica nema olovke (dodir na naziv i dalje preimenuje) */
   }
-  if(typeof total === 'number'){
+  if(jmp && !selectionMode){
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'path-jump';
+    b.setAttribute('aria-label', t('jumpTo', {name: jumpLabel(jmp.to)}));
+    b.innerHTML = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg><span class="pj-nm"></span><span aria-hidden="true">›</span>';
+    b.querySelector('.pj-nm').textContent = jumpLabel(jmp.to);
+    b.onclick = (e)=>{ e.stopPropagation(); jumpGo(); };
+    bar.appendChild(b);
+  }else if(typeof total === 'number'){
     const c = document.createElement('span');
     c.className = 'path-count'; c.textContent = stavkeTxt(total);
     bar.appendChild(c);
@@ -5013,6 +5033,34 @@ function openAlbumFromHome(target){
   if(!c){ render(); return; }
   if(c.parent && catById(c.parent)){ currentFolder = c.parent; pushBack(homeAlbumCloser()); openSubalbum(c); }
   else{ currentFolder = c.id; pushBack(homeAlbumCloser()); render(); }
+}
+/* v112: posle premeštanja ili kopiranja u drugi album, u albumu odakle je poslato ostaje prečica do tog albuma.
+   Nestaje kad se izađe iz albuma, posle „Vrati“ ili kad se pošalje u drugi album (tada pokazuje novi). */
+/* v112: naziv albuma se skraćuje tek kad gornji delovi putanje dođu do najmanje mere */
+function fitPathBar(bar){
+  bar = bar || pathZone.querySelector('.path-bar');
+  if(!bar || !bar.offsetParent) return;
+  bar.classList.remove('tight');
+  if(bar.scrollWidth > bar.clientWidth + 1) bar.classList.add('tight');
+}
+window.addEventListener('resize', ()=>fitPathBar());
+function jumpSet(to, ids){ _jump = (currentFolder && to !== currentFolder) ? {from:currentFolder, to, ids:ids.slice()} : null; }
+function jumpFor(folder){
+  if(!_jump) return null;
+  if(_jump.from !== folder || (_jump.to !== INBOX && !catById(_jump.to))){ _jump = null; return null; }
+  return _jump;
+}
+function jumpLabel(to){ return to === INBOX ? t('pathInbox') : catLabel(to); }
+function jumpGo(){
+  const j = _jump; if(!j) return;
+  _jump = null; hideNote();
+  navToAlbum(j.to, ()=>{
+    _flash = {ids:new Set(j.ids)};
+    render();
+    const first = contentArea.querySelector('.card.just-moved');
+    if(first) first.scrollIntoView({block:'center'});
+    setTimeout(()=>{ _flash = null; contentArea.querySelectorAll('.card.just-moved').forEach(c=>c.classList.remove('just-moved')); }, 2500);
+  });
 }
 function navToAlbum(target, done){
   const step = ()=>{
@@ -5122,6 +5170,7 @@ function applyNote(force){
   _noteShown = key;
   const old = pathZone.querySelector('.note-bar'); if(old) old.remove();
   pathZone.classList.remove('noting');
+  fitPathBar();
   noteTop.innerHTML = ''; noteTop.className = 'note-top';
   document.querySelectorAll('.note-pad').forEach(el=>el.classList.remove('note-pad'));
   if(!_note) return;
@@ -5374,6 +5423,7 @@ function render(){
     selCount.textContent = mergeMode ? t('mergeTitle') : actMode ? t('act_' + actMode + '_title') : selectedIds.size + (selectedIds.size===1 ? ' odabrano' : ' odabrano');
   }
 
+  if(_jump && currentFolder !== _jump.from) _jump = null;   /* v112: prečica važi samo dok si u albumu odakle je poslato */
   const q = normalizeSr(searchEl.value.trim());
 
   if(currentFolder){
@@ -5386,7 +5436,7 @@ function render(){
 
     /* v104: vrh albuma = putanja (u #pathZone, odmah ispod sata) + jedan red ikonica.
        Pretraga zauzima mesto reda ikonica; polje pretrage ostaje u zaglavlju (ne premesta se, da tastatura ne nestane). */
-    if(!selectionMode) pathZone.appendChild(buildPathBar(curCat, totalHere));
+    if(!selectionMode){ const pb = buildPathBar(curCat, totalHere); pathZone.appendChild(pb); fitPathBar(pb); }
     const albumHead = document.createElement('div');
     albumHead.className = 'alb-head';
     if(!selectionMode && !searchOpen){
@@ -5761,7 +5811,7 @@ function formatDateLabel(ts){
 
 function buildCard(item, indexNumber){
   const card = document.createElement('div');
-  card.className = 'card' + (selectionMode ? ' selectable' : '') + (selectedIds.has(item.id) ? ' selected' : '');
+  card.className = 'card' + (selectionMode ? ' selectable' : '') + (selectedIds.has(item.id) ? ' selected' : '') + (_flash && _flash.ids.has(item.id) ? ' just-moved' : '');
 
   const thumbBox = document.createElement('div');
   const isPdf = item.type === 'pdf';
@@ -6629,10 +6679,12 @@ function moveSelectedToFolder(catId){
     }
   });
   const coverSet = target && target.cover !== coverBefore;
+  jumpSet(catId || INBOX, prev.map(p=>p[0].id));
   exitSelection();
   /* v110: obaveštenje na vrhu sa dugmetom „Vrati“ (5 s) */
   showNote(catId ? 'Premešteno u "'+catLabel(catId)+'".' : 'Uklonjeno iz albuma.', 5000, {action:{label:t('noteUndo'), fn:()=>{
     prev.forEach(([item, cat])=>{ item.category = cat; idbPut(item).catch(e=>console.error(e)); });
+    _jump = null;
     if(coverSet && target){ target.cover = coverBefore || null; saveCategories(); }
     render();
     showNote(t('movedBack'), 4000);
@@ -6655,17 +6707,20 @@ async function copyDoc(orig, catId){
 }
 async function copySelectedToFolder(catId){
   const chosen = items.filter(i=>selectedIds.has(i.id));
+  const from = currentFolder;
   exitSelection();
-  let ok = 0;
+  let ok = 0; const newIds = [];
   for(const orig of chosen){
     try{
       const clone = await copyDoc(orig, catId);
       items.push(clone);
       if(clone.validUntil) markExpSeen(clone);
       maybeAutoCover(catId, clone);
+      newIds.push(clone.id);
       ok++;
     }catch(e){ console.error(e); }
   }
+  if(newIds.length && currentFolder === from) jumpSet(catId || INBOX, newIds);
   render();
   toast(ok === chosen.length ? 'Kopirano u "'+catLabel(catId)+'".' : t('saveErr'));
 }
