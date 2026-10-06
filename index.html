@@ -1888,6 +1888,8 @@ body.in-album .searchbar{ margin-top:12px; }
 .pv-to{ border:1.5px solid var(--brass) !important; }
 .pv-small{ height:42px !important; font-size:13.5px !important; font-weight:500 !important; color:var(--ink-dim) !important; }
 .pv-danger{ color:var(--danger) !important; }
+/* v115: Izdvoji iste boje kao Ranije / Kasnije (siv natpis je izgledao kao neaktivno dugme) */
+#pvExtract{ color:var(--ink) !important; }
 .pg-btn.pv-off{ opacity:.35; }
 .pv-to-hint{ margin:-4px 0 12px; font-size:13px; color:var(--ink-dim); font-family:var(--font-ui); }
 .pv-nums{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; max-height:50vh; overflow-y:auto; }
@@ -2718,7 +2720,7 @@ const I18N = {
     pgExtractHint: 'odmah postaje posebna slika u istom albumu',
     pgExtractNo: 'moguće kod sačuvanog dokumenta sa bar dve stranice',
     pgRemove: 'Ukloni iz dokumenta',
-    pgExtracted: 'Stranica je izdvojena kao posebna slika u istom albumu.',
+    pgExtracted: 'Stranica je izdvojena kao posebna slika u istom albumu.', pgExtractLater: 'Stranica će biti posebna slika kad dodirneš „Sačuvaj“.', pgSavedExt: 'Sačuvano. Izdvojene stranice su posebne slike u istom albumu.', pgSavedBoth: 'Sačuvano. Izdvojene stranice su posebne slike u albumu, a uklonjene su u korpi.',
     pgPartName: '{name} – str. {n}',
     pgNeedOne: 'Dokument mora imati bar jednu stranicu.',
     pgWait: 'Sačekaj da se sve stranice obrade.',
@@ -3231,7 +3233,7 @@ const I18N = {
     pgExtractHint: 'becomes a separate image in the same album right away',
     pgExtractNo: 'possible for a saved document with at least two pages',
     pgRemove: 'Remove from document',
-    pgExtracted: 'The page is now a separate image in the same album.',
+    pgExtracted: 'The page is now a separate image in the same album.', pgExtractLater: 'The page becomes a separate image when you tap “Save”.', pgSavedExt: 'Saved. Extracted pages are separate images in the same album.', pgSavedBoth: 'Saved. Extracted pages are separate images in the album; removed ones are in the trash.',
     pgPartName: '{name} – p. {n}',
     pgNeedOne: 'A document needs at least one page.',
     pgWait: 'Wait until all pages are processed.',
@@ -7421,7 +7423,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 114</div>'+
+    '<div class="settings-hint set-build">verzija 115</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -8358,7 +8360,7 @@ function pvUi(){
   document.getElementById('pvNext').classList.toggle('pv-off', i >= n - 1);
   document.getElementById('pvTo').classList.toggle('pv-off', n < 3);
   const pg = ed.pages[i];
-  const canExtract = !!(ed.item && pg && pg.file && ed.item.pages.length > 1);
+  const canExtract = !!(ed.item && pg && pg.file && n > 1);
   /* v114: Izdvoji se ne vidi kad ne moze da radi (novi dokument); Ukloni tada zauzima ceo red */
   document.getElementById('pvExtract').hidden = !canExtract;
 }
@@ -8449,7 +8451,7 @@ document.getElementById('pvExtract').onclick = async ()=>{
   if(!pv || !ed) return;
   const pg = ed.pages[pv.idx]; if(!pg) return;
   if(document.getElementById('pvExtract').classList.contains('pv-off')){ toast(t('pgExtractNo')); return; }
-  await edExtractPage(pg.key);
+  edExtractPage(pg.key);
   if(pv) pvShow();
 };
 /* uvećanje i listanje u pregledu stranice */
@@ -8524,23 +8526,18 @@ pvFrame.addEventListener('touchend', (e)=>{
 });
 /* Izdvajanje: stranica odmah postaje posebna slika u istom albumu (jedna transakcija).
    Ostale nesačuvane izmene na ekranu ostaju i čuvaju se tek na „Sačuvaj“. */
-async function edExtractPage(key){
+/* v115: Izdvoji ceka „Sacuvaj“ kao i sve ostalo na ekranu stranica; „Odbaci izmene“ ga ponistava */
+function edExtractPage(key){
   if(!ed || !ed.item || ed.busy) return;
-  const pg = ed.pages.find(p=>p.key === key);
-  if(!pg || !pg.file) return;
-  const item = ed.item;
-  const origIdx = item.pages.findIndex(p=>p.file === pg.file);
-  if(origIdx < 0 || item.pages.length < 2) return;
-  ed.busy = true;
-  try{
-    const rest = item.pages.filter(p=>p.file !== pg.file).map(p=>({file:p.file}));
-    await db2UpdatePages(item, rest, item.name, [{file:pg.file, name:t('pgPartName', {name:item.name, n:origIdx+1}), deleted:false}]);
-    if(ed){ ed.pages = ed.pages.filter(p=>p !== pg); }
-    render();
-    refreshModalAfterEdit(item);
-    toast(t('pgExtracted'));
-  }catch(e){ console.error(e); toast(t('saveErr')); }
-  if(ed){ ed.busy = false; renderPageEditor(); }
+  const i = ed.pages.findIndex(p=>p.key === key);
+  const pg = ed.pages[i];
+  if(!pg || !pg.file || ed.pages.length < 2) return;
+  const n = ed.item.pages.findIndex(p=>p.file === pg.file) + 1;
+  (ed.extract = ed.extract || []).push({file:pg.file, n:n > 0 ? n : i + 1});
+  ed.pages.splice(i, 1);
+  ed.dirty = true;
+  renderPageEditor();
+  toast(t('pgExtractLater'));
 }
 
 /* Prevlačenje preko ručke (isti način kao kod albuma) */
@@ -8681,13 +8678,15 @@ document.getElementById('pgSave').onclick = async ()=>{
       }
     }else{
       const item = ed.item;
-      const det = await db2UpdatePages(item, ed.pages.map(p=>p.file ? {file:p.file} : {blob:p.blob, thumbBlob:p.thumbBlob, w:p.w, h:p.h}), name, [], {validUntil: ed.validUntil || null, validNote: ed.validUntil ? (ed.validNote || null) : null});
+      const ext = (ed.extract || []).map(x=>({file:x.file, name:t('pgPartName', {name, n:x.n}), deleted:false}));
+      const det = await db2UpdatePages(item, ed.pages.map(p=>p.file ? {file:p.file} : {blob:p.blob, thumbBlob:p.thumbBlob, w:p.w, h:p.h}), name, ext, {validUntil: ed.validUntil || null, validNote: ed.validUntil ? (ed.validNote || null) : null});
       markExpSeen(item);
       ed.dirty = false;
       requestClose();
       render();
       refreshModalAfterEdit(item);
-      toast(det.length ? t('pgSavedTrash') : t('pgSaved', {n:item.pages.length}));
+      const nDel = det.filter(d=>d.deletedAt).length, nExt = det.length - nDel;
+      toast(nDel && nExt ? t('pgSavedBoth') : nDel ? t('pgSavedTrash') : nExt ? t('pgSavedExt') : t('pgSaved', {n:item.pages.length}));
     }
   }catch(e){
     console.error(e);
