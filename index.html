@@ -868,6 +868,16 @@ html[data-theme="ponoc"]{
 .modal-count-row{ display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:8px; }
 .modal-count-row:not(:has(:not(:empty))){ display:none; }
 .modal-count-row .modal-position{ margin:0; font-size:17px; letter-spacing:1.5px; color:var(--ink-dim); }
+.modal-count-row .modal-date{ font-family:var(--font-ui); font-size:14px; color:var(--ink-faint); white-space:nowrap; }
+.modal-count-row .modal-position:not(:empty) + .modal-date{ margin-left:-4px; }
+.modal-count-row .modal-position:not(:empty) + .modal-date::before{ content:'\00b7\00a0'; }
+.modal-count-row .modal-date:empty{ display:none; }
+/* v130: olovka u desnom uglu reda sa nazivom; naziv u sredini, sa obe strane prazno mesto */
+#modalBg .modal-cap-row{ position:relative; padding:0 50px; min-height:40px; }
+#modalBg .modal-cap-row .modal-ren{ position:absolute; right:0; top:50%; transform:translateY(-50%); width:40px; height:40px; }
+#modalBg .modal-cap-row .modal-caption{ font-size:17px; color:var(--ink); }
+/* v130: ispod slike — bez senke i bez gornjeg razmaka, sidro je vrh */
+#modalBg .modal-info.below-img{ bottom:auto; padding-top:0; background:none; }
 .modal-count-row .modal-page-no{ margin:0; font-size:14px; padding:4px 11px; border-radius:12px; }
 [data-theme="ponoc"] .modal-page-no{ background:var(--g-grad); }
 .modal-info{ text-align:center; }
@@ -2146,7 +2156,7 @@ body:not(.in-album) .mark-row{ height:46px; box-sizing:border-box; border-top:1p
   <div class="modal-inner">
     <div class="modal-frame" id="modalFrame"><img id="modalImg" src=""><div class="modal-load" id="modalLoad" hidden></div><div class="modal-file" id="modalFile" hidden><div class="mf-ico" id="mfIco"></div><div class="mf-kind" id="mfKind"></div><div class="mf-meta" id="mfMeta"></div><div class="mf-note" id="mfNote"></div><button class="mf-open" id="mfOpen" type="button"></button></div></div>
     <div class="modal-info">
-      <div class="modal-count-row"><div class="modal-position" id="modalPosition"></div><span class="modal-page-no" id="modalPageNo"></span></div>
+      <div class="modal-count-row"><div class="modal-position" id="modalPosition"></div><span class="modal-date" id="modalDate"></span><span class="modal-page-no" id="modalPageNo"></span></div>
       <div class="modal-cap-row"><div class="modal-caption" id="modalCaption"></div><button class="modal-ren" id="modalRename" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg></button></div>
       <div class="modal-exp-row is-empty" id="modalExpRow"><span class="modal-exp-line" id="modalExpLine" role="button"></span><button class="modal-ren modal-exp-edit" id="modalExpEdit" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg></button></div>
       <div class="modal-exp-note" id="modalExpNote"></div>
@@ -2712,6 +2722,27 @@ function itemWhen(item){
 function itemDay(item){ const d = new Date(item.ts || Date.now()); const y = d.getFullYear(); return d.getDate() + '.' + (d.getMonth() + 1) + '.' + (y === new Date().getFullYear() ? '' : String(y).slice(-2) + '.'); }
 function itemAutoWord(item){ return t(item.type === 'image' ? 'autoImg' : 'autoDoc'); }
 /* naziv za prikaz u jednom redu (pregled, korpa, AI): „Slika · 6.10.2026. 12:34“ */
+/* v130: u pregledu naziv bez vremena (automatsko ime = samo „Slika“), datum sivo iza brojača; vreme se vidi u preimenovanju */
+function setModalCaption(item){
+  const a = autoNameParts(item.name);
+  modalCaption.textContent = a ? itemAutoWord(item) + a.tail : item.name;
+  const d = document.getElementById('modalDate'); if(d) d.textContent = itemDay(item);
+  requestAnimationFrame(placeModalInfo);
+}
+/* v130: red sa brojačem i nazivom stoji odmah ispod stvarne donje ivice slike, kad ima mesta; inače dole kao ranije */
+function placeModalInfo(){
+  const info = document.querySelector('#modalBg .modal-info'); if(!info) return;
+  info.classList.remove('below-img'); info.style.top = '';
+  if(!modalBg.classList.contains('open') || !zmActive() || _zm.s > 1) return;
+  const c = zmContent(); if(!c) return;
+  const fr = modalFrame.getBoundingClientRect();
+  const imgBottom = fr.top + c.oy + c.ch;
+  const defTop = info.getBoundingClientRect().top + (parseFloat(getComputedStyle(info).paddingTop) || 0);
+  info.classList.add('below-img');
+  const top = imgBottom + 12, h = info.offsetHeight;
+  if(top < defTop - 4 && top + h <= window.innerHeight) info.style.top = top + 'px';
+  else info.classList.remove('below-img');
+}
 function itemLabel(item){
   const a = autoNameParts(item.name);
   return a ? itemAutoWord(item) + a.tail + ' · ' + itemWhen(item) : item.name;
@@ -4281,7 +4312,7 @@ async function renameItem(item, name, ts){
   revealItem(item.id);
   if(modalBg.classList.contains('open') && modalItemId === item.id){
     currentGalleryIndex = currentGalleryItems.findIndex(i=>i.id === item.id);
-    modalCaption.textContent = itemLabel(item);
+    setModalCaption(item);
   }
   toast(t('renDone'));
   return true;
@@ -6428,7 +6459,7 @@ function showModalItem(item, page){
   }
   fullUrlFor(item, pg).then(u=>{ if(req === _modalReq){ fullShown = true; modalImg.src = u; } })
     .catch(e=>{ console.error(e); if(req === _modalReq) toast(t('fileMissing')); });
-  modalCaption.textContent = itemLabel(item);
+  setModalCaption(item);
   const total = currentGalleryItems.length;
   const showNav = (total > 1 && currentGalleryIndex >= 0) || n > 1;
   document.getElementById('modalPrev').hidden = !showNav;
@@ -6472,7 +6503,7 @@ function showModalFile(item){
   document.getElementById('mfNote').textContent = why ? t(why === 'locked' ? 'pdfLocked' : 'pdfBroken') : '';
   document.getElementById('modalFile').hidden = false;
   document.getElementById('modalDelete').setAttribute('aria-label', t('delFileLbl'));
-  modalCaption.textContent = itemLabel(item);
+  setModalCaption(item);
   const total = currentGalleryItems.length;
   const showNav = total > 1 && currentGalleryIndex >= 0;
   document.getElementById('modalPrev').hidden = !showNav;
@@ -6557,7 +6588,7 @@ function showModalPdf(item, page){
   modalBg.classList.add('is-file', 'is-pdfview');
   document.getElementById('modalFile').hidden = true;
   document.getElementById('modalDelete').setAttribute('aria-label', t('delFileLbl'));
-  modalCaption.textContent = itemLabel(item);
+  setModalCaption(item);
   updateModalExp(item);
   const known = pdfKnownTotal(item);
   const want = (page < 0) ? (known ? known - 1 : -1) : (page || 0);
@@ -6818,6 +6849,7 @@ let _zmMoved = false, _zmPinched = false;
 let _tapTimer = null, _tapLast = null;
 function zmActive(){ return !(modalBg.classList.contains('is-file') && !modalBg.classList.contains('is-pdfview')); }
 function zmApply(anim){
+  if((_zm.s > 1) !== !!zmApply._z){ zmApply._z = _zm.s > 1; requestAnimationFrame(placeModalInfo); }
   modalImg.classList.toggle('zm-anim', !!anim);
   modalBg.classList.toggle('zoomed', _zm.s > 1);
   modalImg.style.transform = (_zm.s === 1 && !_zm.tx && !_zm.ty) ? '' : 'translate(' + _zm.tx + 'px,' + _zm.ty + 'px) scale(' + _zm.s + ')';
@@ -6943,6 +6975,8 @@ modalBg.addEventListener('touchend', (e)=>{
     _tapTimer = setTimeout(()=>{ _tapTimer = null; _tapLast = null; modalBg.classList.toggle('ui-hidden'); }, 280);
   }
 });
+modalImg.addEventListener('load', ()=>requestAnimationFrame(placeModalInfo));
+window.addEventListener('resize', ()=>{ if(modalBg.classList.contains('open')) placeModalInfo(); });
 modalBg.addEventListener('touchcancel', ()=>{ if(_zmG && _zmG.mode === 'swipe'){ _zmG = null; swSettle(); } });
 /* PDF: kad je stranica uvećana, iscrta se oštrija (jednom, za tu stranicu) */
 let _zmHi = null;   /* {key, url} */
@@ -7819,7 +7853,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 129</div>'+
+    '<div class="settings-hint set-build">verzija 130</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
@@ -9740,7 +9774,7 @@ async function aiApply(item, ch){
   render();
   currentGalleryIndex = currentGalleryItems.findIndex(i=>i.id === item.id);
   if(modalBg.classList.contains('open') && modalItemId === item.id){
-    modalCaption.textContent = itemLabel(item);
+    setModalCaption(item);
     updateModalExp(item);
   }
   toast(t('aiApplied', {list:done.join(', ')}));
