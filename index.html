@@ -443,6 +443,9 @@
   .modal-inner{position:absolute;inset:0;}
   .modal-frame{position:absolute;inset:0;padding:0;border:none;background:none;overflow:hidden;touch-action:none;}
   #modalImg{transform-origin:0 0;will-change:transform;}
+  /* v136: susedna slika koja ulazi zalepljena uz trenutnu dok se prevlači */
+  .modal-peek{pointer-events:none;will-change:transform;}
+  .modal-peek[hidden]{display:none;}
   #modalImg.zm-anim{transition:transform .22s ease;}
   .modal-bg.zoomed .modal-nav{opacity:0;pointer-events:none;}
   .modal-frame img{width:100%;height:100%;object-fit:contain;display:block;
@@ -2196,6 +2199,7 @@ body:not(.in-album) .mark-row{ height:46px; box-sizing:border-box; border-top:1p
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
   </button>
   <div class="modal-inner">
+    <div class="modal-frame modal-peek" id="modalPeek" hidden aria-hidden="true"><img alt=""></div>
     <div class="modal-frame" id="modalFrame"><img id="modalImg" src=""><div class="modal-load" id="modalLoad" hidden></div><div class="modal-file" id="modalFile" hidden><div class="mf-ico" id="mfIco"></div><div class="mf-kind" id="mfKind"></div><div class="mf-meta" id="mfMeta"></div><div class="mf-note" id="mfNote"></div><button class="mf-open" id="mfOpen" type="button"></button></div></div>
     <div class="modal-info">
       <div class="modal-count-row"><div class="modal-position" id="modalPosition"></div><span class="modal-date" id="modalDate"></span><span class="modal-page-no" id="modalPageNo"></span></div>
@@ -6502,6 +6506,7 @@ let _modalReq = 0;        /* poslednji zahtev za prikaz (stariji odgovori se odb
 function setModalSrc(u){ if(u) modalImg.src = u; else modalImg.removeAttribute('src'); }
 function showModalItem(item, page){
   modalItemId = item.id;
+  setTimeout(peekPrep, 0);   /* v136: pripremi susede za traku */
   modalPathSet(item);
   modalBg.classList.toggle('no-share', fileNoShare(item));
   zmReset(false);
@@ -6879,15 +6884,96 @@ function modalCanNav(dir){
   return n > 1;
 }
 let _swBusy = false;
-function swDrag(dx){ modalFrame.style.transition = 'none'; modalFrame.style.transform = dx ? 'translate3d(' + dx + 'px,0,0)' : ''; }
+function swDrag(dx){
+  modalFrame.style.transition = 'none'; modalFrame.style.transform = dx ? 'translate3d(' + dx + 'px,0,0)' : '';
+  if(dx && modalCanNav(dx < 0 ? 1 : -1)) peekShow(dx < 0 ? 1 : -1, dx); else peekHide();
+}
 function swSettle(){
   modalFrame.style.transition = 'transform .22s cubic-bezier(.2,.8,.2,1)';
   modalFrame.style.transform = '';
+  if(!modalPeek.hidden && _peek.dir){
+    const W = modalFrame.clientWidth || window.innerWidth;
+    modalPeek.style.transition = 'transform .22s cubic-bezier(.2,.8,.2,1)';
+    modalPeek.style.transform = 'translate3d(' + (_peek.dir * (W + SW_GAP)) + 'px,0,0)';
+    setTimeout(()=>{ if(!_swBusy) peekHide(); }, 240);
+  }
 }
+/* ---------- v136: susedna slika („traka“) — sledeća ulazi odmah za trenutnom, kao u galeriji telefona ---------- */
+const modalPeek = document.getElementById('modalPeek'), modalPeekImg = modalPeek.querySelector('img');
+const SW_GAP = 16;
+const _peek = {req:0, url:{}};   /* url[1] = sledeća, url[-1] = prethodna */
+function modalNeighbor(dir){
+  const cur = currentGalleryIndex >= 0 ? currentGalleryItems[currentGalleryIndex] : items.find(i=>i.id === modalItemId);
+  if(!cur) return null;
+  const n = modalTotal(cur);
+  if(dir > 0 && modalPage < n - 1) return {item:cur, page:modalPage + 1, inner:true};
+  if(dir < 0 && modalPage > 0) return {item:cur, page:modalPage - 1, inner:true};
+  if(currentGalleryItems.length >= 2 && currentGalleryIndex >= 0){
+    const it = currentGalleryItems[(currentGalleryIndex + dir + currentGalleryItems.length) % currentGalleryItems.length];
+    return {item:it, page:dir > 0 ? 0 : modalTotal(it) - 1, inner:false};
+  }
+  if(n > 1) return {item:cur, page:dir > 0 ? 0 : n - 1, inner:true};
+  return null;
+}
+/* adresa slike suseda: sličica odmah, puna slika kad stigne. Stranice unutar PDF-a i kartice fajlova nemaju sliku (stari način). */
+function peekPrep(){
+  const req = ++_peek.req;
+  _peek.url = {};
+  [1, -1].forEach(dir=>{
+    const nb = modalNeighbor(dir);
+    if(!nb || !nb.item) return;
+    const it = nb.item, pg = nb.page;
+    let thumbP = null, fullP = null;
+    if(it.type === 'pdf' && pdfCanView(it)){
+      if(nb.inner || pg !== 0 || !it.thumb) return;
+      _peek.url[dir] = it.thumb;
+      return;
+    }
+    if(it.type !== 'image' || !(it.pages || [])[pg]) return;
+    thumbP = pageThumbUrl(it, pg); fullP = fullUrlFor(it, pg);
+    thumbP.then(u=>{ if(req === _peek.req && u && !_peek.url[dir]) _peek.url[dir] = u; }).catch(()=>{});
+    fullP.then(u=>{ if(req === _peek.req && u){ _peek.url[dir] = u; if(_peek.dir === dir) modalPeekImg.src = u; } }).catch(()=>{});
+  });
+}
+function peekShow(dir, dx){
+  const u = _peek.url[dir];
+  if(!u){ peekHide(); return false; }
+  const W = modalFrame.clientWidth || window.innerWidth;
+  if(_peek.dir !== dir || modalPeekImg.getAttribute('src') !== u){ _peek.dir = dir; modalPeekImg.src = u; }
+  modalPeek.hidden = false;
+  modalPeek.style.transition = 'none';
+  modalPeek.style.transform = 'translate3d(' + (dx + dir * (W + SW_GAP)) + 'px,0,0)';
+  return true;
+}
+function peekHide(){ modalPeek.hidden = true; modalPeek.style.transition = ''; modalPeek.style.transform = ''; _peek.dir = 0; }
 function swSlideNav(dir, fromDx){
   if(_swBusy){ modalNav(dir); return; }
   _swBusy = true;
   const W = modalFrame.clientWidth || window.innerWidth;
+  /* traka: trenutna izlazi, a susedna (već zalepljena uz nju) dolazi na mesto — istom brzinom */
+  if(peekShow(dir, fromDx || 0)){
+    const left = W + SW_GAP - Math.abs(fromDx || 0);
+    const ms = Math.round(Math.max(140, Math.min(260, left * 0.55)));
+    void modalPeek.offsetWidth;
+    const ease = 'transform ' + ms + 'ms cubic-bezier(.25,.8,.3,1)';
+    modalFrame.style.transition = ease; modalPeek.style.transition = ease;
+    modalFrame.style.transform = 'translate3d(' + (-dir * (W + SW_GAP)) + 'px,0,0)';
+    modalPeek.style.transform = 'translate3d(0,0,0)';
+    setTimeout(()=>{
+      modalFrame.style.visibility = 'hidden';
+      modalNav(dir);
+      modalFrame.style.transition = 'none'; modalFrame.style.transform = '';
+      void modalFrame.offsetWidth;
+      /* nova slika se pokaže tek kad se iscrta, pa tek onda nestaje traka (bez treptaja) */
+      let shown = false;
+      const reveal = ()=>{ if(shown) return; shown = true; modalFrame.style.visibility = ''; modalFrame.style.transition = ''; requestAnimationFrame(()=>{ peekHide(); _swBusy = false; }); };
+      if(modalBg.classList.contains('is-file') && !modalBg.classList.contains('is-pdfview')) reveal();
+      else if(modalImg.complete && modalImg.naturalWidth) reveal();
+      else modalImg.addEventListener('load', reveal, {once:true});
+      setTimeout(reveal, 350);
+    }, ms);
+    return;
+  }
   const done = ()=>{
     modalNav(dir);
     swDrag(dir * W * 0.35);                               /* nova stranica kreće sa druge strane */
@@ -7061,7 +7147,7 @@ function zmSettled(){
   }).catch(e=>console.error(e));
 }
 
-const closeModal = ()=>{ modalBg.classList.remove('open'); zmReset(false); clearDeepLink(); exitModalFullscreen(); };
+const closeModal = ()=>{ modalBg.classList.remove('open'); zmReset(false); peekHide(); modalFrame.style.visibility = ''; _swBusy = false; clearDeepLink(); exitModalFullscreen(); };
 document.getElementById('modalClose').onclick = ()=>requestClose();
 modalBg.onclick = (e)=>{ if(e.target === modalBg){ requestClose(); } };
 
@@ -7920,7 +8006,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 135</div>'+
+    '<div class="settings-hint set-build">verzija 136</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
