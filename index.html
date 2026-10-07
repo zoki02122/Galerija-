@@ -1475,10 +1475,17 @@ html[data-theme="ponoc"]{
   display:inline-flex; align-items:center; gap:5px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
 .ws-jump svg{ flex:none; }
 .ws-jump .pj-nm{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.set-header .ws-jump + .ws-hd-info{ margin-left:8px; }
-.set-header .ws-jump + .ur-btns{ margin-left:6px; }
+#aiWs .set-header.has-jump .ws-hd-info{ margin-left:6px; }
+/* Popuni šablon: uz prečicu se naslov skloni (ispod je kartica sa nazivom šablona), da naziv dokumenta stane */
+#wsFill .set-header.has-jump #wfTitle{ display:none; }
+#wsFill .set-header.has-jump .ws-jump{ flex:1 1 auto; max-width:none; margin-left:4px; }
+#wsFill .set-header.has-jump .ws-jump .pj-nm{ flex:1 1 auto; }
 .wr-saved-bar .ws-jump{ height:32px; margin-left:auto; }
-.set-header .set-title{ min-width:0; }
+#aiWs #wsTitle{ flex:0 0 auto; }   /* naziv „AI radionica“ se nikad ne skraćuje; skraćuje se naziv u prečici */
+#aiWs .set-header.has-jump .ws-res-pill .wrp-full, #aiWs .set-header.has-jump .ws-res-pill .wrp-short{ display:none; }   /* uz prečicu Rezultat je samo ✦ */
+#aiWs .set-header.has-jump .ws-res-pill{ width:40px; padding:0; justify-content:center; flex:none; margin:0 0 0 6px; }
+#aiWs .set-header.has-jump .ws-jump{ flex:1 1 auto; min-width:7em; max-width:none; margin-left:6px; justify-content:flex-start; }
+#aiWs .set-header.has-jump .ws-jump .pj-nm{ flex:1 1 auto; }
 .ur-btns{ display:flex; align-items:center; gap:2px; flex:none; margin-left:4px; }
 .ur-btn{ width:42px; height:42px; border:none; background:none; color:var(--ink); border-radius:12px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; }
 .ur-btn:active{ background:var(--surface); }
@@ -9921,6 +9928,7 @@ function wsJumpPaint(){
     slot.innerHTML = '';
     const b = wsJumpBtn();
     if(b) slot.appendChild(b);
+    const hd = slot.closest('.set-header'); if(hd) hd.classList.toggle('has-jump', !!b);
   });
 }
 function wsJumpSet(item){ _wsJump = item ? {id:item.id} : null; wsJumpPaint(); }
