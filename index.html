@@ -12595,18 +12595,21 @@ async function pdfTextModel(bytes, maxPages){
       const tr = it.transform, fs = Math.hypot(tr[2], tr[3]) || it.height || 10;
       if(Math.abs(tr[1]) > 0.01 * fs) return;   /* zakošen tekst (vodeni žig) se preskače */
       const st = tc.styles && tc.styles[it.fontName];
-      its.push({s:it.str, x:tr[4], y:tr[5], w:it.width || 0, fs, fam:(st && st.fontFamily) || 'sans-serif'});
+      its.push({s:it.str, x:tr[4], y:tr[5], w:it.width || 0, fs, fam:(st && st.fontFamily) || 'sans-serif', fn:it.fontName || ''});
     });
     its.sort((a, b)=>(b.y - a.y) || (a.x - b.x));
     const pl = [];
+    /* v135: red = deo teksta u istoj visini BEZ velikog razmaka; kolone obrasca (uplatnica, račun) ostaju posebni redovi */
+    its.sort((a, b)=>a.x - b.x);
     its.forEach(it=>{
-      if(!it.s) return;
-      let L = pl.find(l=>Math.abs(l.y - it.y) < 0.45 * Math.min(l.fs, it.fs));
-      if(!L){ L = {p:pn - 1, y:it.y, fs:it.fs, fam:it.fam, its:[]}; pl.push(L); }
+      if(!it.s || !it.s.trim() && !pl.length) return;
+      let L = pl.find(l=>Math.abs(l.y - it.y) < 0.45 * Math.min(l.fs, it.fs) && it.x - l.xe < 2.2 * Math.max(l.fs, it.fs) && it.x >= l.xs - 0.5 * it.fs);
+      if(!L){ L = {p:pn - 1, y:it.y, fs:it.fs, fam:it.fam, its:[], xs:it.x, xe:it.x + it.w}; pl.push(L); }
       L.its.push(it);
+      L.xe = Math.max(L.xe, it.x + it.w);
       if(it.fs > L.fs) L.fs = it.fs;
     });
-    pl.sort((a, b)=>b.y - a.y);
+    pl.sort((a, b)=>(Math.abs(b.y - a.y) > 0.45 * Math.min(a.fs, b.fs) ? b.y - a.y : a.xs - b.xs));
     pl.forEach(L=>{
       L.its.sort((a, b)=>a.x - b.x);
       let txt = '', ch = [];
@@ -12618,7 +12621,7 @@ async function pdfTextModel(bytes, maxPages){
         /* širina svakog znaka: izmerena istom vrstom slova pa svedena na stvarnu širinu dela (slova nisu iste širine) */
         const arr = Array.from(it.s), mw = arr.map(c=>pdfCharW(c, it.fam)), sum = mw.reduce((q, v)=>q + v, 0) || 1;
         let xx = it.x;
-        arr.forEach((c, i)=>{ const w = it.w * mw[i] / sum; txt += c; ch.push(/\s/.test(c) ? null : {x:xx, w}); xx += w; });
+        arr.forEach((c, i)=>{ const w = it.w * mw[i] / sum; txt += c; ch.push(/\s/.test(c) ? null : {x:xx, w, y:it.y, fs:it.fs, fn:it.fn}); xx += w; });
       });
       const xs = ch.filter(Boolean);
       if(!xs.length) return;
@@ -12637,11 +12640,12 @@ async function pdfTextModel(bytes, maxPages){
   let cur = null;
   lines.forEach((l, k)=>{
     const pv = k ? lines[k - 1] : null;
-    const brk = !cur || pv.p !== l.p || (pv.y - l.y) > 1.75 * Math.max(pv.fs, l.fs) || Math.abs(pv.fs - l.fs) > 0.18 * l.fs ||
+    const brk = !cur || pv.p !== l.p || (pv.y - l.y) > 1.75 * Math.max(pv.fs, l.fs) || (pv.y - l.y) < 0.45 * l.fs || Math.abs(pv.fs - l.fs) > 0.18 * l.fs ||
+      Math.abs(pv.x0 - l.x0) > 2.5 * l.fs ||
       (pv.x1 < pageR.get(pv.p) - 4 * pv.fs && /[.:;!?]\s*$/.test(pv.txt)) || /^\s*([•\-–]|\d+[.)])\s/.test(l.txt);
     if(brk){ cur = {raw:[], head:false, fs:l.fs}; paras.push(cur); }
     else cur.raw.push({c:' ', i:null});
-    Array.from(l.txt).forEach((c, i)=>cur.raw.push({c, i:l.ch[i] ? {li:l.li, x:l.ch[i].x, w:l.ch[i].w} : null}));
+    Array.from(l.txt).forEach((c, i)=>cur.raw.push({c, i:l.ch[i] ? {li:l.li, x:l.ch[i].x, w:l.ch[i].w, y:l.ch[i].y, fs:l.ch[i].fs, fn:l.ch[i].fn} : null}));
   });
   /* isti zapis teksta kao kod Word-a: razmaci sabijeni, bez razmaka na krajevima */
   const out = [];
@@ -12708,11 +12712,26 @@ function pdfSnapX(ctx, x, y, w, h, fpx, snapA, snapB, tailW, words){
     if(!best) after.forEach(g=>{ if(!best || Math.abs(g[0] - bx2) < Math.abs(best[0] - bx2)) best = g; });
     if(best && Math.abs(best[0] - bx2) <= 1.6 * fpx) nw = (x0 + best[0] + 1 - tw) - nx;
   }
+  /* podatak nikad ne prelazi veliku prazninu (granica okvira ili kolone): tu se brisanje zaustavlja */
+  const wide = gaps.find(g=>g[0] > ax + delta + 1 && g[1] - g[0] >= Math.round(1.3 * fpx));
+  if(wide && x0 + wide[0] + 1 < nx + nw) nw = (x0 + wide[0] + 1) - nx;
   /* visina velikih slova originala (za istu veličinu novog teksta) */
   let top = -1;
   const ca = Math.max(0, Math.round(nx) - x0), cb = Math.min(n, Math.round(nx + nw) - x0);
   for(let r = 0; r < hh && top < 0; r++) for(let c = ca; c < cb; c++){ const i = (r * n + c) * 4; if(d[i] + d[i + 1] + d[i + 2] < bgL - 150){ top = yy + r; break; } }
-  return {x:nx, w:Math.max(2, nw), top};
+  /* slobodno mesto desno: do prvog mastila posle podatka (i crteža, npr. „RSD“ u okviru), najviše 14 visina slova */
+  let free = Infinity;
+  try{
+    const sx = Math.round(nx + nw) + Math.round(0.3 * fpx), ex = Math.min(W, sx + Math.round(14 * fpx));
+    if(ex > sx){
+      const d2 = ctx.getImageData(sx, yy, ex - sx, hh).data, n2 = ex - sx;
+      for(let c = 0; c < n2 && free === Infinity; c++) for(let r = 0; r < hh; r++){ const i = (r * n2 + c) * 4; if(d2[i] + d2[i + 1] + d2[i + 2] < bgL - 150){ free = sx + c - Math.round(0.25 * fpx); break; } }
+    }
+  }catch(e){}
+  return {x:nx, w:Math.max(2, nw), top, free};
+}
+function pdfFontObj(page, fn){
+  try{ return page.commonObjs.has(fn) ? page.commonObjs.get(fn) : null; }catch(e){ return null; }
 }
 const PDF_FILL_W = 1650;   /* širina stranice u pikselima (~200 dpi za A4) */
 async function tplFillPdf(tp, vals, title){
@@ -12731,7 +12750,8 @@ async function tplFillPdf(tp, vals, title){
       const segs = new Map();
       for(let c = o.a; c < o.b && c < pa.ch.length; c++){
         const ci = pa.ch[c]; if(!ci) continue;
-        const g = segs.get(ci.li) || {li:ci.li, a:ci.x, b:ci.x + ci.w, last:c, first:c};
+        const g = segs.get(ci.li) || {li:ci.li, a:ci.x, b:ci.x + ci.w, last:c, first:c, y:ci.y, fs:ci.fs, fn:ci.fn};
+        if(ci.fs > g.fs) g.fs = ci.fs;
         g.a = Math.min(g.a, ci.x); g.b = Math.max(g.b, ci.x + ci.w); g.last = c;
         segs.set(ci.li, g);
       }
@@ -12747,9 +12767,9 @@ async function tplFillPdf(tp, vals, title){
           right = Math.max(r, g.b);
         }
         const firstC = n ? -1 : o.a, sp = (c)=>c < 0 || c >= pa.text.length || pa.text[c] === ' ';
-        edits.push({li:g.li, a:g.a, b:g.b, right, text:n ? '' : wfValue(vals, o.k),
+        edits.push({li:g.li, a:g.a, b:g.b, y:g.y, fs:g.fs, fn:g.fn, right, text:n ? '' : wfValue(vals, o.k),
           snapA:n ? true : sp(firstC - 1), snapB:true,
-          words:pa.text.slice(g.first, g.last + 1).split(' ').length,
+          words:pa.text.slice(g.first, g.last + 1).split(' ').length, old:pa.text.slice(g.first, g.last + 1),
           tail:n === list.length - 1 ? (pa.text.slice(o.b).match(/^[^ ]*/) || [''])[0] : '', fam:m.lines[g.li].fam});
       });
     });
@@ -12766,9 +12786,10 @@ async function tplFillPdf(tp, vals, title){
     ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
     await page.render({canvasContext:ctx, viewport:vp}).promise;
     edits.filter(e=>m.lines[e.li].p === p).forEach(e=>{
-      const L = m.lines[e.li];
+      const L0 = m.lines[e.li], L = {y:e.y, fs:e.fs, fam:L0.fam};
+      const fo = e.fn ? pdfFontObj(page, e.fn) : null, bold = !!(fo && (fo.bold || fo.black || /bold|black|heavy|semibold|demi/i.test(String(fo.name || fo.loadedName || ''))));
       const pad = 0.08 * L.fs;
-      const r = vp.convertToViewportRectangle([e.a - pad, L.y - 0.28 * L.fs, e.b + pad, L.y + 0.92 * L.fs]);
+      const r = vp.convertToViewportRectangle([e.a - pad, L.y - 0.23 * L.fs, e.b + pad, L.y + 0.92 * L.fs]);
       let x = Math.min(r[0], r[2]), w = Math.abs(r[2] - r[0]);
       const y = Math.min(r[1], r[3]), h = Math.abs(r[3] - r[1]);
       const col = pdfSampleColors(ctx, x, y, w, h);
@@ -12781,20 +12802,21 @@ async function tplFillPdf(tp, vals, title){
       ctx.fillRect(x - 1, y - 1, w + 2, h + 2);
       if(!e.text) return;
       const base = [x + 0.08 * L.fs * sc, vp.convertToViewportPoint(e.a, L.y)[1]];
-      const avail = Math.max(w, (e.right - e.a) * sc - 0.25 * L.fs * sc);
+      const avail = Math.max(w, Math.min((e.right - e.a) * sc - 0.25 * L.fs * sc, fx.free - x));
       const fam = /mono/i.test(L.fam) ? 'monospace' : (/serif/i.test(L.fam) && !/sans/i.test(L.fam) ? 'serif' : 'sans-serif');
+      const wt = bold ? 'bold ' : '';
       let px = L.fs * sc;
-      ctx.font = px + 'px ' + fam;
+      ctx.font = wt + px + 'px ' + fam;
       /* ista visina slova kao u originalu (slova na telefonu nisu ista kao u PDF-u) */
       if(inkTop >= 0){
-        const want = base[1] - inkTop, have = ctx.measureText('H').actualBoundingBoxAscent;
-        if(want > 0 && have > 0){ const k = Math.max(0.85, Math.min(1.3, want / have)); px *= k; ctx.font = px + 'px ' + fam; }
+        const want = base[1] - inkTop, have = ctx.measureText(e.old || 'H').actualBoundingBoxAscent;   /* ista slova kao stari podatak */
+        if(want > 0 && have > 0){ const k = Math.max(0.85, Math.min(1.3, want / have)); px *= k; ctx.font = wt + px + 'px ' + fam; }
       }
       let tw = ctx.measureText(e.text).width;
       /* prvo se slova malo suze (do 82 %), pa tek onda smanjuju — da podatak bude iste visine kao okolni tekst */
-      if(tw * 0.82 > avail){ px = Math.max(px * 0.55, px * avail / (tw * 0.82)); ctx.font = px + 'px ' + fam; tw = ctx.measureText(e.text).width; }
+      if(tw * 0.82 > avail){ px = Math.max(px * 0.55, px * avail / (tw * 0.82)); ctx.font = wt + px + 'px ' + fam; tw = ctx.measureText(e.text).width; }
       if(tw > avail + 8){
-        const extra = (e.right - e.b) * sc;   /* ni najmanja slova ne staju: proširi podlogu do ivice */
+        const extra = Math.min((e.right - e.b) * sc, fx.free - (x + w));   /* ni najmanja slova ne staju: proširi podlogu do ivice */
         if(extra > 0){ ctx.fillStyle = col.bg; ctx.fillRect(x + w, y - 1, Math.min(extra, tw - w), h + 2); }
       }
       ctx.fillStyle = col.ink;
