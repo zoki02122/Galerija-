@@ -3198,6 +3198,7 @@ const I18N = {
     wfAiNone: 'AI nije pronašao podatke za prazna polja. · {usd}',
     wfHeadWord: 'Word · polja: {n}', wfHeadPdf: 'PDF · polja: {n}',
     wfLeadWord: 'Upiši podatke u polja ili ih prepusti AI-ju: Slikaj, Galerija ili Arhiva gore (npr. lična karta), pa „Popuni pomoću AI“ dole. AI upisuje samo u prazna polja. Nastaje nov Word sa izgledom originala; šablon ostaje isti.',
+    wfLeadPdfOrig: 'Upiši podatke u polja ili ih prepusti AI-ju: Slikaj, Galerija ili Arhiva gore (npr. lična karta), pa „Popuni pomoću AI“ dole. AI upisuje samo u prazna polja. Nastaje nov PDF sa izgledom originala: menjaju se samo podaci. Šablon ostaje isti.',
     wfLeadPdf: 'Upiši podatke u polja ili ih prepusti AI-ju: Slikaj, Galerija ili Arhiva gore (npr. lična karta), pa „Popuni pomoću AI“ dole. AI upisuje samo u prazna polja. Nastaje nov PDF; šablon ostaje isti.',
     wfPh: 'npr. {ex}', wfNoFields: 'Ovaj šablon nema polja.',
     wfMake: 'Napravi dokument', wfStCount: 'Popunjeno {k} od {n} polja.', wfStDone: 'Napravljeno: „{name}“.',
@@ -3720,6 +3721,7 @@ const I18N = {
     wfAiNone: 'AI did not find data for the empty fields. · {usd}',
     wfHeadWord: 'Word · fields: {n}', wfHeadPdf: 'PDF · fields: {n}',
     wfLeadWord: 'Enter the data in the fields or leave it to AI: Camera, Gallery or Arhiva at the top (e.g. an ID card), then “Fill in with AI” at the bottom. AI writes only into empty fields. A new Word file is made with the original layout; the template stays the same.',
+    wfLeadPdfOrig: 'Enter the data in the fields or leave it to AI: Camera, Gallery or Arhiva at the top (e.g. an ID card), then “Fill in with AI” below. AI writes only into empty fields. A new PDF is made with the look of the original: only the data change. The template stays the same.',
     wfLeadPdf: 'Enter the data in the fields or leave it to AI: Camera, Gallery or Arhiva at the top (e.g. an ID card), then “Fill in with AI” at the bottom. AI writes only into empty fields. A new PDF is made; the template stays the same.',
     wfPh: 'e.g. {ex}', wfNoFields: 'This template has no fields.',
     wfMake: 'Make document', wfStCount: '{k} of {n} fields filled in.', wfStDone: 'Made: “{name}”.',
@@ -10966,6 +10968,12 @@ async function tplSaveFromWs(name, resIn){
         const blob = await getFileBlob(ws.src);
         if(blob && blob.size <= TPL_FILE_MAX) file = {name:String(ws.src.name || 'sablon.docx'), ext:'docx', size:blob.size, b64:await blobToB64(blob)};
       }catch(e){ console.error(e); }
+    }else if(ws.src && ws.src.type === 'pdf' && !(await wsPdfIsScan(ws.src))){
+      /* v134: šablon od PDF-a sa tekstom pamti original, da se popunjava u izgledu originala */
+      try{
+        const blob = await getFileBlob(ws.src);
+        if(blob && blob.size <= TPL_FILE_MAX) file = {name:String(ws.src.name || 'sablon.pdf'), ext:'pdf', size:blob.size, b64:await blobToB64(blob)};
+      }catch(e){ console.error(e); }
     }
     /* verzija 90: uvek nov šablon; od sačuvanog se preuzimaju samo Word original i izvor */
     const tpl = {id:'tp' + now.toString(36) + Math.random().toString(36).slice(2, 7),
@@ -11195,8 +11203,8 @@ async function wsDelTpl(tp){
 /* vraćanje iz kopije: dodaj šablone koji nedostaju, osveži ako je u kopiji novija izmena (ni obrisan se ne vraća ako je brisanje novije) */
 const TPL_FILE_MAX = 8 * 1048576;
 function tplFileOk(f){
-  if(!f || typeof f !== 'object' || f.ext !== 'docx' || typeof f.b64 !== 'string' || !f.b64 || f.b64.length > TPL_FILE_MAX * 1.4) return null;
-  return {name:String(f.name || 'sablon.docx').slice(0, 200), ext:'docx', size:Number(f.size) || 0, b64:f.b64};
+  if(!f || typeof f !== 'object' || (f.ext !== 'docx' && f.ext !== 'pdf') || typeof f.b64 !== 'string' || !f.b64 || f.b64.length > TPL_FILE_MAX * 1.4) return null;
+  return {name:String(f.name || ('sablon.' + f.ext)).slice(0, 200), ext:f.ext, size:Number(f.size) || 0, b64:f.b64};
 }
 async function tplMergeBackup(list){
   if(!Array.isArray(list) || !list.length) return 0;
@@ -11440,7 +11448,18 @@ const WS_TPL_SCHEMA = {
 };
 function wsTplLocal(src){
   const ext = String((src && src.ext) || '').toLowerCase();
+  if(src && src.type === 'pdf') return true;   /* v134: PDF sa tekstom (sken proverava wsPdfIsScan) */
   return !!src && src.type === 'doc' && (ext === 'docx' || ext === 'xlsx' || ext === 'xls');
+}
+/* v134: PDF bez sloja teksta (sken, fotografija sačuvana kao PDF) još ide starim putem (AI čita) — do v135 */
+const _pdfScan = new Map();
+async function wsPdfIsScan(src){
+  if(!src || src.type !== 'pdf') return false;
+  if(_pdfScan.has(src.id)) return _pdfScan.get(src.id);
+  let scan = true;
+  try{ const m = await pdfTextModel(new Uint8Array(await (await getFileBlob(src)).arrayBuffer()), 6); scan = m.chars < 40 * Math.min(m.pages.length, 6); }catch(e){ console.error(e); }
+  _pdfScan.set(src.id, scan);
+  return scan;
 }
 /* originalni tekst dokumenta kao blokovi (naslov, pasus, spisak, tabela), bez ikakve izmene reči */
 async function wsTplBlocks(src){
@@ -11455,7 +11474,10 @@ async function wsTplBlocks(src){
     const n = Math.min(12, Math.max.apply(null, rows.map(r=>r.length)));
     out.push({type:'table', rows:rows.map(r=>{ r = r.slice(0, n); while(r.length < n) r.push(''); return r; })});
   };
-  if(ext === 'docx'){
+  if(src.type === 'pdf'){
+    const m = await pdfTextModel(new Uint8Array(await blob.arrayBuffer()));
+    m.paras.forEach(pa=>out.push({type:pa.head ? 'heading' : 'paragraph', text:pa.text}));
+  }else if(ext === 'docx'){
     if(typeof mammoth === 'undefined') throw aiError('aiErrFile');
     const r = await mammoth.convertToHtml({arrayBuffer:await blob.arrayBuffer()});
     const d = new DOMParser().parseFromString('<body>' + r.value + '</body>', 'text/html');
@@ -11679,7 +11701,7 @@ async function wsTplMake(src, signal, model, req){
   const ap = wsTplApply(blocks, found.concat(wsTplPairs(blocks)));
   /* naslov iz prvog naslova dokumenta (ime fajla često sadrži ime osobe); VELIKA SLOVA → „Ugovor o zakupu stana“ */
   const h1 = ap.blocks.find(b=>b.type === 'heading' && b.text.indexOf('[') < 0);
-  let base = h1 ? h1.text : String(src.name || '').replace(/\.(docx|xlsx|xls)$/i, '');
+  let base = h1 ? h1.text : String(src.name || '').replace(/\.(docx|xlsx|xls|pdf)$/i, '');
   if(h1 && base === base.toUpperCase() && base !== base.toLowerCase()) base = base.charAt(0) + base.slice(1).toLowerCase();
   const res = {title:(t('wsTaskTemplate') + ' – ' + base).slice(0, 120), blocks:ap.blocks,
     note:t(ap.fields.length ? 'wsTplGenNote' : 'wsTplGenNone', {n:ap.fields.length, p:chunks.length}) + (ap.miss ? ' ' + t('wsTplGenMiss', {n:ap.miss}) : ''), tpl:true};
@@ -11806,7 +11828,7 @@ async function wsRun(task){
   else wsBody.scrollTop = 0;
   try{
     let res, usage, rmodel = model, schemaRej = '';
-    if(task.kind === 'template' && wsTplLocal(src)){
+    if(task.kind === 'template' && wsTplLocal(src) && !(await wsPdfIsScan(src))){
       /* verzija 79: šablon na način Generatora — AI vraća samo podatke, tekst ostaje originalan */
       const g = await wsTplMake(src, ctrl.signal, model, req);
       if(!g || req !== _wsReq) return;
@@ -12542,6 +12564,190 @@ function wdRewrite(u, text){
   ts.forEach((x, i)=>wdSetText(x, i ? '' : text));
   return true;
 }
+/* ---------- v134: PDF sa tekstom — tekst sa položajem svakog znaka, popunjavanje u izgledu originala ---------- */
+function tplIsWord(tp){ return !!(tp && tp.file && tp.file.ext === 'docx'); }
+function tplIsPdf(tp){ return !!(tp && tp.file && tp.file.ext === 'pdf'); }
+function pdfJsReady(){
+  if(typeof pdfjsLib === 'undefined') throw aiError('aiErrFile');
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+/* Čita PDF i pravi pasuse: {text, head, ch:[{li, x, w}|null]} — ch prati svaki znak teksta (null = razmak između reči ili redova).
+   lines: [{p, y, fs, fam, x0, x1, next:[x početka sledećih znakova]}]. Isti PDF uvek daje iste pasuse (šablon i popunjavanje se sparuju po tekstu). */
+async function pdfTextModel(bytes, maxPages){
+  pdfJsReady();
+  const pdf = await pdfjsLib.getDocument({data:bytes}).promise;
+  const n = Math.min(pdf.numPages, maxPages || 40);
+  const pages = [], lines = [];
+  let chars = 0;
+  for(let pn = 1; pn <= n; pn++){
+    const page = await pdf.getPage(pn);
+    const tc = await page.getTextContent();
+    const its = [];
+    tc.items.forEach(it=>{
+      if(!it || typeof it.str !== 'string' || !it.transform) return;
+      const tr = it.transform, fs = Math.hypot(tr[2], tr[3]) || it.height || 10;
+      if(Math.abs(tr[1]) > 0.01 * fs) return;   /* zakošen tekst (vodeni žig) se preskače */
+      const st = tc.styles && tc.styles[it.fontName];
+      its.push({s:it.str, x:tr[4], y:tr[5], w:it.width || 0, fs, fam:(st && st.fontFamily) || 'sans-serif'});
+    });
+    its.sort((a, b)=>(b.y - a.y) || (a.x - b.x));
+    const pl = [];
+    its.forEach(it=>{
+      if(!it.s) return;
+      let L = pl.find(l=>Math.abs(l.y - it.y) < 0.45 * Math.min(l.fs, it.fs));
+      if(!L){ L = {p:pn - 1, y:it.y, fs:it.fs, fam:it.fam, its:[]}; pl.push(L); }
+      L.its.push(it);
+      if(it.fs > L.fs) L.fs = it.fs;
+    });
+    pl.sort((a, b)=>b.y - a.y);
+    pl.forEach(L=>{
+      L.its.sort((a, b)=>a.x - b.x);
+      let txt = '', ch = [];
+      L.its.forEach((it, k)=>{
+        if(k){
+          const pv = L.its[k - 1], gap = it.x - (pv.x + pv.w);
+          if(gap > 0.18 * it.fs && !/\s$/.test(txt) && !/^\s/.test(it.s)){ txt += ' '; ch.push(null); }
+        }
+        const arr = Array.from(it.s), cw = arr.length ? it.w / arr.length : 0;
+        arr.forEach((c, i)=>{ txt += c; ch.push(/\s/.test(c) ? null : {x:it.x + cw * i, w:cw}); });
+      });
+      const xs = ch.filter(Boolean);
+      if(!xs.length) return;
+      L.txt = txt; L.ch = ch; L.x0 = xs[0].x; L.x1 = xs[xs.length - 1].x + xs[xs.length - 1].w;
+      L.li = lines.length; lines.push(L);
+      chars += xs.length;
+    });
+    const vp = page.getViewport({scale:1});
+    pages.push({w:vp.width, h:vp.height});
+  }
+  /* pasusi: redovi istog lika zaredom; nov pasus posle velikog razmaka, druge veličine slova ili kratkog reda */
+  const paras = [];
+  const fsAll = lines.map(l=>l.fs).sort((a, b)=>a - b), fsMed = fsAll.length ? fsAll[fsAll.length >> 1] : 10;
+  const pageR = new Map();
+  lines.forEach(l=>pageR.set(l.p, Math.max(pageR.get(l.p) || 0, l.x1)));
+  let cur = null;
+  lines.forEach((l, k)=>{
+    const pv = k ? lines[k - 1] : null;
+    const brk = !cur || pv.p !== l.p || (pv.y - l.y) > 1.75 * Math.max(pv.fs, l.fs) || Math.abs(pv.fs - l.fs) > 0.18 * l.fs ||
+      pv.x1 < pageR.get(pv.p) - 4 * pv.fs || /^\s*([•\-–]|\d+[.)])\s/.test(l.txt);
+    if(brk){ cur = {raw:[], head:false, fs:l.fs}; paras.push(cur); }
+    else cur.raw.push({c:' ', i:null});
+    Array.from(l.txt).forEach((c, i)=>cur.raw.push({c, i:l.ch[i] ? {li:l.li, x:l.ch[i].x, w:l.ch[i].w} : null}));
+  });
+  /* isti zapis teksta kao kod Word-a: razmaci sabijeni, bez razmaka na krajevima */
+  const out = [];
+  paras.forEach(pa=>{
+    let text = '', ch = [];
+    pa.raw.forEach(r=>{
+      const sp = /[\s\u00a0]/.test(r.c);
+      if(sp){ if(!text || text.endsWith(' ')) return; text += ' '; ch.push(null); }
+      else { text += r.c; ch.push(r.i); }
+    });
+    if(text.endsWith(' ')){ text = text.slice(0, -1); ch.pop(); }
+    if(!text) return;
+    out.push({text, ch, head:pa.fs >= 1.25 * fsMed && text.length < 120});
+  });
+  return {pdf, pages, lines, paras:out, chars};
+}
+/* boja podloge (najčešća svetlina na ivici pravougaonika) i boja slova (najtamniji deo unutra) */
+function pdfSampleColors(ctx, x, y, w, h){
+  const W = ctx.canvas.width, H = ctx.canvas.height;
+  const cl = (v, m)=>Math.max(0, Math.min(m - 1, Math.round(v)));
+  const ring = [], pick = (px, py)=>{ const d = ctx.getImageData(cl(px, W), cl(py, H), 1, 1).data; ring.push([d[0], d[1], d[2]]); };
+  for(let i = 0; i <= 12; i++){ const xx = x + w * i / 12; pick(xx, y - 2); pick(xx, y + h + 2); }
+  for(let i = 0; i <= 4; i++){ const yy = y + h * i / 4; pick(x - 2, yy); pick(x + w + 2, yy); }
+  ring.sort((a, b)=>(a[0] + a[1] + a[2]) - (b[0] + b[1] + b[2]));
+  const bg = ring[Math.floor(ring.length * 0.7)];
+  let ink = [20, 20, 20], best = 999;
+  try{
+    const d = ctx.getImageData(cl(x, W), cl(y, H), Math.max(1, Math.min(Math.round(w), W - cl(x, W))), Math.max(1, Math.min(Math.round(h), H - cl(y, H)))).data;
+    for(let i = 0; i < d.length; i += 16){ const v = d[i] + d[i + 1] + d[i + 2]; if(v < best){ best = v; ink = [d[i], d[i + 1], d[i + 2]]; } }
+  }catch(e){}
+  if(best > 600) ink = [20, 20, 20];
+  return {bg:'rgb(' + bg.join(',') + ')', ink:'rgb(' + ink.join(',') + ')'};
+}
+const PDF_FILL_W = 1650;   /* širina stranice u pikselima (~200 dpi za A4) */
+async function tplFillPdf(tp, vals, title){
+  const m = await pdfTextModel(b64ToBytes(tp.file.b64));
+  const T = wdTplUnits(tp);
+  const norm = (x)=>String(x || '').replace(/\s+/g, ' ').trim();
+  const edits = [];   /* {li, a, b (x u PDF jedinicama), text (samo u prvom delu), right} */
+  let lost = 0, i = 0;
+  T.forEach(tu=>{
+    let k = -1;
+    for(let q = i; q < m.paras.length; q++) if(norm(m.paras[q].text) === tu.exp){ k = q; break; }
+    if(k < 0){ lost += tu.occ.length; return; }
+    i = k + 1;
+    const pa = m.paras[k];
+    tu.occ.forEach(o=>{
+      const segs = new Map();
+      for(let c = o.a; c < o.b && c < pa.ch.length; c++){
+        const ci = pa.ch[c]; if(!ci) continue;
+        const g = segs.get(ci.li) || {li:ci.li, a:ci.x, b:ci.x + ci.w, last:c};
+        g.a = Math.min(g.a, ci.x); g.b = Math.max(g.b, ci.x + ci.w); g.last = c;
+        segs.set(ci.li, g);
+      }
+      if(!segs.size){ lost++; return; }
+      const list = Array.from(segs.values());
+      list.forEach((g, n)=>{
+        const L = m.lines[g.li];
+        /* desno sme do sledećeg znaka u istom redu, a na kraju reda do desne ivice teksta stranice */
+        let right = null;
+        for(let c = g.last + 1; c < pa.ch.length; c++){ const ci = pa.ch[c]; if(ci && ci.li === g.li){ right = ci.x; break; } if(ci) break; }
+        if(right == null){
+          const r = Math.max.apply(null, m.lines.filter(x=>x.p === L.p).map(x=>x.x1));
+          right = Math.max(r, g.b);
+        }
+        edits.push({li:g.li, a:g.a, b:g.b, right, text:n ? '' : wfValue(vals, o.k)});
+      });
+    });
+  });
+  const pages = [];
+  let thumb = null;
+  for(let p = 0; p < m.pages.length; p++){
+    const page = await m.pdf.getPage(p + 1);
+    const vp0 = page.getViewport({scale:1});
+    const sc = PDF_FILL_W / vp0.width, vp = page.getViewport({scale:sc});
+    const cv = document.createElement('canvas');
+    cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+    const ctx = cv.getContext('2d', {willReadFrequently:true});
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
+    await page.render({canvasContext:ctx, viewport:vp}).promise;
+    edits.filter(e=>m.lines[e.li].p === p).forEach(e=>{
+      const L = m.lines[e.li];
+      const r = vp.convertToViewportRectangle([e.a, L.y - 0.28 * L.fs, e.b, L.y + 0.92 * L.fs]);
+      const x = Math.min(r[0], r[2]), y = Math.min(r[1], r[3]), w = Math.abs(r[2] - r[0]), h = Math.abs(r[3] - r[1]);
+      const col = pdfSampleColors(ctx, x, y, w, h);
+      ctx.fillStyle = col.bg;
+      ctx.fillRect(x - 1, y - 1, w + 2, h + 2);
+      if(!e.text) return;
+      const base = vp.convertToViewportPoint(e.a, L.y);
+      const avail = Math.max(w, (e.right - e.a) * sc - 0.25 * L.fs * sc);
+      const fam = /mono/i.test(L.fam) ? 'monospace' : (/serif/i.test(L.fam) && !/sans/i.test(L.fam) ? 'serif' : 'sans-serif');
+      let px = L.fs * sc;
+      ctx.font = px + 'px ' + fam;
+      let tw = ctx.measureText(e.text).width;
+      if(tw > avail){ px = Math.max(px * 0.55, px * avail / tw); ctx.font = px + 'px ' + fam; tw = ctx.measureText(e.text).width; }
+      if(tw > avail + 8){
+        const extra = (e.right - e.b) * sc;   /* ni najmanja slova ne staju: proširi podlogu do ivice */
+        if(extra > 0){ ctx.fillStyle = col.bg; ctx.fillRect(x + w, y - 1, Math.min(extra, tw - w), h + 2); }
+      }
+      ctx.fillStyle = col.ink;
+      ctx.textBaseline = 'alphabetic';
+      ctx.save();
+      if(tw > avail) ctx.setTransform(Math.max(0.72, avail / tw), 0, 0, 1, base[0] * (1 - Math.max(0.72, avail / tw)), 0);
+      ctx.fillText(e.text, base[0], base[1]);
+      ctx.restore();
+    });
+    const jb = await new Promise(res=>cv.toBlob(res, 'image/jpeg', 0.9));
+    if(!jb) throw new Error('JPEG');
+    if(!p){ try{ const t0 = await makeThumb(jb); thumb = t0.tblob || null; }catch(e){ console.error(e); } }
+    pages.push(await pdfPageData(jb));
+    cv.width = cv.height = 0;
+  }
+  try{ m.pdf.destroy(); }catch(e){}
+  return {blob:buildPdfBlob(title || tp.name || '', pages), thumb, lost};
+}
 async function tplFillDocx(tp, vals){
   const o = await wdOpen(new Blob([b64ToBytes(tp.file.b64)]));
   const body = o.body;
@@ -12588,7 +12794,7 @@ function wfOpen(tp){
   head.querySelector('b').textContent = tp.name || tp.title || '';
   ['Cam', 'Gal', 'Arh'].forEach(k=>{ document.getElementById('wfAi' + k + 'Lbl').textContent = t('wfAi' + k); });
   /* verzija 91: obaveštenje sa uputstvom (pravilo 12): otvoreno pri ulasku, strelica ga sakriva */
-  iboxSet(document.getElementById('wfLead'), t(tp.file ? 'wfLeadWord' : 'wfLeadPdf'));
+  iboxSet(document.getElementById('wfLead'), t(tplIsWord(tp) ? 'wfLeadWord' : (tplIsPdf(tp) ? 'wfLeadPdfOrig' : 'wfLeadPdf')));
   iboxAttach(document.getElementById('wfLead'), document.getElementById('wfInfoBtn'));
   const list = document.getElementById('wfList');
   list.innerHTML = '';
@@ -12732,7 +12938,7 @@ function wfOpenSave(){
   document.getElementById('wsSaveTitle').textContent = t('wfSaveTitle');
   document.getElementById('wsSaveNameLbl').textContent = t('wsSaveNameLbl');
   document.getElementById('wsSaveAlbLbl').textContent = t('wsSaveAlbLbl');
-  document.getElementById('wsSaveHint').textContent = t(tp.file ? 'wfSaveHintWord' : 'wfSaveHintPdf');
+  document.getElementById('wsSaveHint').textContent = t(tplIsWord(tp) ? 'wfSaveHintWord' : 'wfSaveHintPdf');
   document.getElementById('wsSaveOk').textContent = t('wfSaveOk');
   document.getElementById('wsSaveAlbLbl').hidden = false;
   document.getElementById('wsSaveAlbWrap').hidden = false;
@@ -12763,7 +12969,13 @@ async function wfMakeDoc(name, albumId){
     const text = normalizeSr(wsPlain(res));
     const item = {id:newItemId(), name, ts:Date.now(), category:albumId || null, derivedFrom:tp.sourceId || null};
     let page, lost = 0;
-    if(tp.file){
+    if(tplIsPdf(tp)){
+      /* v134: PDF sa izgledom originala — stari podaci prekriveni, novi upisani na isto mesto */
+      const r = await tplFillPdf(tp, wf.vals, name);
+      lost = r.lost;
+      item.type = 'pdf';
+      page = {blob:r.blob, thumbBlob:r.thumb, w:0, h:0};
+    }else if(tplIsWord(tp)){
       const r = await tplFillDocx(tp, wf.vals);
       lost = r.lost;
       item.type = 'doc';
