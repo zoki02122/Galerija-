@@ -11,7 +11,7 @@
 <meta name="theme-color" id="themeColor" content="#0d0e10">
 <script>
 /* tema se postavlja pre prvog iscrtavanja, da ne bi "bljesnula" klasična */
-(function(){ try{ var t = localStorage.getItem('galerija:theme'); var bars = {banka:'#0E2747', crna:'#1B1B1E', ponoc:'#000000', koza:'#1F3A2E'}; if(t && bars[t]){ document.documentElement.setAttribute('data-theme', t); var m = document.getElementById('themeColor'); if(m) m.setAttribute('content', bars[t]); } }catch(e){} })();
+(function(){ try{ var t = localStorage.getItem('galerija:theme'); var bars = {banka:'#0E2747', crna:'#000000', ponoc:'#000000', koza:'#1F3A2E'}; if(t && bars[t]){ document.documentElement.setAttribute('data-theme', t); var m = document.getElementById('themeColor'); if(m) m.setAttribute('content', bars[t]); } }catch(e){} })();
 </script>
 <link rel="apple-touch-icon" href="icon-192.png">
 <style id="ugradjeniFontovi">
@@ -649,15 +649,16 @@ html[data-theme="banka"]{
 }
 html[data-theme="crna"]{
   color-scheme:dark;
-  --bg:#1B1B1E; --surface:#26262A; --surface-2:#303035; --line:#34343A; --line-soft:#2C2C31;
+  --bg:#000000; --surface:#26262A; --surface-2:#303035;   /* v121: crna pozadina kao ponoć */ --line:#34343A; --line-soft:#2C2C31;
   --ink:#EEEAE1; --ink-dim:#8E8A82; --ink-faint:#8E8A82;
   --brass:#CDB27A; --brass-soft:#D9C08C; --brass-glow:rgba(205,178,122,.2); --danger:#D0604A;
   --accent:#CDB27A; --on-accent:#1B1B1E; --on-brass:#1B1B1E; --title-color:#F1ECE1;
-  --page-bg:var(--bg); --scrim:rgba(0,0,0,.6); --scrim-strong:rgba(27,27,30,.97);
-  --mark-bg:rgba(27,27,30,.82); --nav-bg:rgba(38,38,42,.85);
+  --page-bg:var(--bg); --scrim:rgba(0,0,0,.6); --scrim-strong:rgba(0,0,0,.97);
+  --mark-bg:rgba(0,0,0,.7);
+  --card-shine:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,0) 55%); --nav-bg:rgba(38,38,42,.85);
   --shadow-drag:0 14px 28px -8px rgba(0,0,0,.8); --corner-shadow:drop-shadow(0 1px 2px rgba(0,0,0,.4));
   --danger-soft:rgba(208,96,74,.14); --danger-line:rgba(208,96,74,.4);
-  --overlay-fade:linear-gradient(to top, rgba(27,27,30,.95), rgba(27,27,30,0));
+  --overlay-fade:linear-gradient(to top, rgba(0,0,0,.95), rgba(0,0,0,0));
   --font-ui:-apple-system,"Segoe UI",Roboto,sans-serif;
   --font-num:"TR Serif",serif; --font-title:"TR Serif",serif;
   --font-name:var(--font-ui); --name-style:normal;
@@ -764,7 +765,10 @@ html[data-theme="ponoc"]{
 [data-theme="crna"] .sort-seg{ background:#26262A; border:1px solid #34343A; }
 [data-theme="crna"] .sort-btn{ color:#8E8A82; }
 [data-theme="crna"] .sort-btn.active{ background:#3A3A40; color:#D9C08C; }
-[data-theme="crna"] .folder-tile .ftile-cover, [data-theme="crna"] .folder-tile-row, [data-theme="crna"] .folder-tile-wide, [data-theme="crna"] .thumb-box{ border:1px solid #2E2E33; }
+/* v121: kartice kao u ponoći (blag sjaj odozgo, hladniji sivi ton, senka) na crnoj pozadini */
+[data-theme="crna"] .folder-tile .ftile-cover, [data-theme="crna"] .folder-tile-row, [data-theme="crna"] .folder-tile-wide, [data-theme="crna"] .thumb-box, [data-theme="crna"] .home-inbox{
+  background:var(--card-shine), #1E2024; border:1px solid #34363C; box-shadow:0 3px 12px rgba(0,0,0,.4); }
+[data-theme="crna"] .folder-tile-row .ftile-cover, [data-theme="crna"] .folder-tile-wide .fw-icon{ background:#000; }
 [data-theme="crna"] .date-label{ color:#D9C08C; font-family:var(--font-num); font-size:15px; font-weight:600; padding:0 4px 0; display:flex; align-items:center; gap:10px; }
 [data-theme="crna"] .date-label::after{ content:""; flex:1; height:1px; background:linear-gradient(90deg,rgba(205,178,122,.45),transparent); }
 [data-theme="crna"] .add-sq{ background:linear-gradient(160deg,#E4CD98,#B8995C); color:#1B1B1E; }
@@ -7551,7 +7555,7 @@ function saveBackupInterval(v){
 /* ---------- TEME (iste kao u aplikaciji Troškovi) ---------- */
 const THEMES = [
   {id:'banka',    name:'Privatno bankarstvo', bar:'#0E2747', bg:'#F6F5F1', card:'linear-gradient(140deg,#16365F,#0A1C34)', num:'#D9B46A'},
-  {id:'crna',     name:'Crna kartica',        bar:'#1B1B1E', bg:'#1B1B1E', card:'linear-gradient(150deg,#34343A,#111113)', num:'#CDB27A'},
+  {id:'crna',     name:'Crna kartica',        bar:'#000000', bg:'#000000', card:'linear-gradient(150deg,#34343A,#111113)', num:'#CDB27A'},
   {id:'ponoc',    name:'Ponoć',               bar:'#000000', bg:'#000000', card:'#1E2024', num:'#6FC48A'},
   {id:'koza',     name:'Kožni rokovnik',      bar:'#1F3A2E', bg:'#EFE8D8', card:'#1F3A2E', num:'#7A2331'},
   {id:'klasicna', name:'Klasična',            bar:'#0d0e10', bg:'#0d0e10', card:'#1f2124', num:'#c9a355'}
@@ -7614,7 +7618,7 @@ function renderSettingsTiles(){
     settingsTile('🗑', 'obriši sve podatke', 'trajno briše sve slike, dokumente i albume', 'wipeAllData()', 'danger')+
     '<div class="settings-hint" id="storageInfo"></div>'+
     '<div class="settings-hint" id="persistInfo"></div>'+
-    '<div class="settings-hint set-build">verzija 120</div>'+
+    '<div class="settings-hint set-build">verzija 121</div>'+
     '</div>';
   settingsScreen.scrollTop = 0;
   updateStorageInfo();
