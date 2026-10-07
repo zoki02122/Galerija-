@@ -1522,7 +1522,7 @@ html[data-theme="ponoc"]{
 .we-p.we-ed, .we-p.we-new{ border-left-color:var(--brass); background:color-mix(in srgb, var(--brass) 8%, transparent); }
 /* v131: AI izmena u Izmeni Word */
 .we-ask{ position:relative; margin:0 0 8px; }
-.we-ask .we-ask-ic{ position:absolute; left:13px; bottom:14px; color:var(--brass); pointer-events:none; display:flex; }
+.we-ask .we-ask-ic{ position:absolute; left:13px; bottom:18px; color:var(--brass); pointer-events:none; display:flex; }
 .we-ask textarea{ padding-left:40px !important; }
 .we-p.we-ai, .we-cell.we-ai{ border:1.5px solid var(--brass); background:color-mix(in srgb, var(--brass) 14%, transparent); }
 .we-p.we-ai{ border-left-width:3px; }
@@ -1705,19 +1705,20 @@ body:has(#aiWs.open) .toast{ bottom:calc(190px + env(safe-area-inset-bottom)); }
 .ws-status{ font-size:11.5px; color:var(--ink-dim); text-align:center; margin:0 0 8px; line-height:1.4; overflow-wrap:anywhere; }
 .ws-status.saved{ color:var(--brass); font-weight:600; }
 .ws-ask{ display:flex; gap:8px; align-items:flex-end; }
-.ws-ask textarea{ flex:1; min-width:0; height:46px; min-height:46px; max-height:120px; resize:none; box-sizing:border-box; border:1px solid var(--line);
+.ws-ask textarea{ flex:1; min-width:0; height:54px; min-height:54px; max-height:120px; resize:none; box-sizing:border-box; border:1px solid var(--line);
   border-radius:12px; background:var(--surface-2); color:var(--ink); font-family:var(--font-ui); font-size:15px; line-height:1.4; padding:12px; margin:0; display:block; }
 .ws-ask textarea::placeholder{ color:var(--ink-dim); opacity:1; }
 .ws-ask textarea:disabled{ opacity:.55; }
-.ws-send{ width:46px; height:46px; flex:none; border:none; border-radius:12px; background:var(--accent); color:var(--on-accent);
+.ws-send{ width:54px; height:54px; box-sizing:border-box; flex:none; border:1px solid var(--line); border-radius:16px; background:var(--surface-2); color:var(--brass);
   cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; }
+.ws-send:active{ background:var(--brass-glow); }
+#wsStatus[hidden]{ display:none; }
 .ws-send:disabled{ opacity:.4; cursor:default; }
 .ws-btns{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; }
 .ws-btns .pg-btn{ height:46px; }
 .ws-btns .pg-save{ grid-column:auto; height:46px; font-size:15px; }
 .ws-btns .pg-btn:disabled{ opacity:.4; cursor:default; }
 .ws-btns .pg-save svg{ color:inherit; }
-[data-theme="ponoc"] .ws-send{ background:var(--g-grad); box-shadow:var(--g-shine); }
 [data-theme="ponoc"] .ws-bar{ background:#000; }
 [data-theme="ponoc"] .ws-ask textarea{ background:#000; }
 .sum-right{ display:flex; align-items:center; gap:8px; flex:none; }
@@ -2334,10 +2335,10 @@ body:not(.in-album) .mark-row{ height:46px; box-sizing:border-box; border-top:1p
     <div class="ws-orig-card" id="wsOrigCard"><button type="button" class="ws-orig-x" id="wsOrigX"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg></button><div class="ws-orig" id="wsOrig"></div></div>
   </div></div>
   <div class="ws-bar"><div class="ws-bar-in">
-    <div class="ws-status" id="wsStatus"></div>
+    <div class="ws-status" id="wsStatus" hidden></div>
     <div class="ws-ask">
       <textarea id="wsAsk" rows="1" maxlength="1000" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="send"></textarea>
-      <button type="button" class="ws-send" id="wsSend"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg></button>
+      <button type="button" class="ws-send" id="wsSend"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3L10 14"></path><path d="M21 3l-6.5 18-3.5-7-7-3.5z"></path></svg></button>
     </div>
   </div></div>
 </div>
@@ -2356,7 +2357,7 @@ body:not(.in-album) .mark-row{ height:46px; box-sizing:border-box; border-top:1p
     <div class="ws-status" id="wrStatus"></div>
     <div class="ws-ask" id="wrAskRow">
       <textarea id="wrAsk" rows="1" maxlength="1000" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="send"></textarea>
-      <button type="button" class="ws-send" id="wrSend"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg></button>
+      <button type="button" class="ws-send" id="wrSend"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3L10 14"></path><path d="M21 3l-6.5 18-3.5-7-7-3.5z"></path></svg></button>
     </div>
     <div class="ws-btns">
       <button type="button" class="pg-btn" id="wsShare"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"></circle><circle cx="6" cy="12" r="2.6"></circle><circle cx="18" cy="19" r="2.6"></circle><line x1="8.3" y1="10.7" x2="15.7" y2="6.3"></line><line x1="8.3" y1="13.3" x2="15.7" y2="17.7"></line></svg><span id="wsShareLbl"></span></button>
@@ -2408,7 +2409,7 @@ body:not(.in-album) .mark-row{ height:46px; box-sizing:border-box; border-top:1p
     <div class="ws-ask we-ask">
       <span class="we-ask-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"></path><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"></path></svg></span>
       <textarea id="weAsk" rows="1" maxlength="1000" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="send"></textarea>
-      <button type="button" class="ws-send" id="weSend"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg></button>
+      <button type="button" class="ws-send" id="weSend"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3L10 14"></path><path d="M21 3l-6.5 18-3.5-7-7-3.5z"></path></svg></button>
     </div>
     <button type="button" class="pg-btn pg-save wf-make" id="weSave"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11l3 3v13H5z"></path><path d="M8 4v5h7V4"></path><rect x="8" y="13" width="8" height="5"></rect></svg><span id="weSaveLbl"></span></button>
   </div></div>
@@ -11279,7 +11280,7 @@ document.getElementById('wrSend').onclick = ()=>wsSendAsk('res');
 });
 function wsFitAsk(el){
   el.style.height = '';
-  if(el.value) el.style.height = Math.min(120, Math.max(46, el.scrollHeight + 2)) + 'px';
+  if(el.value) el.style.height = Math.min(120, Math.max(54, el.scrollHeight + 2)) + 'px';
 }
 
 function wsLangName(){ return appLang() === 'en' ? 'English' : 'Serbian (Latin script)'; }
