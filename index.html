@@ -9960,7 +9960,13 @@ document.getElementById('modalAi').setAttribute('aria-label', t('wsTitle'));
 const aiWs = document.getElementById('aiWs');
 const wsBody = document.getElementById('wsBody');
 const wsAsk = document.getElementById('wsAsk');
+/* v139: bez dokumenta dodir na polje otvara izbor dokumenta. Otvara se na „click“ (kad se prst podigne), ne na pointerdown:
+   prozor otvoren dok je prst još na ekranu dobijao je taj isti dodir na pozadinu i odmah se zatvarao (radio je samo dugi pritisak). */
 wsAsk.addEventListener('pointerdown', (e)=>{
+  if(!_ws || _ws.busy || _ws.src) return;
+  e.preventDefault(); wsAsk.blur();
+});
+wsAsk.addEventListener('click', (e)=>{
   if(!_ws || _ws.busy || _ws.src) return;
   e.preventDefault(); wsAsk.blur();
   wsPickDoc(()=>{ if(_ws && _ws.src) wsAsk.focus(); });
