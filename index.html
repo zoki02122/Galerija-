@@ -13106,7 +13106,7 @@ async function pdfTextModel(bytes, maxPages){
     /* v135: red = deo teksta u istoj visini BEZ velikog razmaka; kolone obrasca (uplatnica, račun) ostaju posebni redovi */
     its.sort((a, b)=>a.x - b.x);
     its.forEach(it=>{
-      if(!it.s || !it.s.trim()) return;   /* v143: prazan deo (razmak preko kolone) ne spaja redove; razmaci se dodaju po praznini */
+      if(!it.s || !it.s.trim() && (!pl.length || it.w > 2 * it.fs)) return;   /* v143: širok prazan deo (razmak preko kolone) ne spaja redove */
       let L = pl.find(l=>Math.abs(l.y - it.y) < 0.45 * Math.min(l.fs, it.fs) && it.x - l.xe < 2.2 * Math.max(l.fs, it.fs) && it.x >= l.xs - 0.5 * it.fs);
       if(!L){ L = {p:pn - 1, y:it.y, fs:it.fs, fam:it.fam, its:[], xs:it.x, xe:it.x + it.w}; pl.push(L); }
       L.its.push(it);
