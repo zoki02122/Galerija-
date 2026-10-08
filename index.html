@@ -12278,19 +12278,28 @@ function wsPickChosen(it){
 async function wsBuildPdf(res, srcName){
   const W = 1240, H = 1754, M = 104, FOOT = 64, CW = W - 2 * M, BOTTOM = H - M - FOOT;
   const FONT = 'Roboto, "Noto Sans", "Segoe UI", Arial, sans-serif';
+  /* v138: raspored se prvo proba bez crtanja. Ako bi na poslednjoj stranici ostalo samo malo teksta, sve se malo smanji (najviše na 85 %)
+     da stane na stranicu manje. Naslov ide sa početkom svog teksta, a pasus ne ostavlja jedan red sam na dnu ili na vrhu stranice. */
+  const layout = (k, real)=>{
+  const z = (v)=>Math.round(v * k);
   const canvases = [];
-  let ctx = null, y = 0;
+  let ctx = null, y = 0, nPages = 0;
+  const scratch = real ? null : document.createElement('canvas');
   const newPage = ()=>{
-    const c = document.createElement('canvas');
-    c.width = W; c.height = H;
-    ctx = c.getContext('2d');
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(0, 0, W, H);
+    nPages++;
+    if(real){
+      const c = document.createElement('canvas');
+      c.width = W; c.height = H;
+      ctx = c.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, W, H);
+      canvases.push(c);
+    }else ctx = scratch.getContext('2d');
     ctx.textBaseline = 'top';
-    canvases.push(c);
     y = M;
   };
-  const setFont = (px, bold)=>{ ctx.font = (bold ? '700 ' : '400 ') + px + 'px ' + FONT; };
+  const fill = (txt, x, yy)=>{ if(real) ctx.fillText(txt, x, yy); };
+  const setFont = (px, bold)=>{ ctx.font = (bold ? '700 ' : '400 ') + z(px) + 'px ' + FONT; };
   /* prelom teksta po rečima; predugačka reč se lomi po slovima */
   const wrap = (text, maxW)=>{
     const out = [];
@@ -12300,11 +12309,11 @@ async function wsBuildPdf(res, srcName){
       let line = '';
       words.forEach(w=>{
         while(ctx.measureText(w).width > maxW && w.length > 1){
-          let k = w.length - 1;
-          while(k > 1 && ctx.measureText(w.slice(0, k)).width > maxW) k--;
+          let q = w.length - 1;
+          while(q > 1 && ctx.measureText(w.slice(0, q)).width > maxW) q--;
           if(line){ out.push(line); line = ''; }
-          out.push(w.slice(0, k));
-          w = w.slice(k);
+          out.push(w.slice(0, q));
+          w = w.slice(q);
         }
         const tryL = line ? line + ' ' + w : w;
         if(ctx.measureText(tryL).width <= maxW) line = tryL;
@@ -12314,48 +12323,75 @@ async function wsBuildPdf(res, srcName){
     });
     return out;
   };
+  /* redovi jednog pasusa: bez jednog usamljenog reda na dnu ili na vrhu stranice */
   const lines = (arr, x, lh, color)=>{
-    arr.forEach(l=>{
+    let i = 0;
+    while(i < arr.length){
+      const left = arr.length - i;
+      const fit = Math.floor((BOTTOM - y) / lh);
+      if(fit < left && left > 1){
+        let take = fit;
+        if(take === 1 && y > M + 4) take = 0;
+        else if(left - take === 1 && take >= 2) take--;
+        for(let q = 0; q < take; q++, i++) drawLine(arr[i], x, lh, color);
+        const f = ctx.font; newPage(); ctx.font = f;
+        continue;
+      }
       if(y + lh > BOTTOM){ const f = ctx.font; newPage(); ctx.font = f; }
+      drawLine(arr[i], x, lh, color); i++;
+    }
+  };
+  const drawLine = (l, x, lh, color)=>{
+    if(real){
       ctx.fillStyle = color || '#111';
       ctx.fillText(l, x, y + (lh - parseInt(ctx.font.match(/(\d+)px/)[1], 10)) / 2);
-      y += lh;
-    });
+    }
+    y += lh;
+  };
+  /* koliko prostora traži početak bloka (za naslov koji ne sme ostati sam na dnu) */
+  const startH = (bl)=>{
+    if(!bl) return 0;
+    if(bl.type === 'table') return z(32) * 2 + 40;
+    setFont(27, false);
+    const n = bl.type === 'bullets' ? bl.items.reduce((s, it)=>s + wrap(it, CW - z(36)).length, 0) : wrap(bl.text, CW).length;
+    return Math.min(2, n) * z(39);
   };
   newPage();
   if(res.title){
     setFont(42, true);
-    lines(wrap(res.title, CW), M, 56, '#111');
-    y += 10;
-    ctx.fillStyle = '#b9b9b9';
-    ctx.fillRect(M, y, CW, 2);
-    y += 26;
+    lines(wrap(res.title, CW), M, z(56), '#111');
+    y += z(10);
+    if(real){ ctx.fillStyle = '#b9b9b9'; ctx.fillRect(M, y, CW, 2); }
+    y += z(26);
   }
-  res.blocks.forEach(b=>{
+  res.blocks.forEach((b, bi)=>{
     if(b.type === 'heading'){
+      if(y > M + 4) y += z(16);
       setFont(32, true);
-      if(y > M + 4) y += 16;
-      if(y + 44 * 2 > BOTTOM) newPage();
+      const hl = wrap(b.text, CW);
+      const need = hl.length * z(44) + z(6) + startH(res.blocks[bi + 1]);
+      if(y > M + 4 && y + need > BOTTOM) newPage();
       setFont(32, true);
-      lines(wrap(b.text, CW), M, 44, '#111');
-      y += 6;
+      lines(hl, M, z(44), '#111');
+      y += z(6);
     }else if(b.type === 'paragraph'){
       setFont(27, false);
-      lines(wrap(b.text, CW), M, 39, '#1a1a1a');
-      y += 14;
+      lines(wrap(b.text, CW), M, z(39), '#1a1a1a');
+      y += z(14);
     }else if(b.type === 'bullets'){
       setFont(27, false);
       b.items.forEach(it=>{
-        const ls = wrap(it, CW - 36);
-        if(y + 39 > BOTTOM){ newPage(); setFont(27, false); }
-        ctx.fillStyle = '#1a1a1a';
-        ctx.fillText('•', M + 4, y + 6);
-        lines(ls, M + 36, 39, '#1a1a1a');
-        y += 4;
+        const ls = wrap(it, CW - z(36));
+        /* kratka stavka (do 3 reda) se ne deli između stranica */
+        const need = (ls.length <= 3 ? ls.length : 2) * z(39);
+        if(y + need > BOTTOM){ newPage(); setFont(27, false); }
+        if(real){ ctx.fillStyle = '#1a1a1a'; ctx.fillText('•', M + z(4), y + z(6)); }
+        lines(ls, M + z(36), z(39), '#1a1a1a');
+        y += z(4);
       });
-      y += 10;
+      y += z(10);
     }else if(b.type === 'table'){
-      const n = b.rows[0].length, PAD = 10, LH = 32;
+      const n = b.rows[0].length, PAD = z(10), LH = z(32);
       setFont(23, false);
       /* širine kolona prema dužini sadržaja, svaka bar 70 px */
       const nat = [];
@@ -12376,24 +12412,35 @@ async function wsBuildPdf(res, srcName){
           newPage();
           if(!head){ drawRow(b.rows[0], true); }
         }
-        if(head){ ctx.fillStyle = '#ececec'; ctx.fillRect(M, y, CW, hRow); }
-        let x = M;
-        setFont(23, head);
-        ls.forEach((a, i)=>{
-          ctx.fillStyle = '#111';
-          a.forEach((l, k)=>ctx.fillText(l, x + PAD, y + PAD + k * LH + 4));
-          ctx.strokeStyle = '#9a9a9a';
-          ctx.lineWidth = 1.5;
-          ctx.strokeRect(x, y, cw[i], hRow);
-          x += cw[i];
-        });
+        if(real){
+          if(head){ ctx.fillStyle = '#ececec'; ctx.fillRect(M, y, CW, hRow); }
+          let x = M;
+          setFont(23, head);
+          ls.forEach((a, i)=>{
+            ctx.fillStyle = '#111';
+            a.forEach((l, q)=>ctx.fillText(l, x + PAD, y + PAD + q * LH + z(4)));
+            ctx.strokeStyle = '#9a9a9a';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(x, y, cw[i], hRow);
+            x += cw[i];
+          });
+        }
         y += hRow;
       };
       if(y + 3 * LH > BOTTOM) newPage();
       b.rows.forEach((r, i)=>drawRow(r, i === 0));
-      y += 20;
+      y += z(20);
     }
   });
+  if(scratch) scratch.width = scratch.height = 0;
+  return {canvases, n:nPages, lastFill:(y - M) / (BOTTOM - M)};
+  };
+  let k = 1;
+  const t1 = layout(1, false);
+  if(t1.n > 1 && t1.lastFill < 0.3){
+    for(let kk = 0.97; kk >= 0.849; kk -= 0.03){ if(layout(kk, false).n < t1.n){ k = kk; break; } }
+  }
+  const canvases = layout(k, true).canvases;
   /* podnožje: poreklo i broj stranice */
   const total = canvases.length;
   const foot = srcName ? t('wsPdfFoot', {src:srcName}) : t('wsPdfFootNoSrc');
